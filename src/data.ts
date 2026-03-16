@@ -132,7 +132,7 @@ export const SKILLS: Omit<Skill, 'value'>[] = [
   { name: 'Intimidar', attribute: 'Espíritu', isBasic: false },
   { name: 'Investigar', attribute: 'Astucia', isBasic: false },
   { name: 'Latrocinio', attribute: 'Agilidad', isBasic: false },
-  { name: 'Medicina', attribute: 'Astucia', isBasic: false },
+  { name: 'Sanar', attribute: 'Astucia', isBasic: false },
   { name: 'Navegar', attribute: 'Agilidad', isBasic: false },
   { name: 'Notar', attribute: 'Astucia', isBasic: true },
   { name: 'Ocultismo', attribute: 'Astucia', isBasic: false },
@@ -157,7 +157,7 @@ export const HINDRANCES: Hindrance[] = [
   { 
     name: 'Anciano', 
     type: 'Mayor', 
-    description: 'Tu héroe es mayor. Ha vivido mucho y tiene mucha experiencia, pero su cuerpo ya no es lo que era. Reduce su Paso en 1 y sufre una penalización de -1 a todas sus tiradas de Fuerza y Vigor (esto no reduce el tipo de dado, sino el resultado de la tirada). A cambio, su sabiduría le otorga 5 puntos de habilidad adicionales que debe gastar en habilidades de Astucia o Espíritu. Estos puntos no pueden usarse para comprar nuevas habilidades, solo para mejorar las existentes.' 
+    description: 'Tu héroe es mayor. Ha vivido mucho y tiene mucha experiencia, pero su cuerpo ya no es lo que era. Reduce su Paso en 1 y sufre una penalización de -1 a todas sus tiradas de Fuerza y Vigor (esto no reduce el tipo de dado, sino el resultado de la tirada). A cambio, su sabiduría le otorga 5 puntos de habilidad adicionales que debe gastar en habilidades de Astucia. Estos puntos no pueden usarse para comprar nuevas habilidades, solo para mejorar las existentes.' 
   },
   { 
     name: 'Anémico', 
@@ -551,139 +551,150 @@ export const HINDRANCES: Hindrance[] = [
   },
 ];
 
-export const EDGES: Omit<Edge, 'requirements' | 'effects'>[] = [
-  { name: 'Acaparador' },
-  { name: 'Acróbata' },
-  { name: 'Acróbata Marcial' },
-  { name: 'Afortunado' },
-  { name: 'Afortunado, Muy' },
-  { name: 'Alcurnia' },
-  { name: 'Alerta' },
-  { name: 'Ambidextro' },
-  { name: 'Amenazador' },
-  { name: 'Animar' },
-  { name: 'Ardor' },
-  { name: 'Arma Distintiva' },
-  { name: 'Arma Distintiva Mejorada' },
-  { name: 'Artífice' },
-  { name: 'Artista Marcial' },
-  { name: 'Artista Marcial Mejorado' },
-  { name: 'As' },
-  { name: 'Asesino' },
-  { name: 'Ataque Repentino' },
-  { name: 'Ataque Repentino Mejorado' },
-  { name: 'Atractivo' },
-  { name: 'Atractivo, Muy' },
-  { name: 'Ayudante' },
-  { name: 'Barrido' },
-  { name: 'Barrido Mejorado' },
-  { name: 'Berserk' },
-  { name: 'Bestia' },
-  { name: 'Bloqueo' },
-  { name: 'Bloqueo Mejorado' },
-  { name: 'Calculador' },
-  { name: 'Callejear' },
-  { name: 'Campeón' },
-  { name: 'Canalización' },
-  { name: 'Carismático' },
-  { name: 'Chi' },
-  { name: 'Con un Par' },
-  { name: 'Concentración' },
-  { name: 'Conexiones' },
-  { name: 'Contraataque' },
-  { name: 'Contraataque Mejorado' },
-  { name: 'Coraje Líquido' },
-  { name: 'Curación Rápida' },
-  { name: 'Curandero' },
-  { name: 'Demagogo' },
-  { name: 'Difícil de Matar' },
-  { name: 'Difícil de Matar, Aún Más' },
-  { name: 'Disparo Doble' },
-  { name: 'Disparo Mortal' },
-  { name: 'Disparo Rápido' },
-  { name: 'Disparo Rápido Mejorado' },
-  { name: 'Drenar el Alma' },
-  { name: 'Erudito' },
-  { name: 'Esfuerzo Extra' },
-  { name: 'Esquiva' },
-  { name: 'Esquiva Mejorada' },
-  { name: 'Experto' },
-  { name: 'Famoso' },
-  { name: 'Famoso, Muy' },
-  { name: 'Fervor' },
-  { name: 'Finta' },
-  { name: 'Fornido' },
-  { name: 'Frenesí' },
-  { name: 'Frenesí Mejorado' },
-  { name: 'Fuerza de Voluntad' },
-  { name: 'Fuga' },
-  { name: 'Fuga Mejorada' },
-  { name: 'Golpe Poderoso' },
-  { name: 'Gorila' },
-  { name: 'Guerrero Impío/Sagrado' },
-  { name: 'Hombre de Recursos' },
-  { name: 'Hueso Duro de Roer' },
-  { name: 'Hueso Muy Duro de Roer' },
-  { name: 'Humillar' },
-  { name: 'Improvisación' },
-  { name: 'Inspiración' },
-  { name: 'Instinto Asesino' },
-  { name: 'Inventor' },
-  { name: 'Investigador' },
-  { name: 'Kid Dos Pistolas' },
-  { name: 'Ladrón' },
-  { name: 'Leñador' },
-  { name: 'Líder Nato' },
-  { name: 'Lingüista' },
-  { name: 'Maestro' },
-  { name: 'Maestro de Armas' },
-  { name: 'Maestro de Armas Mejorado' },
-  { name: 'Mago' },
-  { name: 'Mandíbula de Hierro' },
-  { name: 'Mando' },
-  { name: 'Mando, Presencia de' },
-  { name: 'Manos Firmes' },
-  { name: '¡Mantened la Formación!' },
-  { name: 'Matagigantes' },
-  { name: 'Matón' },
-  { name: 'McGyver' },
-  { name: 'Mentalista' },
-  { name: 'Mr. Arreglalotodo' },
-  { name: 'Nervios de Acero' },
-  { name: 'Nervios de Acero Mejorados' },
-  { name: 'Nuevos Poderes' },
-  { name: 'Ofuscar' },
-  { name: 'Osado' },
-  { name: 'Parkour' },
-  { name: 'Pies Ligeros' },
-  { name: 'Profesional' },
-  { name: 'Puntería' },
-  { name: 'Puntos de Poder' },
-  { name: 'Rápido' },
-  { name: 'Recuperación Rápida' },
-  { name: 'Recuperación Rápida Mejorada' },
-  { name: 'Reflejos de Combate' },
-  { name: 'Replicar' },
-  { name: 'Resistencia Arcana' },
-  { name: 'Resistencia Arcana Mejorada' },
-  { name: 'Responsable' },
-  { name: 'Rico' },
-  { name: 'Rico, Asquerosamente' },
-  { name: '¡Rock’n’roll!' },
-  { name: 'Seguidores' },
-  { name: 'Sentir el Peligro' },
-  { name: 'Señor de las Bestias' },
-  { name: 'Sin Piedad' },
-  { name: 'Soldado' },
-  { name: 'Subidón de Poder' },
-  { name: 'Táctico' },
-  { name: 'Táctico, Genio' },
-  { name: 'Temple' },
-  { name: 'Temple Mejorado' },
-  { name: 'Trasfondo Arcano' },
-  { name: 'Vínculo' },
-  { name: 'Vínculo Animal' },
-  { name: 'Voluntad de Hierro' },
-  { name: 'Voz Potente' },
-  { name: 'Voz Muy Potente' },
+export const EDGES: Edge[] = [
+  { 
+    name: 'Acaparador', 
+    requirements: 'Novato, Astucia d6+', 
+    effects: 'Tu héroe tiene un talento natural para encontrar objetos útiles. Recibe un bono de +2 a todas las tiradas de Notar para encontrar equipo o suministros.' 
+  },
+  { 
+    name: 'Acróbata', 
+    requirements: 'Novato, Agilidad d8+, Atletismo d8+', 
+    effects: 'Tu héroe es extremadamente ágil. Recibe un bono de +2 a las tiradas de Atletismo para realizar maniobras acrobáticas y +1 a su Parada si no lleva armadura pesada.' 
+  },
+  { 
+    name: 'Afortunado', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe parece tener una suerte increíble. Recibe un beni adicional al comienzo de cada sesión de juego.' 
+  },
+  { 
+    name: 'Alerta', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe siempre está atento a su entorno. Recibe un bono de +2 a todas sus tiradas de Notar.' 
+  },
+  { 
+    name: 'Ambidextro', 
+    requirements: 'Novato, Agilidad d8+', 
+    effects: 'Tu héroe puede usar ambas manos con la misma habilidad. Ignora la penalización de -2 por usar la mano torpe.' 
+  },
+  { 
+    name: 'Arma Distintiva', 
+    requirements: 'Novato, Habilidad de combate d8+', 
+    effects: 'Tu héroe tiene un arma especial con la que ha entrenado extensamente. Recibe un bono de +1 a las tiradas de ataque y +1 a la Parada mientras empuñe ese arma específica.' 
+  },
+  { 
+    name: 'As', 
+    requirements: 'Novato, Agilidad d8+', 
+    effects: 'Tu héroe es un piloto o conductor excepcional. Recibe un bono de +2 a las tiradas de Conducir, Pilotar y Navegar. Además, puede gastar benis para realizar tiradas de Vigor por su vehículo para ignorar Heridas.' 
+  },
+  { 
+    name: 'Atractivo', 
+    requirements: 'Novato, Vigor d6+', 
+    effects: 'Tu héroe es físicamente muy agraciado. Recibe un bono de +1 a las tiradas de Persuadir e Interpretar.' 
+  },
+  { 
+    name: 'Barrido', 
+    requirements: 'Novato, Fuerza d8+, Pelear d8+', 
+    effects: 'Tu héroe puede atacar a todos los enemigos adyacentes con una sola acción. Realiza una única tirada de Pelea con una penalización de -2 y compárala con la Parada de cada oponente.' 
+  },
+  { 
+    name: 'Berserk', 
+    requirements: 'Novato', 
+    effects: 'Cuando tu héroe sufre una Herida, debe realizar una tirada de Espíritu o entrar en un estado de furia ciega. Recibe un bono de +2 a las tiradas de Pelea y Fuerza, y +2 a la Dureza, pero no puede usar habilidades que requieran concentración.' 
+  },
+  { 
+    name: 'Bloqueo', 
+    requirements: 'Novato, Pelear d6+', 
+    effects: 'Tu héroe es experto en defenderse en combate cuerpo a cuerpo. Su Parada aumenta en +1.' 
+  },
+  { 
+    name: 'Carismático', 
+    requirements: 'Novato, Espíritu d8+', 
+    effects: 'Tu héroe tiene una personalidad magnética. Puede repetir una tirada de Persuadir fallida una vez por sesión.' 
+  },
+  { 
+    name: 'Contraataque', 
+    requirements: 'Novato, Pelear d8+', 
+    effects: 'Una vez por asalto, si un enemigo falla un ataque de Pelea contra tu héroe, este puede realizar un ataque de Pelea inmediato contra ese enemigo como acción gratuita.' 
+  },
+  { 
+    name: 'Curandero', 
+    requirements: 'Novato, Espíritu d8+', 
+    effects: 'Tu héroe tiene un don para la medicina. Recibe un bono de +2 a todas las tiradas de Sanar.' 
+  },
+  { 
+    name: 'Difícil de Matar', 
+    requirements: 'Novato, Espíritu d8+', 
+    effects: 'Tu héroe es increíblemente resistente. Ignora las penalizaciones por Heridas al realizar tiradas de Incapacitación.' 
+  },
+  { 
+    name: 'Esquiva', 
+    requirements: 'Novato, Agilidad d8+', 
+    effects: 'Tu héroe es experto en evitar ataques a distancia. Los ataques de disparo contra él sufren una penalización de -2.' 
+  },
+  { 
+    name: 'Fornido', 
+    requirements: 'Novato, Fuerza d8+, Vigor d8+', 
+    effects: 'Tu héroe es excepcionalmente robusto. Su Tamaño aumenta en +1 y su Dureza en +1. Además, puede cargar más peso sin penalización.' 
+  },
+  { 
+    name: 'Frenesí', 
+    requirements: 'Novato, Pelear d8+', 
+    effects: 'Tu héroe puede realizar un ataque de Pelea adicional por asalto con una penalización de -2 a todas sus tiradas de Pelea ese turno.' 
+  },
+  { 
+    name: 'Hueso Duro de Roer', 
+    requirements: 'Novato, Vigor d8+', 
+    effects: 'Tu héroe puede ignorar un nivel de penalización por Heridas.' 
+  },
+  { 
+    name: 'Inspiración', 
+    requirements: 'Novato, Mando', 
+    effects: 'Los aliados bajo el mando de tu héroe pueden repetir sus tiradas de Espíritu para recuperarse del estado Aturdido.' 
+  },
+  { 
+    name: 'Ladrón', 
+    requirements: 'Novato, Agilidad d8+, Sigilo d8+, Atletismo d8+', 
+    effects: 'Tu héroe es un experto en infiltración y robo. Recibe un bono de +2 a las tiradas de Sigilo en entornos urbanos y a las tiradas de Atletismo para trepar.' 
+  },
+  { 
+    name: 'Mando', 
+    requirements: 'Novato, Espíritu d8+', 
+    effects: 'Tu héroe es un líder natural. Los aliados en su Radio de Mando (5 casillas) reciben un bono de +1 a sus tiradas de Espíritu para recuperarse de estar Aturdidos.' 
+  },
+  { 
+    name: 'Nervios de Acero', 
+    requirements: 'Novato, Vigor d8+', 
+    effects: 'Tu héroe puede ignorar un nivel de penalización por Heridas.' 
+  },
+  { 
+    name: 'Pies Ligeros', 
+    requirements: 'Novato, Agilidad d6+', 
+    effects: 'Tu héroe es muy rápido. Su Paso aumenta en +2 y su dado de carrera aumenta en un tipo de dado.' 
+  },
+  { 
+    name: 'Reflejos de Combate', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe reacciona rápidamente en combate. Recibe un bono de +2 a las tiradas de Espíritu para recuperarse del estado Aturdido.' 
+  },
+  { 
+    name: 'Rico', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe tiene acceso a una gran cantidad de recursos económicos. Empieza con el triple del dinero inicial y tiene un salario o ingresos regulares.' 
+  },
+  { 
+    name: 'Sentir el Peligro', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe tiene un sexto sentido para las emboscadas. Realiza una tirada de Notar con un bono de +2 para detectar ataques sorpresa o trampas.' 
+  },
+  { 
+    name: 'Trasfondo Arcano', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe tiene la capacidad de usar magia, milagros, superpoderes o ciencia extraña. Recibe un número inicial de poderes y puntos de poder según el tipo de trasfondo.' 
+  },
+  { 
+    name: 'Voluntad de Hierro', 
+    requirements: 'Novato, Espíritu d8+', 
+    effects: 'Tu héroe tiene una determinación inquebrantable. Recibe un bono de +2 a las tiradas de Espíritu para resistir la Intimidación y la Provocación.' 
+  },
 ];

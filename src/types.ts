@@ -66,6 +66,7 @@ export interface Character {
     Parada: number;
     Dureza: number;
     Tamaño: number;
+    DadoCarrera: string;
   };
   spentHindrancePoints: {
     attributes: number;

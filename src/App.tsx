@@ -22,7 +22,11 @@ import {
   Dice5,
   Info,
   AlertTriangle,
-  Eye
+  AlertCircle,
+  Eye,
+  BookOpen,
+  Award,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Character, Dice, Species, Skill, Hindrance, Edge } from './types';
@@ -60,6 +64,7 @@ const INITIAL_CHARACTER: Character = {
     Parada: 2,
     Dureza: 4,
     Tamaño: 0,
+    DadoCarrera: 'd6',
   },
   spentHindrancePoints: {
     attributes: 0,
@@ -147,25 +152,28 @@ const calculateAttributePointsSpent = (char: Character) => {
 };
 
 const calculateSkillPointsSpent = (char: Character) => {
-  let spent = 0;
+  let basicNeeded = 0;
+  let ancianoEligibleSpent = 0;
+  const isElderly = char.hindrances.some(h => h.name === 'Anciano');
+
   SKILLS.forEach(skill => {
     const { min } = getSkillLimits(skill.name, char.species, char.heritageChoice);
     const val = char.skills[skill.name] || min;
     if (val === 0) return;
     
     const attrVal = char.attributes[skill.attribute as keyof typeof char.attributes];
-    
     let currentVal = min;
     
     while (currentVal < val) {
       if (currentVal === 0) {
-        spent += 1;
+        basicNeeded += 1;
         currentVal = 4;
       } else {
-        if (currentVal < attrVal) {
-          spent += 1;
+        const cost = currentVal < attrVal ? 1 : 2;
+        if (isElderly && skill.attribute === 'Astucia' && currentVal >= 4) {
+          ancianoEligibleSpent += cost;
         } else {
-          spent += 2;
+          basicNeeded += cost;
         }
         
         if (currentVal === 12) {
@@ -176,7 +184,15 @@ const calculateSkillPointsSpent = (char: Character) => {
       }
     }
   });
-  return spent - (char.spentHindrancePoints?.skills || 0);
+
+  const ancianoUsed = Math.min(ancianoEligibleSpent, 5);
+  const extraBasic = Math.max(0, ancianoEligibleSpent - 5);
+  
+  return {
+    basicNeeded: basicNeeded + extraBasic,
+    ancianoUsed,
+    ancianoTotal: 5
+  };
 };
 
 const calculateHindrancePoints = (hindrances: Hindrance[]) => {
@@ -187,9 +203,121 @@ const calculateHindrancePoints = (hindrances: Hindrance[]) => {
   return Math.min(4, points);
 };
 
+const checkRequirements = (char: Character, requirements: string): { met: boolean; reason?: string } => {
+  if (requirements === 'Novato') return { met: true };
+  
+  const parts = requirements.split(',').map(p => p.trim());
+  const unmet: string[] = [];
+
+  for (const part of parts) {
+    if (part === 'Novato') continue;
+    
+    // Check for "Mando" (Edge requirement)
+    if (part === 'Mando') {
+      if (!char.edges.some(e => e.name === 'Mando')) {
+        unmet.push('Ventaja: Mando');
+      }
+      continue;
+    }
+
+    // Check for Attribute or Skill: "Name dValue+"
+    const match = part.match(/(.+) d(\d+)\+/);
+    if (match) {
+      const name = match[1].trim();
+      const minVal = parseInt(match[2]);
+      
+      // Check Attributes
+      if (ATTRIBUTES.includes(name)) {
+        const currentVal = char.attributes[name as keyof typeof char.attributes] || 4;
+        if (currentVal < minVal) {
+          unmet.push(`${name} ${formatDice(minVal)}+`);
+        }
+      } 
+      // Check Skills
+      else {
+        // Special case for "Habilidad de combate"
+        if (name === 'Habilidad de combate') {
+          const pelea = char.skills['Pelear'] || 0;
+          const disparar = char.skills['Disparar'] || 0;
+          if (pelea < minVal && disparar < minVal) {
+            unmet.push(`Pelear o Disparar ${formatDice(minVal)}+`);
+          }
+        } else {
+          const currentVal = char.skills[name] || 0;
+          if (currentVal < minVal) {
+            unmet.push(`${name} ${formatDice(minVal)}+`);
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    met: unmet.length === 0,
+    reason: unmet.length > 0 ? `Falta: ${unmet.join(', ')}` : undefined
+  };
+};
+
 const formatDice = (val: number) => {
   if (val <= 12) return `d${val}`;
   return `d12+${val - 12}`;
+};
+
+const getSkillBonus = (char: Character, skillName: string): number => {
+  let bonus = 0;
+  
+  // Global penalties
+  if (char.hindrances.some(h => h.name === 'Ciego')) bonus -= 6;
+
+  // Edges
+  if (char.edges.some(e => e.name === 'Alerta') && skillName === 'Notar') bonus += 2;
+  if (char.edges.some(e => e.name === 'Atractivo') && (skillName === 'Persuadir' || skillName === 'Interpretar')) bonus += 1;
+  if (char.edges.some(e => e.name === 'Curandero') && skillName === 'Sanar') bonus += 2;
+  if (char.edges.some(e => e.name === 'As') && ['Conducir', 'Pilotar', 'Navegar'].includes(skillName)) bonus += 2;
+  if (char.edges.some(e => e.name === 'Acaparador') && skillName === 'Notar') bonus += 2;
+  if (char.edges.some(e => e.name === 'Ladrón') && (skillName === 'Sigilo' || skillName === 'Atletismo')) bonus += 2;
+  if (char.edges.some(e => e.name === 'Sentir el Peligro') && skillName === 'Notar') bonus += 2;
+  
+  // Hindrances
+  if (char.hindrances.some(h => h.name === 'Apacible') && skillName === 'Intimidar') bonus -= 2;
+  if (char.hindrances.some(h => h.name === 'Canalla') && skillName === 'Persuadir') bonus -= 2;
+  if (char.hindrances.some(h => h.name === 'Corto de Vista' && h.type === 'Mayor') && skillName === 'Notar') bonus -= 2;
+  if (char.hindrances.some(h => h.name === 'Corto de Vista' && h.type === 'Menor') && skillName === 'Notar') bonus -= 1;
+  if (char.hindrances.some(h => h.name === 'Cojo' && h.type === 'Mayor') && skillName === 'Atletismo') bonus -= 2;
+  if (char.hindrances.some(h => h.name === 'Despistado')) {
+    if (skillName === 'Notar' || skillName === 'Conocimientos Generales') bonus -= 2;
+  }
+  if (char.hindrances.some(h => h.name === 'Feo' && h.type === 'Mayor') && skillName === 'Persuadir') bonus -= 2;
+  if (char.hindrances.some(h => h.name === 'Feo' && h.type === 'Menor') && skillName === 'Persuadir') bonus -= 1;
+  if (char.hindrances.some(h => h.name === 'Hábito' && h.type === 'Menor') && skillName === 'Persuadir') bonus -= 1;
+  if (char.hindrances.some(h => h.name === 'Delirio' && h.type === 'Mayor') && skillName === 'Persuadir') bonus -= 2;
+  if (char.hindrances.some(h => h.name === 'Delirio' && h.type === 'Menor') && skillName === 'Persuadir') bonus -= 1;
+  if (char.hindrances.some(h => h.name === 'Manazas') && skillName === 'Reparar') bonus -= 2;
+  if (char.hindrances.some(h => h.name === 'Marginado') && skillName === 'Persuadir') bonus -= 2;
+  if (char.hindrances.some(h => h.name === 'Patoso') && (skillName === 'Sigilo' || skillName === 'Atletismo')) bonus -= 2;
+  if (char.hindrances.some(h => h.name === 'Sanguinario') && skillName === 'Persuadir') bonus -= 4;
+  if (char.hindrances.some(h => h.name === 'Sordo' && h.type === 'Mayor') && skillName === 'Notar') bonus -= 4;
+  if (char.hindrances.some(h => h.name === 'Sordo' && h.type === 'Menor') && skillName === 'Notar') bonus -= 2;
+  if (char.hindrances.some(h => h.name === 'Suspicaz') && skillName === 'Persuadir') bonus -= 1;
+  if (char.hindrances.some(h => h.name === 'Tuerto') && (skillName === 'Disparar' || skillName === 'Conducir')) bonus -= 2;
+
+  // Species abilities
+  if (char.species === 'Androide' && skillName === 'Persuadir') bonus -= 2;
+  if (char.species === 'Aviano' && skillName === 'Atletismo') bonus -= 2;
+  if (char.species === 'Rakhasa' && skillName === 'Atletismo') bonus -= 2;
+  if (char.species === 'Saurio' && skillName === 'Persuadir') bonus -= 2;
+  if (char.species === 'Semielfo' && skillName === 'Persuadir') bonus -= 2;
+
+  return bonus;
+};
+
+const getAttributeBonus = (char: Character, attrName: string): number => {
+  let bonus = 0;
+  if (char.hindrances.some(h => h.name === 'Ciego')) bonus -= 6;
+  if (char.hindrances.some(h => h.name === 'Anciano') && (attrName === 'Fuerza' || attrName === 'Vigor')) bonus -= 1;
+  if (char.hindrances.some(h => h.name === 'Anémico') && attrName === 'Vigor') bonus -= 1;
+  if (char.hindrances.some(h => h.name === 'Apocado') && attrName === 'Espíritu') bonus -= 2;
+  return bonus;
 };
 
 export default function App() {
@@ -200,6 +328,7 @@ export default function App() {
   const [viewingCharacter, setViewingCharacter] = useState<Character | null>(null);
   const [previewHindranceName, setPreviewHindranceName] = useState<string>('');
   const [previewHindranceType, setPreviewHindranceType] = useState<'Menor' | 'Mayor'>('Menor');
+  const [previewEdgeName, setPreviewEdgeName] = useState<string>('');
   const [pendingHindranceSpend, setPendingHindranceSpend] = useState<{
     type: 'attribute' | 'skill' | 'edge';
     cost: number;
@@ -277,32 +406,44 @@ export default function App() {
 
   const calculateDerived = (char: Character) => {
     const vig = char.attributes.Vigor;
-    const pelear = char.skills['Pelear'] || 4; // d4 is minimum if basic, but here it's 0 if not learned
+    const pelear = char.skills['Pelear'] || 0;
     
-    // Find if has "Obeso" or "Fornido" or "Menudo"
-    const isObese = char.hindrances.some(h => h.name === 'Obeso');
-    const isSmall = char.hindrances.some(h => h.name === 'Pequeño' || h.name === 'Menudo');
-    const isBrawny = char.edges.some(e => e.name === 'Fornido');
-
-    let toughness = 2 + (vig / 2);
+    let toughness = 2 + (Math.floor(Math.min(vig, 12) / 2));
     let size = 0;
     let pace = 6;
+    let parry = 2 + (Math.floor(Math.min(pelear, 12) / 2));
+    let runningDie = 6;
 
-    if (isObese) { size += 1; toughness += 1; pace -= 1; }
-    if (isBrawny) { size += 1; toughness += 1; }
-    if (isSmall) { size -= 1; toughness -= 1; }
-
-    // Species specific
+    // Species base
+    if (char.species === 'Aviano') { pace = 5; runningDie = 4; toughness -= 1; }
+    if (char.species === 'Enano') { pace = 5; runningDie = 4; }
+    if (char.species === 'Mediano') { size -= 1; toughness -= 1; pace = 5; runningDie = 4; }
     if (char.species === 'Acuariano') toughness += 1;
-    if (char.species === 'Enano') pace -= 1;
-    if (char.species === 'Mediano') { size -= 1; toughness -= 1; pace -= 1; }
-    if (char.species === 'Saurio') toughness += 2; // Armor +2
+    if (char.species === 'Saurio') toughness += 2; // Armadura +2
+
+    // Edges
+    if (char.edges.some(e => e.name === 'Fornido')) { size += 1; toughness += 1; }
+    if (char.edges.some(e => e.name === 'Pies Ligeros')) { pace += 2; runningDie = 8; }
+    if (char.edges.some(e => e.name === 'Bloqueo')) parry += 1;
+    if (char.edges.some(e => e.name === 'Arma Distintiva')) parry += 1;
+    if (char.edges.some(e => e.name === 'Acróbata')) parry += 1;
+    
+    // Hindrances
+    if (char.hindrances.some(h => h.name === 'Obeso')) { size += 1; toughness += 1; pace -= 1; runningDie = 4; }
+    if (char.hindrances.some(h => h.name === 'Pequeño' || h.name === 'Menudo')) { size -= 1; toughness -= 1; }
+    if (char.hindrances.some(h => h.name === 'Joven' && h.type === 'Menor')) { size -= 1; toughness -= 1; }
+    if (char.hindrances.some(h => h.name === 'Joven' && h.type === 'Mayor')) { size -= 2; toughness -= 2; }
+    if (char.hindrances.some(h => h.name === 'Anciano')) pace -= 1;
+    if (char.hindrances.some(h => h.name === 'Cojo' && h.type === 'Menor')) { pace -= 1; runningDie = 4; }
+    if (char.hindrances.some(h => h.name === 'Cojo' && h.type === 'Mayor')) { pace -= 2; runningDie = 4; }
+    if (char.hindrances.some(h => h.name === 'Ciego')) { pace = Math.max(1, Math.floor(pace / 2)); }
 
     return {
       Paso: pace,
-      Parada: 2 + (pelear / 2),
+      Parada: parry,
       Dureza: toughness,
       Tamaño: size,
+      DadoCarrera: formatDice(runningDie),
     };
   };
 
@@ -375,12 +516,26 @@ export default function App() {
         <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden border border-stone-200">
           <div className="bg-stone-900 text-white p-6 flex justify-between items-center">
             <h2 className="text-2xl font-bold tracking-tight uppercase">Hoja de Personaje</h2>
-            <button 
-              onClick={() => setViewingCharacter(null)}
-              className="px-4 py-2 bg-stone-800 hover:bg-stone-700 rounded-lg transition-colors text-sm font-medium"
-            >
-              Cerrar
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => {
+                  setCurrentCharacter(viewingCharacter);
+                  setCurrentStep(STEPS.length - 1);
+                  setIsCreating(true);
+                  setViewingCharacter(null);
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+              >
+                <Plus size={16} />
+                Editar
+              </button>
+              <button 
+                onClick={() => setViewingCharacter(null)}
+                className="px-4 py-2 bg-stone-800 hover:bg-stone-700 rounded-lg transition-colors text-sm font-medium"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
           <CharacterSheetView character={viewingCharacter} />
         </div>
@@ -393,17 +548,12 @@ export default function App() {
       <header className="bg-white border-b border-stone-200 py-6 px-4 md:px-8 shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-stone-900 rounded-lg flex items-center justify-center text-white">
-              <Dice5 size={24} />
-            </div>
-            <h1 className="text-xl font-bold tracking-tight uppercase hidden sm:block">Savage Worlds Creator</h1>
+            <h1 className="flex flex-col items-center leading-none tracking-tighter uppercase">
+              <span className="text-xl font-black italic">Savage Worlds</span>
+              <span className="text-[10px] font-bold tracking-[0.4em] text-stone-500 -mt-0.5 ml-1">Creator</span>
+            </h1>
           </div>
           <div className="flex items-center gap-4">
-            <label className="cursor-pointer flex items-center gap-2 px-4 py-2 text-stone-600 hover:text-stone-900 transition-colors text-sm font-medium">
-              <Upload size={18} />
-              <span className="hidden sm:inline">Importar</span>
-              <input type="file" className="hidden" onChange={importCharacter} accept=".json" />
-            </label>
             <button 
               onClick={startNewCharacter}
               className="flex items-center gap-2 px-6 py-2 bg-stone-900 text-white rounded-full hover:bg-stone-800 transition-all shadow-md hover:shadow-lg active:scale-95 font-medium"
@@ -446,7 +596,9 @@ export default function App() {
                     setPreviewHindranceName, 
                     previewHindranceType, 
                     setPreviewHindranceType,
-                    setPendingHindranceSpend
+                    setPendingHindranceSpend,
+                    previewEdgeName,
+                    setPreviewEdgeName
                   })}
                 </motion.div>
               </AnimatePresence>
@@ -485,7 +637,9 @@ export default function App() {
                         return calculateAttributePointsSpent(currentCharacter) > 5;
                       }
                       if (currentStep === 4) { // Habilidades
-                        return calculateSkillPointsSpent(currentCharacter) > 12;
+                        const { basicNeeded } = calculateSkillPointsSpent(currentCharacter);
+                        const isYoung = currentCharacter.hindrances.some(h => h.name === 'Joven');
+                        return basicNeeded > (isYoung ? 10 : 12);
                       }
                     }
                     return false;
@@ -545,15 +699,24 @@ export default function App() {
                 </div>
                 <h3 className="text-xl font-medium text-stone-600 mb-2">No tienes personajes guardados</h3>
                 <p className="text-stone-400 mb-6">Comienza creando uno nuevo para tu próxima aventura.</p>
-                <button 
-                  onClick={startNewCharacter}
-                  className="px-8 py-3 bg-stone-900 text-white rounded-full hover:bg-stone-800 transition-all shadow-md font-medium"
-                >
-                  Crear mi primer personaje
-                </button>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button 
+                    onClick={startNewCharacter}
+                    className="px-8 py-3 bg-stone-900 text-white rounded-full hover:bg-stone-800 transition-all shadow-md font-medium flex items-center justify-center gap-2"
+                  >
+                    <Plus size={18} />
+                    Crear mi primer personaje
+                  </button>
+                  <label className="cursor-pointer px-8 py-3 bg-white text-stone-900 border-2 border-stone-200 rounded-full hover:border-stone-900 transition-all font-medium flex items-center justify-center gap-2">
+                    <Upload size={18} />
+                    Importar JSON
+                    <input type="file" className="hidden" onChange={importCharacter} accept="application/json,.json" />
+                  </label>
+                </div>
               </div>
             ) : (
-              characters.map(char => (
+              <>
+                {characters.map(char => (
                 <motion.div 
                   key={char.id}
                   layout
@@ -584,7 +747,7 @@ export default function App() {
                         <div key={name} className="text-center">
                           <div className="text-[10px] uppercase font-bold text-stone-400 mb-1">{name.slice(0, 3)}</div>
                           <div className="w-8 h-8 bg-stone-50 rounded border border-stone-200 flex items-center justify-center font-mono font-bold text-stone-700">
-                            d{val}
+                            {formatDice(val as number)}
                           </div>
                         </div>
                       ))}
@@ -615,25 +778,22 @@ export default function App() {
                     </div>
                   </div>
                 </motion.div>
-              ))
-            )}
-          </div>
-        )}
-      </main>
-
-      {isCreating && (
-        <button 
-          onClick={() => {
-            if (window.confirm('¿Estás seguro de que quieres cancelar? Se perderán los cambios.')) {
-              setIsCreating(false);
-              setCurrentCharacter(null);
-            }
-          }}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-red-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-red-600 transition-all active:scale-95 z-50"
-        >
-          <Trash2 size={24} />
-        </button>
+              ))}
+              <label className="cursor-pointer bg-stone-50 rounded-2xl border-2 border-dashed border-stone-200 p-6 flex flex-col items-center justify-center gap-3 hover:border-stone-400 hover:bg-stone-100 transition-all group min-h-[300px]">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-stone-400 group-hover:text-stone-600 shadow-sm transition-colors">
+                  <Upload size={24} />
+                </div>
+                <div className="text-center">
+                  <span className="block text-stone-600 font-bold">Importar Personaje</span>
+                  <span className="text-xs text-stone-400">Sube un archivo .json</span>
+                </div>
+                <input type="file" className="hidden" onChange={importCharacter} accept="application/json,.json" />
+              </label>
+            </>
+          )}
+        </div>
       )}
+      </main>
     </div>
   );
 }
@@ -652,6 +812,8 @@ function renderStep(
       cost: number;
       onConfirm: () => void;
     } | null) => void;
+    previewEdgeName: string;
+    setPreviewEdgeName: (name: string) => void;
   }
 ) {
   const { 
@@ -659,7 +821,9 @@ function renderStep(
     setPreviewHindranceName, 
     previewHindranceType, 
     setPreviewHindranceType,
-    setPendingHindranceSpend
+    setPendingHindranceSpend,
+    previewEdgeName,
+    setPreviewEdgeName
   } = extras;
 
   switch (step) {
@@ -767,10 +931,10 @@ function renderStep(
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2">
             {char.hindrances.map((h, i) => (
-              <div key={i} className="px-4 py-2 bg-stone-900 text-white rounded-full flex items-center gap-2 text-sm font-bold shadow-md">
+              <div key={i} className="px-4 py-2 bg-red-50 border border-red-100 text-red-700 rounded-full flex items-center gap-2 text-sm font-bold shadow-sm">
                 <span>{h.name} ({h.type})</span>
                 <button onClick={() => update({ hindrances: char.hindrances.filter((_, idx) => idx !== i) })}>
-                  <Trash2 size={14} className="text-red-400" />
+                  <Trash2 size={14} className="text-red-400 hover:text-red-600" />
                 </button>
               </div>
             ))}
@@ -855,30 +1019,48 @@ function renderStep(
           </div>
         </div>
       );
-    case 3: // Atributos
-      const pointsSpent = calculateAttributePointsSpent(char);
-      const totalHP = calculateHindrancePoints(char.hindrances);
-      const spentHP = (char.spentHindrancePoints?.attributes || 0) * 2 + 
-                      (char.spentHindrancePoints?.skills || 0) * 1 + 
-                      (char.spentHindrancePoints?.edges || 0) * 2;
-      const availableHP = totalHP - spentHP;
-      const totalAllowed = 5;
-      const isOverLimit = pointsSpent > totalAllowed;
+    case 3: { // Atributos
+      const pointsSpent_Attr = calculateAttributePointsSpent(char);
+      const totalHP_Attr = calculateHindrancePoints(char.hindrances);
+      const spentHP_Attr = (char.spentHindrancePoints?.attributes || 0) * 2 + 
+                           (char.spentHindrancePoints?.skills || 0) * 1 + 
+                           (char.spentHindrancePoints?.edges || 0) * 2;
+      const availableHP_Attr = totalHP_Attr - spentHP_Attr;
+      const baseAllowed_Attr = 5;
+      const totalAllowed_Attr = baseAllowed_Attr + (char.spentHindrancePoints?.attributes || 0);
+      const isOverLimit_Attr = pointsSpent_Attr > totalAllowed_Attr;
 
       return (
         <div className="space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className={`p-4 rounded-xl border flex items-center gap-3 ${isOverLimit ? 'bg-red-50 border-red-200 text-red-600' : 'bg-stone-50 border-stone-200 text-stone-600'}`}>
-              {isOverLimit ? <AlertTriangle size={20} /> : <Info size={20} />}
-              <div>
-                <p className="text-sm font-bold">Puntos de Atributo (Base): {pointsSpent} / {totalAllowed}</p>
-                <p className="text-xs">{isOverLimit ? 'Has gastado demasiados puntos base.' : `Tienes 5 puntos base para tus atributos.`}</p>
+            <div className={`p-4 rounded-xl border flex items-center gap-3 ${isOverLimit_Attr ? 'bg-red-50 border-red-200 text-red-600' : 'bg-stone-50 border-stone-200 text-stone-600'}`}>
+              {isOverLimit_Attr ? <AlertTriangle size={20} /> : <Info size={20} />}
+              <div className="flex-1">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-bold">Puntos Atributo: {pointsSpent_Attr} / {totalAllowed_Attr}</p>
+                  {char.spentHindrancePoints?.attributes > 0 && pointsSpent_Attr < totalAllowed_Attr && (
+                    <button 
+                      onClick={() => {
+                        update({ 
+                          spentHindrancePoints: { 
+                            ...char.spentHindrancePoints, 
+                            attributes: Math.max(0, char.spentHindrancePoints.attributes - 1) 
+                          } 
+                        });
+                      }}
+                      className="text-[10px] bg-stone-200 hover:bg-stone-300 px-2 py-0.5 rounded text-stone-700 font-bold"
+                    >
+                      REEMBOLSAR HP
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs">{isOverLimit_Attr ? 'Has gastado demasiados puntos.' : `Tienes 5 base ${char.spentHindrancePoints?.attributes > 0 ? `+ ${char.spentHindrancePoints.attributes} de Desventajas` : ''}.`}</p>
               </div>
             </div>
             <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 flex items-center gap-3 text-stone-600">
               <Dice5 size={20} />
               <div>
-                <p className="text-sm font-bold">Puntos de Desventajas: {availableHP} / {totalHP}</p>
+                <p className="text-sm font-bold">Puntos de Desventajas: {availableHP_Attr} / {totalHP_Attr}</p>
                 <p className="text-xs">Usa estos puntos para Atributos (2 pts), Ventajas (2 pts) o Habilidades (1 pt).</p>
               </div>
             </div>
@@ -917,9 +1099,9 @@ function renderStep(
                     <button 
                       onClick={() => {
                         if (current < max) {
-                          if (pointsSpent < totalAllowed) {
+                          if (pointsSpent_Attr < totalAllowed_Attr) {
                             update({ attributes: { ...char.attributes, [attr]: (current === 12 ? 13 : current + 2) as Dice } });
-                          } else if (availableHP >= 2) {
+                          } else if (availableHP_Attr >= 2) {
                             setPendingHindranceSpend({
                               type: 'attribute',
                               cost: 2,
@@ -933,7 +1115,7 @@ function renderStep(
                           }
                         }
                       }}
-                      disabled={current >= max || (pointsSpent >= totalAllowed && availableHP < 2)}
+                      disabled={current >= max || (pointsSpent_Attr >= totalAllowed_Attr && availableHP_Attr < 2)}
                       className="w-8 h-8 rounded-full bg-stone-900 text-white flex items-center justify-center hover:bg-stone-800 transition-colors shadow-md disabled:opacity-30"
                     >
                       +
@@ -945,40 +1127,66 @@ function renderStep(
           </div>
         </div>
       );
-    case 4: // Habilidades
+    }
+    case 4: { // Habilidades
       const isYoung = char.hindrances.some(h => h.name === 'Joven');
       const isElderly = char.hindrances.some(h => h.name === 'Anciano');
       
-      const skillsSpent = calculateSkillPointsSpent(char);
+      const { basicNeeded, ancianoUsed, ancianoTotal } = calculateSkillPointsSpent(char);
       const totalHP_Skills = calculateHindrancePoints(char.hindrances);
       const spentHP_Skills = (char.spentHindrancePoints?.attributes || 0) * 2 + 
                              (char.spentHindrancePoints?.skills || 0) * 1 + 
                              (char.spentHindrancePoints?.edges || 0) * 2;
       const availableHP_Skills = totalHP_Skills - spentHP_Skills;
       
-      const basePoints = isYoung ? 10 : 12;
-      const extraElderlyPoints = isElderly ? 5 : 0;
-      const totalAllowed_Skills = basePoints + extraElderlyPoints;
+      const baseAllowed = isYoung ? 10 : 12;
+      const totalAllowed_Skills = baseAllowed + (char.spentHindrancePoints?.skills || 0);
       
-      const isOverLimit_Skills = skillsSpent > totalAllowed_Skills;
+      const isOverLimit_Skills = basicNeeded > totalAllowed_Skills;
 
       return (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className={`p-4 rounded-xl border flex items-center gap-3 ${isOverLimit_Skills ? 'bg-red-50 border-red-200 text-red-600' : 'bg-stone-50 border-stone-200 text-stone-600'}`}>
               {isOverLimit_Skills ? <AlertTriangle size={20} /> : <Info size={20} />}
-              <div>
-                <p className="text-sm font-bold">Puntos de Habilidad (Base): {skillsSpent} / {totalAllowed_Skills}</p>
+              <div className="flex-1">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-bold">Puntos Habilidad: {basicNeeded} / {totalAllowed_Skills}</p>
+                  {char.spentHindrancePoints?.skills > 0 && basicNeeded < totalAllowed_Skills && (
+                    <button 
+                      onClick={() => {
+                        update({ 
+                          spentHindrancePoints: { 
+                            ...char.spentHindrancePoints, 
+                            skills: Math.max(0, char.spentHindrancePoints.skills - 1) 
+                          } 
+                        });
+                      }}
+                      className="text-[10px] bg-stone-200 hover:bg-stone-300 px-2 py-0.5 rounded text-stone-700 font-bold"
+                    >
+                      REEMBOLSAR HP
+                    </button>
+                  )}
+                </div>
                 <p className="text-xs">
-                  {isYoung ? 'Como Joven tienes 10 puntos.' : isElderly ? 'Como Anciano tienes 12 + 5 puntos (Astucia/Espíritu).' : 'Tienes 12 puntos base.'}
+                  {isYoung ? '10 base' : '12 base'} {char.spentHindrancePoints?.skills > 0 ? `+ ${char.spentHindrancePoints.skills} de Desventajas` : ''}
                 </p>
               </div>
             </div>
+            {isElderly && (
+              <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 flex items-center gap-3 text-amber-700">
+                <BookOpen size={20} />
+                <div>
+                  <p className="text-sm font-bold">Puntos Anciano: {ancianoUsed} / {ancianoTotal}</p>
+                  <p className="text-xs">Solo para mejorar habilidades de Astucia.</p>
+                </div>
+              </div>
+            )}
             <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 flex items-center gap-3 text-stone-600">
               <Dice5 size={20} />
               <div>
-                <p className="text-sm font-bold">Puntos de Desventajas: {availableHP_Skills} / {totalHP_Skills}</p>
-                <p className="text-xs">Usa estos puntos para Atributos (2 pts), Ventajas (2 pts) o Habilidades (1 pt).</p>
+                <p className="text-sm font-bold">Puntos Desventajas: {availableHP_Skills} / {totalHP_Skills}</p>
+                <p className="text-xs">Usa estos puntos para Atributos, Ventajas o Habilidades.</p>
               </div>
             </div>
           </div>
@@ -995,10 +1203,12 @@ function renderStep(
                       {skill.name}
                       {skill.isBasic && <span className="w-2 h-2 bg-stone-900 rounded-full" title="Básica" />}
                     </div>
-                    <div className="text-[10px] uppercase text-stone-400 font-bold">{skill.attribute} (d{attrVal})</div>
+                    <div className="text-[10px] uppercase text-stone-400 font-bold">{skill.attribute} ({formatDice(attrVal)})</div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="font-mono font-bold text-stone-700">d{val || '-'}</div>
+                    <div className="font-mono font-bold text-stone-700 w-12 text-center">
+                      {val ? formatDice(val) : 'd4-2'}
+                    </div>
                     <div className="flex flex-col gap-1">
                       <button 
                         onClick={() => {
@@ -1006,7 +1216,13 @@ function renderStep(
                           const maxSkill = attrVal > 12 ? 13 : 12;
                           if (val < maxSkill) {
                             const cost = val === 0 ? 1 : (val < attrVal ? 1 : 2);
-                            if (skillsSpent + cost <= totalAllowed_Skills) {
+                            
+                            const currentPoints = calculateSkillPointsSpent(char);
+                            const canAffordWithBasic = currentPoints.basicNeeded + cost <= totalAllowed_Skills;
+                            const isAncianoEligible = isElderly && skill.attribute === 'Astucia' && val >= 4;
+                            const canAffordWithAnciano = isAncianoEligible && (currentPoints.ancianoUsed + cost <= ancianoTotal);
+
+                            if (canAffordWithBasic || canAffordWithAnciano) {
                               nextSkills[skill.name] = (val === 12 ? 13 : (val || 2) + 2) as Dice;
                               update({ skills: nextSkills });
                             } else if (availableHP_Skills >= cost) {
@@ -1026,31 +1242,22 @@ function renderStep(
                           }
                         }}
                         className="w-5 h-5 bg-stone-900 text-white rounded flex items-center justify-center text-xs hover:bg-stone-800 disabled:opacity-30"
-                        disabled={val >= (attrVal > 12 ? 13 : 12) || (skillsSpent >= totalAllowed_Skills && availableHP_Skills < (val === 0 ? 1 : (val < attrVal ? 1 : 2)))}
+                        disabled={val >= (attrVal > 12 ? 13 : 12)}
                       >
                         +
                       </button>
                       <button 
                         onClick={() => {
                           const nextSkills = { ...char.skills };
-                          const costToRemove = val === 4 ? 1 : (val <= attrVal ? 1 : 2);
-                          
                           if (val === 13) {
                             nextSkills[skill.name] = 12 as Dice;
+                          } else if (val === 4 && min === 0) {
+                            delete nextSkills[skill.name];
                           } else if (val > min) {
                             nextSkills[skill.name] = (val - 2) as Dice;
-                          } else if (val === min && min > 0) {
-                            // Cannot go below racial min
-                          } else if (val === 4 && !skill.isBasic) {
-                            delete nextSkills[skill.name];
                           }
                           
-                          const nextSpentHP = { ...char.spentHindrancePoints };
-                          if (nextSpentHP.skills >= costToRemove) {
-                            nextSpentHP.skills -= costToRemove;
-                          }
-                          
-                          update({ skills: nextSkills, spentHindrancePoints: nextSpentHP });
+                          update({ skills: nextSkills });
                         }}
                         disabled={val === 0 || (val === min && (min > 0 || skill.isBasic))}
                         className="w-5 h-5 bg-stone-100 rounded flex items-center justify-center text-xs hover:bg-stone-200 disabled:opacity-30"
@@ -1065,7 +1272,8 @@ function renderStep(
           </div>
         </div>
       );
-    case 5: // Ventajas
+    }
+    case 5: { // Ventajas
       const totalHP_Edges = calculateHindrancePoints(char.hindrances);
       const spentHP_Edges = (char.spentHindrancePoints?.attributes || 0) * 2 + 
                              (char.spentHindrancePoints?.skills || 0) * 1 + 
@@ -1075,75 +1283,146 @@ function renderStep(
       const freeEdges = char.species === 'Humano' ? 1 : 0;
       const currentEdgesCount = char.edges.length;
       const canPickFree = currentEdgesCount < freeEdges;
+      
+      const selectedEdge = EDGES.find(e => e.name === previewEdgeName);
+      const alreadyHasEdge = char.edges.some(e => e.name === previewEdgeName);
 
       return (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 flex items-center gap-3 text-stone-600">
               <Shield size={20} />
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-bold">Ventajas Gratuitas: {Math.min(freeEdges, currentEdgesCount)} / {freeEdges}</p>
                 <p className="text-xs">{char.species === 'Humano' ? 'Los humanos reciben una ventaja gratuita.' : 'Tu especie no tiene ventajas gratuitas.'}</p>
               </div>
             </div>
             <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 flex items-center gap-3 text-stone-600">
               <Dice5 size={20} />
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-bold">Puntos de Desventajas: {availableHP_Edges} / {totalHP_Edges}</p>
                 <p className="text-xs">Cada ventaja adicional cuesta 2 puntos de desventaja.</p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {char.edges.map((e, i) => (
-              <div key={i} className="px-4 py-2 bg-stone-900 text-white rounded-full flex items-center gap-2 text-sm font-bold shadow-md">
-                <span>{e.name}</span>
-                <button onClick={() => {
-                  const isFromHindrance = i >= freeEdges;
-                  const nextEdges = char.edges.filter((_, idx) => idx !== i);
-                  const nextSpentHP = { ...char.spentHindrancePoints };
-                  if (isFromHindrance && nextSpentHP.edges > 0) {
-                    nextSpentHP.edges -= 1;
-                  }
-                  update({ edges: nextEdges, spentHindrancePoints: nextSpentHP });
-                }}>
-                  <Trash2 size={14} className="text-red-400" />
-                </button>
+          <div className="bg-stone-50 p-6 rounded-2xl border border-stone-200 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-1">Seleccionar Ventaja</label>
+                <select 
+                  value={previewEdgeName}
+                  onChange={(e) => setPreviewEdgeName(e.target.value)}
+                  className="w-full p-3 bg-white border border-stone-200 rounded-xl font-bold focus:ring-2 focus:ring-stone-900 outline-none"
+                >
+                  <option value="">-- Selecciona una Ventaja --</option>
+                  {EDGES.map(e => {
+                    const req = checkRequirements(char, e.requirements);
+                    return (
+                      <option key={e.name} value={e.name} className={!req.met ? 'text-stone-300' : ''}>
+                        {e.name} {!req.met ? '🔒' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            {EDGES.map((e, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  if (char.edges.some(existing => existing.name === e.name)) return;
-                  
-                  if (canPickFree) {
-                    update({ edges: [...char.edges, { ...e, requirements: '', effects: '' }] });
-                  } else if (availableHP_Edges >= 2) {
-                    setPendingHindranceSpend({
-                      type: 'edge',
-                      cost: 2,
-                      onConfirm: () => {
-                        update({ 
-                          edges: [...char.edges, { ...e, requirements: '', effects: '' }],
-                          spentHindrancePoints: { ...char.spentHindrancePoints, edges: (char.spentHindrancePoints.edges || 0) + 1 }
-                        });
-                      }
-                    });
-                  }
-                }}
-                disabled={char.edges.some(existing => existing.name === e.name) || (!canPickFree && availableHP_Edges < 2)}
-                className="p-3 text-left bg-stone-50 border border-stone-200 rounded-xl hover:border-stone-900 transition-all text-xs font-bold disabled:opacity-30"
+            </div>
+
+            {selectedEdge && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white p-4 rounded-xl border border-stone-200 space-y-3"
               >
-                {e.name}
-              </button>
-            ))}
+                <div>
+                  <h4 className="font-bold text-stone-900">{selectedEdge.name}</h4>
+                  <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter">Requisitos: {selectedEdge.requirements}</p>
+                </div>
+                <p className="text-sm text-stone-600 leading-relaxed italic">
+                  {selectedEdge.effects}
+                </p>
+                
+                {(() => {
+                  const req = checkRequirements(char, selectedEdge.requirements);
+                  return (
+                    <>
+                      {!req.met && (
+                        <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-red-600 text-xs font-bold">
+                          <AlertCircle size={14} />
+                          <span>{req.reason}</span>
+                        </div>
+                      )}
+                      <button 
+                        onClick={() => {
+                          if (alreadyHasEdge || !req.met) return;
+                          
+                          if (canPickFree) {
+                            update({ edges: [...char.edges, selectedEdge] });
+                            setPreviewEdgeName('');
+                          } else if (availableHP_Edges >= 2) {
+                            setPendingHindranceSpend({
+                              type: 'edge',
+                              cost: 2,
+                              onConfirm: () => {
+                                update({ 
+                                  edges: [...char.edges, selectedEdge],
+                                  spentHindrancePoints: { ...char.spentHindrancePoints, edges: (char.spentHindrancePoints.edges || 0) + 1 }
+                                });
+                                setPreviewEdgeName('');
+                              }
+                            });
+                          }
+                        }}
+                        disabled={alreadyHasEdge || !req.met || (!canPickFree && availableHP_Edges < 2)}
+                        className="w-full py-4 bg-stone-900 text-white rounded-xl font-black uppercase tracking-widest hover:bg-stone-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-30"
+                      >
+                        <Plus size={20} />
+                        {alreadyHasEdge ? 'Ya tienes esta ventaja' : !req.met ? 'Requisitos no cumplidos' : 'Agregar Ventaja'}
+                      </button>
+                    </>
+                  );
+                })()}
+              </motion.div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="font-black uppercase tracking-widest text-stone-400 text-xs">Tus Ventajas</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {char.edges.map((edge, index) => (
+                <div key={`${edge.name}-${index}`} className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between group hover:border-emerald-300 transition-all">
+                  <div>
+                    <div className="font-bold text-emerald-900">{edge.name}</div>
+                    <div className="text-[10px] text-emerald-600 font-bold uppercase">{edge.requirements}</div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      const nextEdges = [...char.edges];
+                      nextEdges.splice(index, 1);
+                      
+                      const nextSpentHP = { ...char.spentHindrancePoints };
+                      if (index >= freeEdges && nextSpentHP.edges > 0) {
+                        nextSpentHP.edges -= 1;
+                      }
+                      
+                      update({ edges: nextEdges, spentHindrancePoints: nextSpentHP });
+                    }}
+                    className="p-2 text-emerald-300 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+              {char.edges.length === 0 && (
+                <div className="col-span-full py-12 text-center border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 font-bold">
+                  No has seleccionado ninguna ventaja aún.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       );
+    }
     case 6: // Equipo
       return (
         <div className="space-y-6">
@@ -1228,11 +1507,72 @@ function renderStep(
   }
 }
 
+const ATTRIBUTE_DESCRIPTIONS: { [key: string]: string } = {
+  'Agilidad': 'Refleja la coordinación física, los reflejos y el equilibrio. Es clave para el combate y el movimiento.',
+  'Astucia': 'Mide la agudeza mental, la lógica y la rapidez de pensamiento. Afecta a muchas habilidades de conocimiento.',
+  'Espíritu': 'Representa la fuerza de voluntad, la determinación y la presencia. Es vital para resistir efectos mentales y recuperarse.',
+  'Fuerza': 'Indica la potencia física y la capacidad de carga. Afecta al daño cuerpo a cuerpo y al equipo que puedes llevar.',
+  'Vigor': 'Determina la resistencia física, la salud y la capacidad de soportar daño. Es la base de tu Dureza.'
+};
+
+const DERIVED_DESCRIPTIONS: { [key: string]: string } = {
+  'Paso': 'Indica cuántas pulgadas puede moverse tu personaje en un asalto de combate.',
+  'Parada': 'Es la dificultad base para que un enemigo te golpee en combate cuerpo a cuerpo. Se calcula como 2 + la mitad de tu dado de Pelear.',
+  'Dureza': 'Representa la resistencia física al daño. Si el daño de un ataque iguala o supera este valor, el personaje queda Aturdido o sufre Heridas.',
+  'Carrera': 'Es el dado que tiras cuando tu personaje realiza una acción de carrera para moverse más rápido en un asalto.'
+};
+
 function CharacterSheetView({ character }: { character: Character }) {
+  const [selectedTrait, setSelectedTrait] = useState<{ name: string, description: string, type?: string, requirements?: string } | null>(null);
   const speciesData = useMemo(() => SPECIES.find(s => s.name === character.species), [character.species]);
 
   return (
-    <div className="p-8 space-y-10">
+    <div className="p-8 space-y-10 relative">
+      <AnimatePresence>
+        {selectedTrait && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-200 relative"
+            >
+              <button 
+                onClick={() => setSelectedTrait(null)}
+                className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900 transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center mb-6 text-stone-900">
+                <Info size={24} />
+              </div>
+
+              <h3 className="text-2xl font-black text-stone-900 uppercase tracking-tighter mb-2">{selectedTrait.name}</h3>
+              {selectedTrait.type && (
+                <div className="text-xs font-black uppercase tracking-widest text-stone-400 mb-4">{selectedTrait.type}</div>
+              )}
+              {selectedTrait.requirements && (
+                <div className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-4 bg-stone-50 p-2 rounded-lg border border-stone-100">
+                  Requisitos: {selectedTrait.requirements}
+                </div>
+              )}
+              
+              <p className="text-stone-600 leading-relaxed italic">
+                {selectedTrait.description}
+              </p>
+
+              <button 
+                onClick={() => setSelectedTrait(null)}
+                className="w-full mt-8 py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all shadow-lg"
+              >
+                Entendido
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col md:flex-row justify-between gap-8 border-b border-stone-100 pb-10">
         <div className="space-y-4">
           <h1 className="text-5xl font-black tracking-tighter uppercase text-stone-900">{character.name}</h1>
@@ -1248,22 +1588,43 @@ function CharacterSheetView({ character }: { character: Character }) {
             )}
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          <DerivedStat label="Paso" value={character.derived.Paso} />
-          <DerivedStat label="Parada" value={character.derived.Parada} />
-          <DerivedStat label="Dureza" value={character.derived.Dureza} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <DerivedStat 
+            label="Paso" 
+            value={character.derived.Paso} 
+            onClick={() => setSelectedTrait({ name: 'Paso', description: DERIVED_DESCRIPTIONS['Paso'], type: 'Estadística Derivada' })}
+          />
+          <DerivedStat 
+            label="Carrera" 
+            value={character.derived.DadoCarrera} 
+            onClick={() => setSelectedTrait({ name: 'Carrera', description: DERIVED_DESCRIPTIONS['Carrera'], type: 'Estadística Derivada' })}
+          />
+          <DerivedStat 
+            label="Parada" 
+            value={character.derived.Parada} 
+            onClick={() => setSelectedTrait({ name: 'Parada', description: DERIVED_DESCRIPTIONS['Parada'], type: 'Estadística Derivada' })}
+          />
+          <DerivedStat 
+            label="Dureza" 
+            value={character.derived.Dureza} 
+            onClick={() => setSelectedTrait({ name: 'Dureza', description: DERIVED_DESCRIPTIONS['Dureza'], type: 'Estadística Derivada' })}
+          />
         </div>
       </div>
 
       {speciesData && (
-        <section className="p-6 bg-stone-50 rounded-2xl border border-stone-100 space-y-3">
-          <h3 className="text-xs font-black uppercase tracking-widest text-stone-400">Capacidades de Especie</h3>
+        <section className="p-6 bg-stone-50 rounded-2xl border border-stone-100 space-y-6">
+          <SectionTitle icon={<User size={20} className="text-stone-400" />} title="Capacidades de Especie" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
             {speciesData.abilities.map((a, i) => (
-              <div key={i} className="space-y-1">
-                <div className="text-sm font-black text-stone-900 uppercase tracking-tight">{a.name}</div>
-                <p className="text-xs text-stone-600 leading-relaxed">{a.description}</p>
-              </div>
+              <button 
+                key={i} 
+                onClick={() => setSelectedTrait({ name: a.name, description: a.description, type: 'Capacidad de Especie' })}
+                className="text-left space-y-1 p-2 -m-2 rounded-lg hover:bg-stone-100 transition-colors group"
+              >
+                <div className="text-sm font-black text-stone-900 uppercase tracking-tight group-hover:text-stone-700">{a.name}</div>
+                <p className="text-xs text-stone-600 leading-relaxed line-clamp-2">{a.description}</p>
+              </button>
             ))}
           </div>
         </section>
@@ -1271,30 +1632,55 @@ function CharacterSheetView({ character }: { character: Character }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <section className="space-y-6">
-          <SectionTitle icon={<Zap size={20} />} title="Atributos" />
+          <SectionTitle icon={<Zap size={20} className="text-amber-500" />} title="Atributos" />
           <div className="grid grid-cols-1 gap-3">
             {Object.entries(character.attributes).map(([name, val]) => (
-              <div key={name} className="flex items-center justify-between p-4 bg-stone-50 rounded-xl border border-stone-100">
-                <span className="font-bold text-stone-500 uppercase text-xs tracking-widest">{name}</span>
-                <span className="font-mono font-black text-2xl">{formatDice(val)}</span>
-              </div>
+              <button 
+                key={name} 
+                onClick={() => setSelectedTrait({ name, description: ATTRIBUTE_DESCRIPTIONS[name], type: 'Atributo' })}
+                className="flex items-center justify-between p-4 bg-stone-50 rounded-xl border border-stone-100 hover:bg-stone-100 transition-all active:scale-[0.98] group"
+              >
+                <span className="font-bold text-stone-500 uppercase text-xs tracking-widest group-hover:text-stone-700">{name}</span>
+                <span className="font-mono font-black text-2xl">
+                  {formatDice(val)}
+                  {getAttributeBonus(character, name) !== 0 && (
+                    <span className={`text-lg ml-1 ${getAttributeBonus(character, name) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {getAttributeBonus(character, name) > 0 ? '+' : ''}{getAttributeBonus(character, name)}
+                    </span>
+                  )}
+                </span>
+              </button>
             ))}
           </div>
         </section>
 
         <section className="space-y-6">
-          <SectionTitle icon={<Sword size={20} />} title="Habilidades" />
+          <SectionTitle icon={<Sword size={20} className="text-stone-500" />} title="Habilidades" />
           <div className="grid grid-cols-1 gap-2">
             {Object.entries(character.skills).map(([name, val]) => (
               <div key={name} className="flex items-center justify-between p-3 bg-white border border-stone-100 rounded-lg shadow-sm">
                 <span className="font-bold text-stone-800">{name}</span>
-                <span className="font-mono font-bold text-stone-600">d{val}</span>
+                <span className="font-mono font-bold text-stone-600">
+                  {formatDice(val as number)}
+                  {getSkillBonus(character, name) !== 0 && (
+                    <span className={`text-sm ml-1 font-bold ${getSkillBonus(character, name) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {getSkillBonus(character, name) > 0 ? '+' : ''}{getSkillBonus(character, name)}
+                    </span>
+                  )}
+                </span>
               </div>
             ))}
             {SKILLS.filter(s => s.isBasic && !character.skills[s.name]).map(s => (
               <div key={s.name} className="flex items-center justify-between p-3 bg-stone-50 border border-stone-100 rounded-lg opacity-60">
                 <span className="font-bold text-stone-800">{s.name}</span>
-                <span className="font-mono font-bold text-stone-600">d4</span>
+                <span className="font-mono font-bold text-stone-600">
+                  d4
+                  {getSkillBonus(character, s.name) !== 0 && (
+                    <span className={`text-sm ml-1 font-bold ${getSkillBonus(character, s.name) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {getSkillBonus(character, s.name) > 0 ? '+' : ''}{getSkillBonus(character, s.name)}
+                    </span>
+                  )}
+                </span>
               </div>
             ))}
           </div>
@@ -1303,30 +1689,38 @@ function CharacterSheetView({ character }: { character: Character }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <section className="space-y-6">
-          <SectionTitle icon={<Shield size={20} />} title="Desventajas" />
+          <SectionTitle icon={<Shield size={20} className="text-red-500" />} title="Desventajas" />
           <div className="flex flex-wrap gap-2">
             {character.hindrances.map((h, i) => (
-              <div key={i} className="px-4 py-2 bg-stone-100 border border-stone-200 rounded-lg text-sm font-bold text-stone-700">
+              <button 
+                key={i} 
+                onClick={() => setSelectedTrait({ name: h.name, description: h.description, type: `Desventaja ${h.type}` })}
+                className="px-4 py-2 bg-red-50 border border-red-100 rounded-lg text-sm font-bold text-red-700 hover:bg-red-100 transition-all active:scale-95 text-left"
+              >
                 {h.name} ({h.type})
-              </div>
+              </button>
             ))}
           </div>
         </section>
 
         <section className="space-y-6">
-          <SectionTitle icon={<Zap size={20} />} title="Ventajas" />
+          <SectionTitle icon={<Award size={20} className="text-emerald-500" />} title="Ventajas" />
           <div className="flex flex-wrap gap-2">
             {character.edges.map((e, i) => (
-              <div key={i} className="px-4 py-2 bg-stone-900 text-white rounded-lg text-sm font-bold shadow-md">
+              <button 
+                key={i} 
+                onClick={() => setSelectedTrait({ name: e.name, description: e.effects, type: 'Ventaja', requirements: e.requirements })}
+                className="px-4 py-2 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-lg text-sm font-bold shadow-sm hover:bg-emerald-100 transition-all active:scale-95 text-left"
+              >
                 {e.name}
-              </div>
+              </button>
             ))}
           </div>
         </section>
       </div>
 
       <section className="space-y-6">
-        <SectionTitle icon={<Backpack size={20} />} title="Equipo" />
+        <SectionTitle icon={<Backpack size={20} className="text-blue-500" />} title="Equipo" />
         <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
           <div className="flex flex-wrap gap-3">
             {character.gear.map((item, i) => (
@@ -1342,12 +1736,15 @@ function CharacterSheetView({ character }: { character: Character }) {
   );
 }
 
-function DerivedStat({ label, value }: { label: string, value: number }) {
+function DerivedStat({ label, value, onClick }: { label: string, value: number | string, onClick?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center w-24 h-24 bg-white border-2 border-stone-900 rounded-2xl shadow-lg">
-      <span className="text-[10px] font-black uppercase text-stone-400">{label}</span>
+    <button 
+      onClick={onClick}
+      className="flex flex-col items-center justify-center w-24 h-24 bg-white border-2 border-stone-900 rounded-2xl shadow-lg hover:bg-stone-50 transition-all active:scale-95 group"
+    >
+      <span className="text-[10px] font-black uppercase text-stone-400 group-hover:text-stone-600">{label}</span>
       <span className="text-3xl font-black text-stone-900">{value}</span>
-    </div>
+    </button>
   );
 }
 
