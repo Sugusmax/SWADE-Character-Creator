@@ -227,7 +227,7 @@ export const HINDRANCES: Hindrance[] = [
   { 
     name: 'Ciego', 
     type: 'Mayor', 
-    description: 'Tu héroe no puede ver. Sufre una penalización de -6 a todas las tiradas que dependan de la vista (como Disparar o Notar) y su Paso se reduce a la mitad. A cambio, suele desarrollar otros sentidos de forma excepcional y es inmune a los ataques basados en la luz o la ceguera visual.' 
+    description: 'Un individuo que ha perdido completamente la visión. Sufre una penalización de -6 a todas las tareas que dependan de la vista. Por el lado bueno, un personaje ciego recibe una ventaja adicional totalmente gratuita para compensar una desventaja tan seria.' 
   },
   { 
     name: 'Cobarde', 

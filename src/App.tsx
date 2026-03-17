@@ -267,7 +267,12 @@ const getSkillBonus = (char: Character, skillName: string): number => {
   let bonus = 0;
   
   // Global penalties
-  if (char.hindrances.some(h => h.name === 'Ciego')) bonus -= 6;
+  if (char.hindrances.some(h => h.name === 'Ciego')) {
+    const visualSkills = ['Disparar', 'Pelear', 'Pilotar', 'Conducir', 'Navegar', 'Reparar', 'Sanar', 'Investigar', 'Latrocinio', 'Sigilo', 'Notar', 'Atletismo'];
+    if (visualSkills.includes(skillName)) {
+      bonus -= 6;
+    }
+  }
 
   // Edges
   if (char.edges.some(e => e.name === 'Alerta') && skillName === 'Notar') bonus += 2;
@@ -313,7 +318,6 @@ const getSkillBonus = (char: Character, skillName: string): number => {
 
 const getAttributeBonus = (char: Character, attrName: string): number => {
   let bonus = 0;
-  if (char.hindrances.some(h => h.name === 'Ciego')) bonus -= 6;
   if (char.hindrances.some(h => h.name === 'Anciano') && (attrName === 'Fuerza' || attrName === 'Vigor')) bonus -= 1;
   if (char.hindrances.some(h => h.name === 'Anémico') && attrName === 'Vigor') bonus -= 1;
   if (char.hindrances.some(h => h.name === 'Apocado') && attrName === 'Espíritu') bonus -= 2;
@@ -451,8 +455,7 @@ export default function App() {
     if (char.edges.some(e => e.name === 'Acróbata')) parry += 1;
     
     // Final adjustments
-    if (char.hindrances.some(h => h.name === 'Ciego')) { pace = Math.max(1, Math.floor(pace / 2)); }
-
+    
     return {
       Paso: pace,
       Parada: parry,
@@ -613,7 +616,8 @@ export default function App() {
                     setPreviewHindranceType,
                     setPendingHindranceSpend,
                     previewEdgeName,
-                    setPreviewEdgeName
+                    setPreviewEdgeName,
+                    nextStep
                   })}
                 </motion.div>
               </AnimatePresence>
@@ -864,6 +868,7 @@ function renderStep(
     } | null) => void;
     previewEdgeName: string;
     setPreviewEdgeName: (name: string) => void;
+    nextStep: () => void;
   }
 ) {
   const { 
@@ -873,7 +878,8 @@ function renderStep(
     setPreviewHindranceType,
     setPendingHindranceSpend,
     previewEdgeName,
-    setPreviewEdgeName
+    setPreviewEdgeName,
+    nextStep
   } = extras;
 
   switch (step) {
@@ -886,17 +892,31 @@ function renderStep(
               type="text" 
               value={char.name}
               onChange={e => update({ name: e.target.value })}
-              placeholder="Ej: Red, el Bárbaro"
-              className="w-full text-4xl font-bold border-b-2 border-stone-200 focus:border-stone-900 outline-none py-2 transition-colors placeholder:text-stone-200"
+              onKeyDown={e => {
+                if (e.key === 'Enter' && char.name.trim()) {
+                  // Focus next input or go to next step if concept is also filled
+                  const conceptInput = document.getElementById('concept-input');
+                  if (conceptInput) conceptInput.focus();
+                }
+              }}
+              placeholder="Ej: Red"
+              className="w-full text-4xl font-bold focus:border-stone-900 outline-none py-2 transition-colors placeholder:text-stone-200"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-bold uppercase tracking-widest text-stone-400">Concepto</label>
-            <textarea 
+            <input 
+              id="concept-input"
+              type="text"
               value={char.concept}
               onChange={e => update({ concept: e.target.value })}
-              placeholder="Describe brevemente quién es tu personaje..."
-              className="w-full text-xl border-stone-200 focus:border-stone-900 outline-none py-2 transition-colors min-h-[150px] resize-none placeholder:text-stone-200"
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  nextStep();
+                }
+              }}
+              placeholder="Ej: Bárbaro de las tierras del norte"
+              className="w-full text-xl focus:border-stone-900 outline-none py-2 transition-colors placeholder:text-stone-200"
             />
           </div>
         </div>
@@ -932,7 +952,7 @@ function renderStep(
                     <p className="text-stone-600 leading-relaxed italic">{s.description}</p>
                   </div>
                   <div className="space-y-6">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-stone-400 border-b border-stone-200 pb-2">Capacidades de Especie</h4>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-stone-400 pb-2">Capacidades de Especie</h4>
                     <div className="space-y-6">
                       {s.abilities.map((a, i) => (
                         <div key={i} className="space-y-1">
@@ -942,7 +962,7 @@ function renderStep(
                       ))}
                     </div>
                     {s.heritageChoices && (
-                      <div className="space-y-4 pt-4 border-t border-stone-200">
+                      <div className="space-y-4 pt-4">
                         <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Elige tu Herencia</h4>
                         <div className="grid grid-cols-1 gap-3">
                           {s.heritageChoices.map(choice => (
@@ -1330,7 +1350,8 @@ function renderStep(
                              (char.spentHindrancePoints?.edges || 0) * 2;
       const availableHP_Edges = totalHP_Edges - spentHP_Edges;
       
-      const freeEdges = char.species === 'Humano' ? 1 : 0;
+      const isBlind = char.hindrances.some(h => h.name === 'Ciego');
+      const freeEdges = (char.species === 'Humano' ? 1 : 0) + (isBlind ? 1 : 0);
       const currentEdgesCount = char.edges.length;
       const canPickFree = currentEdgesCount < freeEdges;
       
@@ -1623,7 +1644,7 @@ function CharacterSheetView({ character }: { character: Character }) {
         )}
       </AnimatePresence>
 
-      <div className="flex flex-col md:flex-row justify-between gap-8 border-b border-stone-100 pb-10">
+      <div className="flex flex-col md:flex-row justify-between gap-8 pb-10">
         <div className="space-y-4">
           <h1 className="text-5xl font-black tracking-tighter uppercase text-stone-900">{character.name}</h1>
           <p className="text-xl text-stone-500 font-medium italic">{character.concept}</p>
@@ -1800,7 +1821,7 @@ function DerivedStat({ label, value, onClick }: { label: string, value: number |
 
 function SectionTitle({ icon, title }: { icon: React.ReactNode, title: string }) {
   return (
-    <div className="flex items-center gap-3 border-b-2 border-stone-900 pb-2">
+    <div className="flex items-center gap-3">
       <div className="text-stone-900">{icon}</div>
       <h3 className="text-xl font-black uppercase tracking-tighter text-stone-900">{title}</h3>
     </div>
