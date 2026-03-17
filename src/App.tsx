@@ -334,6 +334,7 @@ export default function App() {
     cost: number;
     onConfirm: () => void;
   } | null>(null);
+  const [characterToDelete, setCharacterToDelete] = useState<Character | null>(null);
 
   // Load characters from localStorage
   useEffect(() => {
@@ -412,30 +413,44 @@ export default function App() {
     let size = 0;
     let pace = 6;
     let parry = 2 + (Math.floor(Math.min(pelear, 12) / 2));
-    let runningDie = 6;
+    
+    // Running die logic (SWADE: base d6, can be modified by die types)
+    const dieSteps = [4, 6, 8, 10, 12];
+    let runningDieIndex = 1; // Start at d6
 
     // Species base
-    if (char.species === 'Aviano') { pace = 5; runningDie = 4; toughness -= 1; }
-    if (char.species === 'Enano') { pace = 5; runningDie = 4; }
-    if (char.species === 'Mediano') { size -= 1; toughness -= 1; pace = 5; runningDie = 4; }
+    if (char.species === 'Aviano') { pace = 5; runningDieIndex = 0; toughness -= 1; }
+    if (char.species === 'Enano') { pace = 5; runningDieIndex = 0; }
+    if (char.species === 'Mediano') { size -= 1; toughness -= 1; pace = 5; runningDieIndex = 0; }
     if (char.species === 'Acuariano') toughness += 1;
     if (char.species === 'Saurio') toughness += 2; // Armadura +2
 
+    // Hindrances that SET or REDUCE (Applied before Edges for base adjustment)
+    if (char.hindrances.some(h => h.name === 'Obeso')) { size += 1; toughness += 1; pace -= 1; runningDieIndex = 0; }
+    if (char.hindrances.some(h => h.name === 'Cojo')) {
+      runningDieIndex = 0;
+      const isMayor = char.hindrances.some(h => h.name === 'Cojo' && h.type === 'Mayor');
+      pace -= isMayor ? 2 : 1;
+    }
+    if (char.hindrances.some(h => h.name === 'Anciano')) {
+      pace -= 1;
+      runningDieIndex = Math.max(0, runningDieIndex - 1);
+    }
+    if (char.hindrances.some(h => h.name === 'Pequeño' || h.name === 'Menudo')) { size -= 1; toughness -= 1; }
+    if (char.hindrances.some(h => h.name === 'Joven' && h.type === 'Menor')) { size -= 1; toughness -= 1; }
+    if (char.hindrances.some(h => h.name === 'Joven' && h.type === 'Mayor')) { size -= 2; toughness -= 2; }
+
     // Edges
     if (char.edges.some(e => e.name === 'Fornido')) { size += 1; toughness += 1; }
-    if (char.edges.some(e => e.name === 'Pies Ligeros')) { pace += 2; runningDie = 8; }
+    if (char.edges.some(e => e.name === 'Pies Ligeros')) { 
+      pace += 2; 
+      runningDieIndex = Math.min(4, runningDieIndex + 1); 
+    }
     if (char.edges.some(e => e.name === 'Bloqueo')) parry += 1;
     if (char.edges.some(e => e.name === 'Arma Distintiva')) parry += 1;
     if (char.edges.some(e => e.name === 'Acróbata')) parry += 1;
     
-    // Hindrances
-    if (char.hindrances.some(h => h.name === 'Obeso')) { size += 1; toughness += 1; pace -= 1; runningDie = 4; }
-    if (char.hindrances.some(h => h.name === 'Pequeño' || h.name === 'Menudo')) { size -= 1; toughness -= 1; }
-    if (char.hindrances.some(h => h.name === 'Joven' && h.type === 'Menor')) { size -= 1; toughness -= 1; }
-    if (char.hindrances.some(h => h.name === 'Joven' && h.type === 'Mayor')) { size -= 2; toughness -= 2; }
-    if (char.hindrances.some(h => h.name === 'Anciano')) pace -= 1;
-    if (char.hindrances.some(h => h.name === 'Cojo' && h.type === 'Menor')) { pace -= 1; runningDie = 4; }
-    if (char.hindrances.some(h => h.name === 'Cojo' && h.type === 'Mayor')) { pace -= 2; runningDie = 4; }
+    // Final adjustments
     if (char.hindrances.some(h => h.name === 'Ciego')) { pace = Math.max(1, Math.floor(pace / 2)); }
 
     return {
@@ -443,7 +458,7 @@ export default function App() {
       Parada: parry,
       Dureza: toughness,
       Tamaño: size,
-      DadoCarrera: formatDice(runningDie),
+      DadoCarrera: formatDice(dieSteps[runningDieIndex]),
     };
   };
 
@@ -769,7 +784,7 @@ export default function App() {
                         <Download size={18} />
                       </button>
                       <button 
-                        onClick={() => deleteCharacter(char.id)}
+                        onClick={() => setCharacterToDelete(char)}
                         className="p-2 text-stone-400 hover:text-red-500 transition-colors"
                         title="Eliminar"
                       >
@@ -794,6 +809,41 @@ export default function App() {
         </div>
       )}
       </main>
+
+      {characterToDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100"
+          >
+            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Trash2 size={32} />
+            </div>
+            <h3 className="text-2xl font-black text-center mb-2">¿Borrar personaje?</h3>
+            <p className="text-stone-500 text-center mb-8">
+              ¿Estás seguro de que deseas borrar la ficha de <span className="font-bold text-stone-900">"{characterToDelete.name || 'Sin nombre'}"</span>? Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setCharacterToDelete(null)}
+                className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  deleteCharacter(characterToDelete.id);
+                  setCharacterToDelete(null);
+                }}
+                className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
+              >
+                Sí, borrar
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
