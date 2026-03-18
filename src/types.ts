@@ -73,4 +73,8 @@ export interface Character {
     skills: number;
     edges: number;
   };
+  bennies?: number;
+  wounds?: number;
+  fatigue?: number;
+  advances?: number;
 }
