@@ -32,7 +32,7 @@ import {
   Minus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Character, Dice, Species, Skill, Hindrance, Edge } from './types';
+import { Character, Dice, Species, Skill, Hindrance, Edge, Advance } from './types';
 import { SPECIES, ATTRIBUTES, SKILLS, HINDRANCES, EDGES } from './data';
 
 const STEPS = [
@@ -311,10 +311,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   let generalValue = 0;
   const situational: SituationalBonus[] = [];
   
-  // Global penalties (Wounds and Fatigue)
-  generalValue -= getWoundPenalty(char);
-  generalValue -= getFatiguePenalty(char);
-  
   // Permanent Skill Edges
   if (char.edges.some(e => e.name === 'Alerta') && skillName === 'Notar') generalValue += 2;
   if (char.edges.some(e => e.name === 'Atractivo') && (skillName === 'Persuadir' || skillName === 'Interpretar')) generalValue += 1;
@@ -388,15 +384,61 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   let generalValue = 0;
   const situational: SituationalBonus[] = [];
   
-  // Global penalties (Wounds and Fatigue)
-  generalValue -= getWoundPenalty(char);
-  generalValue -= getFatiguePenalty(char);
-
   if (char.hindrances.some(h => h.name === 'Anciano') && (attrName === 'Fuerza' || attrName === 'Vigor')) generalValue -= 1;
   if (char.hindrances.some(h => h.name === 'Anémico') && attrName === 'Vigor') generalValue -= 1;
   if (char.hindrances.some(h => h.name === 'Apocado') && attrName === 'Espíritu') generalValue -= 2;
   
   return { generalValue, situational };
+};
+
+const calculateDerived = (char: Character) => {
+  const vig = char.attributes.Vigor;
+  const pelear = char.skills['Pelear'] || 0;
+  
+  let toughness = 2 + (Math.floor(vig / 2));
+  let size = 0;
+  let pace = 6;
+  let parry = 2 + (Math.floor(pelear / 2));
+  
+  // Running die logic (SWADE: base d6, can be modified by die types)
+  const dieSteps = [4, 6, 8, 10, 12];
+  let runningDieIndex = 1; // Start at d6
+
+  // Species base
+  if (char.species === 'Aviano') { pace = 5; runningDieIndex = 0; toughness -= 1; }
+  if (char.species === 'Enano') { pace = 5; runningDieIndex = 0; }
+  if (char.species === 'Mediano') { size -= 1; toughness -= 1; pace = 5; runningDieIndex = 0; }
+  if (char.species === 'Acuariano') toughness += 1;
+  if (char.species === 'Saurio') toughness += 2; // Armadura +2
+
+  // Hindrances that SET or REDUCE (Applied before Edges for base adjustment)
+  if (char.hindrances.some(h => h.name === 'Obeso')) { size += 1; toughness += 1; pace -= 1; runningDieIndex = 0; }
+  if (char.hindrances.some(h => h.name === 'Cojo')) {
+    runningDieIndex = 0;
+    const isMayor = char.hindrances.some(h => h.name === 'Cojo' && h.type === 'Mayor');
+    pace -= isMayor ? 2 : 1;
+  }
+  if (char.hindrances.some(h => h.name === 'Anciano')) {
+    pace -= 1;
+    runningDieIndex = Math.max(0, runningDieIndex - 1);
+  }
+  if (char.hindrances.some(h => h.name === 'Pequeño' || h.name === 'Menudo')) { size -= 1; toughness -= 1; }
+  if (char.hindrances.some(h => h.name === 'Joven' && h.type === 'Menor')) { size -= 1; toughness -= 1; }
+  if (char.hindrances.some(h => h.name === 'Joven' && h.type === 'Mayor')) { size -= 2; toughness -= 2; }
+
+  // Edges that modify (Applied after base adjustments)
+  if (char.edges.some(e => e.name === 'Pies Ligeros')) { pace += 2; runningDieIndex = Math.min(4, runningDieIndex + 1); }
+  if (char.edges.some(e => e.name === 'Acróbata')) parry += 1;
+  if (char.edges.some(e => e.name === 'Bloqueo')) parry += 1;
+  if (char.edges.some(e => e.name === 'Fornido')) { size += 1; toughness += 1; }
+
+  return {
+    Paso: pace,
+    Parada: parry,
+    Dureza: toughness,
+    Tamaño: size,
+    DadoCarrera: `d${dieSteps[runningDieIndex]}`
+  };
 };
 
 export default function App() {
@@ -446,6 +488,7 @@ export default function App() {
       wounds: currentCharacter.wounds ?? 0,
       fatigue: currentCharacter.fatigue ?? 0,
       advances: currentCharacter.advances ?? 0,
+      derived: calculateDerived(currentCharacter),
     };
     setCharacters(prev => {
       const index = prev.findIndex(c => c.id === finalCharacter.id);
@@ -482,69 +525,18 @@ export default function App() {
       try {
         const char = JSON.parse(event.target?.result as string);
         if (char.id) {
-          setCharacters(prev => [...prev, { ...char, id: crypto.randomUUID() }]);
+          const importedChar = { 
+            ...char, 
+            id: crypto.randomUUID(),
+            derived: calculateDerived(char)
+          };
+          setCharacters(prev => [...prev, importedChar]);
         }
       } catch (err) {
         console.error('Failed to import character', err);
       }
     };
     reader.readAsText(file);
-  };
-
-  const calculateDerived = (char: Character) => {
-    const vig = char.attributes.Vigor;
-    const pelear = char.skills['Pelear'] || 0;
-    
-    let toughness = 2 + (Math.floor(Math.min(vig, 12) / 2));
-    let size = 0;
-    let pace = 6;
-    let parry = 2 + (Math.floor(Math.min(pelear, 12) / 2));
-    
-    // Running die logic (SWADE: base d6, can be modified by die types)
-    const dieSteps = [4, 6, 8, 10, 12];
-    let runningDieIndex = 1; // Start at d6
-
-    // Species base
-    if (char.species === 'Aviano') { pace = 5; runningDieIndex = 0; toughness -= 1; }
-    if (char.species === 'Enano') { pace = 5; runningDieIndex = 0; }
-    if (char.species === 'Mediano') { size -= 1; toughness -= 1; pace = 5; runningDieIndex = 0; }
-    if (char.species === 'Acuariano') toughness += 1;
-    if (char.species === 'Saurio') toughness += 2; // Armadura +2
-
-    // Hindrances that SET or REDUCE (Applied before Edges for base adjustment)
-    if (char.hindrances.some(h => h.name === 'Obeso')) { size += 1; toughness += 1; pace -= 1; runningDieIndex = 0; }
-    if (char.hindrances.some(h => h.name === 'Cojo')) {
-      runningDieIndex = 0;
-      const isMayor = char.hindrances.some(h => h.name === 'Cojo' && h.type === 'Mayor');
-      pace -= isMayor ? 2 : 1;
-    }
-    if (char.hindrances.some(h => h.name === 'Anciano')) {
-      pace -= 1;
-      runningDieIndex = Math.max(0, runningDieIndex - 1);
-    }
-    if (char.hindrances.some(h => h.name === 'Pequeño' || h.name === 'Menudo')) { size -= 1; toughness -= 1; }
-    if (char.hindrances.some(h => h.name === 'Joven' && h.type === 'Menor')) { size -= 1; toughness -= 1; }
-    if (char.hindrances.some(h => h.name === 'Joven' && h.type === 'Mayor')) { size -= 2; toughness -= 2; }
-
-    // Edges
-    if (char.edges.some(e => e.name === 'Fornido')) { size += 1; toughness += 1; }
-    if (char.edges.some(e => e.name === 'Pies Ligeros')) { 
-      pace += 2; 
-      runningDieIndex = Math.min(4, runningDieIndex + 1); 
-    }
-    if (char.edges.some(e => e.name === 'Bloqueo')) parry += 1;
-    if (char.edges.some(e => e.name === 'Arma Distintiva')) parry += 1;
-    if (char.edges.some(e => e.name === 'Acróbata')) parry += 1;
-    
-    // Final adjustments
-    
-    return {
-      Paso: pace,
-      Parada: parry,
-      Dureza: toughness,
-      Tamaño: size,
-      DadoCarrera: formatDice(dieSteps[runningDieIndex]),
-    };
   };
 
   const updateCharacter = (updates: Partial<Character>) => {
@@ -867,7 +859,7 @@ export default function App() {
 
                     <div className="flex gap-2">
                       <button 
-                        onClick={() => setViewingCharacter(char)}
+                        onClick={() => setViewingCharacter({ ...char, derived: calculateDerived(char) })}
                         className="flex-1 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors text-sm font-bold flex items-center justify-center gap-2"
                       >
                         <FileText size={16} />
@@ -1711,12 +1703,104 @@ const DERIVED_DESCRIPTIONS: { [key: string]: string } = {
   'Carrera': 'Es el dado que tiras cuando tu personaje realiza una acción de carrera para moverse más rápido en un asalto.'
 };
 
+const upgradeDie = (val: number): Dice => {
+  if (val === 4) return 6;
+  if (val === 6) return 8;
+  if (val === 8) return 10;
+  if (val === 10) return 12;
+  if (val === 12) return 13;
+  if (val === 13) return 14;
+  return val as Dice;
+};
+
+const getRank = (advances: number) => {
+  if (advances < 4) return 'Novato';
+  if (advances < 8) return 'Experimentado';
+  if (advances < 12) return 'Veterano';
+  if (advances < 16) return 'Heroico';
+  return 'Legendario';
+};
+
+const downgradeDie = (val: Dice): Dice => {
+  if (val === 14) return 13;
+  if (val === 13) return 12;
+  if (val === 12) return 10;
+  if (val === 10) return 8;
+  if (val === 8) return 6;
+  if (val === 6) return 4;
+  return 4;
+};
+
 function CharacterSheetView({ character, onUpdate }: { character: Character, onUpdate: (c: Character) => void }) {
   const [selectedTrait, setSelectedTrait] = useState<{ name: string, description: string, type?: string, requirements?: string } | null>(null);
+  const [isAddingAdvance, setIsAddingAdvance] = useState(false);
+  const [advanceType, setAdvanceType] = useState<'Attribute' | 'Skills' | 'Edge' | 'NewSkill' | null>(null);
+  const [selectedAdvanceSkills, setSelectedAdvanceSkills] = useState<string[]>([]);
+  const [selectedAdvanceAttribute, setSelectedAdvanceAttribute] = useState<string | null>(null);
+  const [selectedAdvanceEdge, setSelectedAdvanceEdge] = useState<Edge | null>(null);
+  const [newSkillName, setNewSkillName] = useState<string>('');
+  
+  const [rollResult, setRollResult] = useState<{
+    trait: string;
+    dice: string;
+    traitRoll: { die: number, result: number, explosions: number[] };
+    wildRoll?: { die: number, result: number, explosions: number[] };
+    modifier: number;
+    total: number;
+  } | null>(null);
+
   const speciesData = useMemo(() => SPECIES.find(s => s.name === character.species), [character.species]);
 
   const isIncapacitated = (character.wounds || 0) >= 4 || (character.fatigue || 0) >= 3;
   const totalPenalty = getWoundPenalty(character) + getFatiguePenalty(character);
+
+  const performRoll = (traitName: string, dieStr: string, isTraitRoll: boolean = true, traitModifier: number = 0, explodes: boolean = true) => {
+    // Handle d12+X format
+    let dieType = 6;
+    let baseModifier = 0;
+    
+    if (dieStr.includes('+')) {
+      const parts = dieStr.split('+');
+      dieType = parseInt(parts[0].replace('d', '')) || 6;
+      baseModifier = parseInt(parts[1]) || 0;
+    } else {
+      dieType = parseInt(dieStr.replace('d', '')) || 6;
+    }
+    
+    const rollSingleDie = (sides: number, canExplode: boolean) => {
+      let total = 0;
+      let explosions: number[] = [];
+      let currentRoll = 0;
+      do {
+        currentRoll = Math.floor(Math.random() * sides) + 1;
+        total += currentRoll;
+        explosions.push(currentRoll);
+      } while (canExplode && currentRoll === sides);
+      return { die: sides, result: total, explosions };
+    };
+
+    const traitRoll = rollSingleDie(dieType, explodes);
+    let wildRoll = undefined;
+    let finalTotal = traitRoll.result;
+
+    if (isTraitRoll) {
+      wildRoll = rollSingleDie(6, true);
+      finalTotal = Math.max(traitRoll.result, wildRoll.result);
+    }
+
+    const penalty = isTraitRoll ? totalPenalty : 0;
+    const totalModifier = traitModifier + baseModifier - penalty;
+    const totalWithMod = Math.max(1, finalTotal + totalModifier);
+
+    setRollResult({
+      trait: traitName,
+      dice: dieStr,
+      traitRoll,
+      wildRoll,
+      modifier: totalModifier,
+      total: totalWithMod
+    });
+  };
 
   const updatePlayState = (field: keyof Character, delta: number) => {
     const currentVal = (character[field] as number) || 0;
@@ -1731,6 +1815,59 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
     }
     
     onUpdate({ ...character, [field]: newVal });
+  };
+
+  const handleApplyAdvance = () => {
+    if (!advanceType) return;
+
+    const newChar = { ...character };
+    newChar.advances = (newChar.advances || 0) + 1;
+    const advanceId = Math.random().toString(36).substr(2, 9);
+    
+    let description = '';
+    let details = {};
+
+    if (advanceType === 'Attribute') {
+      if (!selectedAdvanceAttribute) return;
+      const attr = selectedAdvanceAttribute as keyof typeof character.attributes;
+      newChar.attributes[attr] = upgradeDie(newChar.attributes[attr]);
+      description = `Aumentar Atributo: ${attr}`;
+      details = { attribute: attr };
+    } else if (advanceType === 'Skills') {
+      if (selectedAdvanceSkills.length === 0) return;
+      selectedAdvanceSkills.forEach(skillName => {
+        newChar.skills[skillName] = upgradeDie(newChar.skills[skillName]);
+      });
+      description = `Aumentar Habilidades: ${selectedAdvanceSkills.join(', ')}`;
+      details = { skills: selectedAdvanceSkills };
+    } else if (advanceType === 'Edge') {
+      if (!selectedAdvanceEdge) return;
+      newChar.edges = [...newChar.edges, selectedAdvanceEdge];
+      description = `Nueva Ventaja: ${selectedAdvanceEdge.name}`;
+      details = { edge: selectedAdvanceEdge };
+    } else if (advanceType === 'NewSkill') {
+      if (!newSkillName) return;
+      newChar.skills[newSkillName] = 4;
+      description = `Nueva Habilidad: ${newSkillName}`;
+      details = { skillName: newSkillName };
+    }
+
+    const newAdvance: Advance = {
+      id: advanceId,
+      type: advanceType,
+      description,
+      details
+    };
+
+    newChar.advancesList = [...(newChar.advancesList || []), newAdvance];
+    newChar.derived = calculateDerived(newChar);
+    onUpdate(newChar);
+    setIsAddingAdvance(false);
+    setAdvanceType(null);
+    setSelectedAdvanceSkills([]);
+    setSelectedAdvanceAttribute(null);
+    setSelectedAdvanceEdge(null);
+    setNewSkillName('');
   };
 
   const getFatigueLabel = (val: number) => {
@@ -1749,6 +1886,77 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
   return (
     <div className="p-8 space-y-10 relative">
       <AnimatePresence>
+        {rollResult && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-stone-200 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-stone-900" />
+              
+              <button 
+                onClick={() => setRollResult(null)}
+                className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900 transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="text-center space-y-6">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-black text-stone-400 uppercase tracking-widest">Tirada de {rollResult.trait}</h3>
+                  <div className="text-5xl font-black text-stone-900 tracking-tighter">{rollResult.total}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col items-center">
+                    <span className="text-[10px] font-black uppercase text-stone-400 mb-2">Dado {rollResult.dice}</span>
+                    <div className="flex flex-wrap justify-center gap-1">
+                      {rollResult.traitRoll.explosions.map((e, i) => (
+                        <span key={i} className={`text-xl font-black ${i < rollResult.traitRoll.explosions.length - 1 ? 'text-amber-500' : 'text-stone-900'}`}>{e}</span>
+                      ))}
+                    </div>
+                    <div className="text-[10px] font-bold text-stone-500 mt-1">Total: {rollResult.traitRoll.result}</div>
+                  </div>
+
+                  {rollResult.wildRoll && (
+                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex flex-col items-center">
+                      <span className="text-[10px] font-black uppercase text-amber-600/60 mb-2">Dado Salvaje</span>
+                      <div className="flex flex-wrap justify-center gap-1">
+                        {rollResult.wildRoll.explosions.map((e, i) => (
+                          <span key={i} className={`text-xl font-black ${i < rollResult.wildRoll.explosions.length - 1 ? 'text-amber-500' : 'text-amber-700'}`}>{e}</span>
+                        ))}
+                      </div>
+                      <div className="text-[10px] font-bold text-amber-600 mt-1">Total: {rollResult.wildRoll.result}</div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {rollResult.modifier !== 0 && (
+                    <div className="flex items-center justify-center gap-2 py-2 px-4 bg-stone-100 rounded-full text-xs font-bold text-stone-600">
+                      Modificador total: {rollResult.modifier > 0 ? '+' : ''}{rollResult.modifier}
+                    </div>
+                  )}
+                  {totalPenalty > 0 && rollResult.wildRoll && (
+                    <div className="text-[9px] font-black text-red-500 uppercase tracking-widest">
+                      Incluye -{totalPenalty} por Heridas/Fatiga
+                    </div>
+                  )}
+                </div>
+
+                <button 
+                  onClick={() => setRollResult(null)}
+                  className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all shadow-lg"
+                >
+                  Listo
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
         {selectedTrait && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
             <motion.div 
@@ -1791,6 +1999,201 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
             </motion.div>
           </div>
         )}
+
+        {isAddingAdvance && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-stone-200 relative overflow-hidden max-h-[90vh] flex flex-col"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-stone-900" />
+              
+              <button 
+                onClick={() => {
+                  setIsAddingAdvance(false);
+                  setAdvanceType(null);
+                }}
+                className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900 transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="mb-8">
+                <h3 className="text-3xl font-black text-stone-900 uppercase tracking-tighter">Nuevo Avance</h3>
+                <p className="text-stone-500 font-medium">Elige cómo quieres mejorar a tu personaje.</p>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-2 space-y-8">
+                {!advanceType ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button 
+                      onClick={() => setAdvanceType('Attribute')}
+                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group"
+                    >
+                      <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Zap size={20} />
+                      </div>
+                      <div className="font-black uppercase tracking-widest text-xs text-stone-900">Atributo</div>
+                      <p className="text-[10px] text-stone-500 leading-relaxed">Sube un tipo de dado a un atributo (máx. una vez por Rango).</p>
+                    </button>
+                    
+                    <button 
+                      onClick={() => setAdvanceType('Skills')}
+                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group"
+                    >
+                      <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Sword size={20} />
+                      </div>
+                      <div className="font-black uppercase tracking-widest text-xs text-stone-900">Habilidades</div>
+                      <p className="text-[10px] text-stone-500 leading-relaxed">Sube dos habilidades que sean menores que su atributo vinculado.</p>
+                    </button>
+
+                    <button 
+                      onClick={() => setAdvanceType('Edge')}
+                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group"
+                    >
+                      <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Award size={20} />
+                      </div>
+                      <div className="font-black uppercase tracking-widest text-xs text-stone-900">Ventaja</div>
+                      <p className="text-[10px] text-stone-500 leading-relaxed">Elige una nueva ventaja para la que cumplas los requisitos.</p>
+                    </button>
+
+                    <button 
+                      onClick={() => setAdvanceType('NewSkill')}
+                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group"
+                    >
+                      <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Plus size={20} />
+                      </div>
+                      <div className="font-black uppercase tracking-widest text-xs text-stone-900">Nueva Habilidad</div>
+                      <p className="text-[10px] text-stone-500 leading-relaxed">Aprende una nueva habilidad a d4.</p>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <button 
+                      onClick={() => setAdvanceType(null)}
+                      className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors"
+                    >
+                      <ChevronLeft size={14} /> Volver
+                    </button>
+
+                    {advanceType === 'Attribute' && (
+                      <div className="grid grid-cols-1 gap-2">
+                        {ATTRIBUTES.map(attr => (
+                          <button
+                            key={attr}
+                            onClick={() => setSelectedAdvanceAttribute(attr)}
+                            className={`p-4 rounded-xl border transition-all text-left flex items-center justify-between ${
+                              selectedAdvanceAttribute === attr 
+                                ? 'bg-stone-900 border-stone-900 text-white shadow-lg' 
+                                : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'
+                            }`}
+                          >
+                            <span className="font-bold">{attr}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="font-mono opacity-60">{formatDice(character.attributes[attr as keyof typeof character.attributes])}</span>
+                              <ChevronRight size={14} />
+                              <span className="font-mono font-black">{formatDice(upgradeDie(character.attributes[attr as keyof typeof character.attributes]))}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {advanceType === 'Skills' && (
+                      <div className="space-y-4">
+                        <div className="text-xs font-black uppercase tracking-widest text-stone-400">Selecciona habilidades para subir</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {Object.entries(character.skills).map(([name, val]) => {
+                            const isSelected = selectedAdvanceSkills.includes(name);
+                            return (
+                              <button
+                                key={name}
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setSelectedAdvanceSkills(prev => prev.filter(s => s !== name));
+                                  } else {
+                                    setSelectedAdvanceSkills(prev => [...prev, name]);
+                                  }
+                                }}
+                                className={`p-3 rounded-xl border transition-all text-left flex items-center justify-between ${
+                                  isSelected 
+                                    ? 'bg-stone-900 border-stone-900 text-white shadow-md' 
+                                    : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'
+                                }`}
+                              >
+                                <span className="text-xs font-bold">{name}</span>
+                                <span className="font-mono text-xs opacity-60">{formatDice(val as number)}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {advanceType === 'Edge' && (
+                      <div className="space-y-4">
+                        <div className="text-xs font-black uppercase tracking-widest text-stone-400">Selecciona una nueva ventaja</div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {EDGES.filter(e => !character.edges.some(ce => ce.name === e.name)).map(edge => (
+                            <button
+                              key={edge.name}
+                              onClick={() => setSelectedAdvanceEdge(edge)}
+                              className={`p-4 rounded-xl border transition-all text-left ${
+                                selectedAdvanceEdge?.name === edge.name 
+                                  ? 'bg-stone-900 border-stone-900 text-white shadow-lg' 
+                                  : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'
+                              }`}
+                            >
+                              <div className="font-bold">{edge.name}</div>
+                              <div className="text-[10px] opacity-60 mt-1">{edge.requirements}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {advanceType === 'NewSkill' && (
+                      <div className="space-y-4">
+                        <div className="text-xs font-black uppercase tracking-widest text-stone-400">Elige una habilidad básica</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {SKILLS.filter(s => !character.skills[s.name]).map(skill => (
+                            <button
+                              key={skill.name}
+                              onClick={() => setNewSkillName(skill.name)}
+                              className={`p-3 rounded-xl border transition-all text-left ${
+                                newSkillName === skill.name 
+                                  ? 'bg-stone-900 border-stone-900 text-white shadow-md' 
+                                  : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'
+                              }`}
+                            >
+                              <span className="text-xs font-bold">{skill.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {advanceType && (
+                <div className="mt-8 pt-6 border-t border-stone-100">
+                  <button 
+                    onClick={handleApplyAdvance}
+                    className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all shadow-lg active:scale-95"
+                  >
+                    Confirmar Avance
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
 
       {isIncapacitated && (
@@ -1807,45 +2210,69 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
         </motion.div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between gap-8 pb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 pb-10 border-b border-stone-200">
         <div className="space-y-4">
-          <h1 className="text-5xl font-black tracking-tighter uppercase text-stone-900">{character.name}</h1>
-          <p className="text-xl text-stone-500 font-medium italic">{character.concept}</p>
-          <div className="flex flex-wrap gap-2">
-            <div className="inline-block px-4 py-1 bg-stone-900 text-white text-xs font-black uppercase tracking-widest rounded-full">
-              {character.species}
+          <div className="flex items-center gap-4">
+            <h1 className="text-5xl font-black tracking-tighter uppercase text-stone-900">{character.name}</h1>
+            <div className="px-4 py-1 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm">
+              {getRank(character.advances || 0)}
             </div>
-            {character.heritageChoice && (
-              <div className="inline-block px-4 py-1 bg-stone-200 text-stone-700 text-xs font-black uppercase tracking-widest rounded-full">
-                {character.heritageChoice}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="text-xl text-stone-500 font-medium italic">{character.concept}</p>
+            <div className="w-1.5 h-1.5 rounded-full bg-stone-300 hidden md:block" />
+            <div className="flex gap-2">
+              <div className="inline-block px-4 py-1 bg-stone-100 text-stone-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-stone-200">
+                {character.species}
               </div>
-            )}
+              {character.heritageChoice && (
+                <div className="inline-block px-4 py-1 bg-stone-50 text-stone-500 text-[10px] font-black uppercase tracking-widest rounded-full border border-stone-200">
+                  {character.heritageChoice}
+                </div>
+              )}
+            </div>
           </div>
         </div>
+        
+        <div className="flex items-center gap-6">
+          <div className="text-right">
+            <div className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-1">Avances</div>
+            <div className="text-3xl font-black text-stone-900 leading-none">{character.advances || 0}</div>
+          </div>
+          <button 
+            onClick={() => setIsAddingAdvance(true)}
+            className="group relative flex items-center gap-3 px-6 py-4 bg-stone-900 text-white rounded-2xl hover:bg-stone-800 transition-all active:scale-95 shadow-xl overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <TrendingUp size={20} className="relative z-10" />
+            <span className="relative z-10 font-black uppercase tracking-widest text-xs">Avanzar</span>
+          </button>
+        </div>
+      </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <DerivedStat 
             label="Paso" 
             value={character.derived.Paso} 
             bonus={-getWoundPenalty(character)}
-            onClick={() => setSelectedTrait({ name: 'Paso', description: DERIVED_DESCRIPTIONS['Paso'], type: 'Estadística Derivada' })}
+            onInfo={() => setSelectedTrait({ name: 'Paso', description: DERIVED_DESCRIPTIONS['Paso'], type: 'Estadística Derivada' })}
           />
           <DerivedStat 
             label="Carrera" 
             value={character.derived.DadoCarrera} 
-            onClick={() => setSelectedTrait({ name: 'Carrera', description: DERIVED_DESCRIPTIONS['Carrera'], type: 'Estadística Derivada' })}
+            onClick={() => performRoll('Carrera', character.derived.DadoCarrera, false, 0, false)}
+            onInfo={() => setSelectedTrait({ name: 'Carrera', description: DERIVED_DESCRIPTIONS['Carrera'], type: 'Estadística Derivada' })}
           />
           <DerivedStat 
             label="Parada" 
             value={character.derived.Parada} 
-            onClick={() => setSelectedTrait({ name: 'Parada', description: DERIVED_DESCRIPTIONS['Parada'], type: 'Estadística Derivada' })}
+            onInfo={() => setSelectedTrait({ name: 'Parada', description: DERIVED_DESCRIPTIONS['Parada'], type: 'Estadística Derivada' })}
           />
           <DerivedStat 
             label="Dureza" 
             value={character.derived.Dureza} 
-            onClick={() => setSelectedTrait({ name: 'Dureza', description: DERIVED_DESCRIPTIONS['Dureza'], type: 'Estadística Derivada' })}
+            onInfo={() => setSelectedTrait({ name: 'Dureza', description: DERIVED_DESCRIPTIONS['Dureza'], type: 'Estadística Derivada' })}
           />
         </div>
-      </div>
 
       {/* Tracking Section: Bennies, Wounds, Fatigue, Advances */}
       <div className="space-y-4">
@@ -1914,23 +2341,43 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <section className="space-y-6">
-          <SectionTitle icon={<Zap size={20} className="text-amber-500" />} title="Atributos" />
+          <SectionTitle 
+            icon={<Zap size={20} className="text-amber-500" />} 
+            title="Atributos" 
+            extra={totalPenalty > 0 && (
+              <span className="text-[10px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                Penalizador: -{totalPenalty}
+              </span>
+            )}
+          />
           <div className="grid grid-cols-1 gap-3">
             {Object.entries(character.attributes).map(([name, val]) => {
               const bonus = getAttributeBonus(character, name);
+              const displayBonus = bonus.generalValue - totalPenalty;
               return (
                 <button 
                   key={name} 
-                  onClick={() => setSelectedTrait({ name, description: ATTRIBUTE_DESCRIPTIONS[name], type: 'Atributo' })}
+                  onClick={() => performRoll(name, formatDice(val), true, bonus.generalValue)}
                   className="flex items-center justify-between p-4 bg-stone-50 rounded-xl border border-stone-100 hover:bg-stone-100 transition-all active:scale-[0.98] group"
                 >
-                  <span className="font-bold text-stone-500 uppercase text-xs tracking-widest group-hover:text-stone-700">{name}</span>
+                  <div className="flex flex-col items-start">
+                    <span className="font-bold text-stone-500 uppercase text-xs tracking-widest group-hover:text-stone-700">{name}</span>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTrait({ name, description: ATTRIBUTE_DESCRIPTIONS[name], type: 'Atributo' });
+                      }}
+                      className="text-[9px] text-stone-400 hover:text-stone-900 flex items-center gap-1 mt-1"
+                    >
+                      <Info size={10} /> Info
+                    </button>
+                  </div>
                   <span className="font-mono font-black text-2xl flex items-center">
                     {formatDice(val)}
                     <div className="flex items-center gap-2 ml-2">
-                      {bonus.generalValue !== 0 && (
-                        <span className={`text-xl font-black ${bonus.generalValue > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {bonus.generalValue > 0 ? '+' : ''}{bonus.generalValue}
+                      {displayBonus !== 0 && (
+                        <span className={`text-xl font-black ${displayBonus > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {displayBonus > 0 ? '+' : ''}{displayBonus}
                         </span>
                       )}
                       {bonus.situational.map((sit, idx) => (
@@ -1952,61 +2399,83 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
         </section>
 
         <section className="space-y-6">
-          <SectionTitle icon={<Sword size={20} className="text-stone-500" />} title="Habilidades" />
+          <SectionTitle 
+            icon={<Sword size={20} className="text-stone-500" />} 
+            title="Habilidades" 
+            extra={totalPenalty > 0 && (
+              <span className="text-[10px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                Penalizador: -{totalPenalty}
+              </span>
+            )}
+          />
           <div className="grid grid-cols-1 gap-2">
             {Object.entries(character.skills).map(([name, val]) => {
               const bonus = getSkillBonus(character, name);
+              const displayBonus = bonus.generalValue - totalPenalty;
               return (
-                <div key={name} className="flex items-center justify-between p-3 bg-white border border-stone-100 rounded-lg shadow-sm">
-                  <span className="font-bold text-stone-800">{name}</span>
-                  <span className="font-mono font-bold text-stone-600 flex items-center">
-                    {formatDice(val as number)}
-                    <div className="flex items-center gap-2 ml-2">
-                      {bonus.generalValue !== 0 && (
-                        <span className={`text-base font-black ${bonus.generalValue > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {bonus.generalValue > 0 ? '+' : ''}{bonus.generalValue}
-                        </span>
-                      )}
-                      {bonus.situational.map((sit, idx) => (
-                        <div key={idx} className="flex flex-col items-center">
-                          <span className={`text-[11px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : 'text-red-600'}`}>
-                            ({sit.value > 0 ? '+' : ''}{sit.value}*)
-                          </span>
-                          <span className={`text-[9px] italic leading-none mt-1 whitespace-nowrap ${sit.value > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                            *{sit.note}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </span>
+                <div key={name} className="flex items-start py-2 border-b border-stone-100 gap-4 group">
+                  <div className="w-32 shrink-0">
+                    <div className="font-bold text-stone-900">{name}</div>
+                    <button 
+                      onClick={() => setSelectedTrait({ name, description: SKILLS.find(s => s.name === name)?.description || '', type: 'Habilidad' })}
+                      className="text-[9px] text-stone-400 hover:text-stone-900 flex items-center gap-1 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Info size={10} /> Info
+                    </button>
+                  </div>
+                  <button 
+                    onClick={() => performRoll(name, formatDice(val as number), true, bonus.generalValue)}
+                    className="flex items-center gap-1 shrink-0 w-20 hover:bg-stone-100 rounded px-1 -mx-1 transition-colors"
+                  >
+                    <span className="font-mono font-bold text-stone-600">{formatDice(val as number)}</span>
+                    {displayBonus !== 0 && (
+                      <span className={`text-base font-black ${displayBonus > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {displayBonus > 0 ? '+' : ''}{displayBonus}
+                      </span>
+                    )}
+                  </button>
+                  <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
+                    {bonus.situational.map((sit, idx) => (
+                      <span key={idx} className={`text-[10px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : 'text-red-600'}`}>
+                        ({sit.value > 0 ? '+' : ''}{sit.value} {sit.note})
+                      </span>
+                    ))}
+                  </div>
                 </div>
               );
             })}
             {SKILLS.filter(s => s.isBasic && !character.skills[s.name]).map(s => {
               const bonus = getSkillBonus(character, s.name);
+              const displayBonus = bonus.generalValue - totalPenalty;
               return (
-                <div key={s.name} className="flex items-center justify-between p-3 bg-stone-50 border border-stone-100 rounded-lg opacity-60">
-                  <span className="font-bold text-stone-800">{s.name}</span>
-                  <span className="font-mono font-bold text-stone-600 flex items-center">
-                    d4
-                    <div className="flex items-center gap-2 ml-2">
-                      {bonus.generalValue !== 0 && (
-                        <span className={`text-base font-black ${bonus.generalValue > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {bonus.generalValue > 0 ? '+' : ''}{bonus.generalValue}
-                        </span>
-                      )}
-                      {bonus.situational.map((sit, idx) => (
-                        <div key={idx} className="flex flex-col items-center">
-                          <span className={`text-[11px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : 'text-red-600'}`}>
-                            ({sit.value > 0 ? '+' : ''}{sit.value}*)
-                          </span>
-                          <span className={`text-[9px] italic leading-none mt-1 whitespace-nowrap ${sit.value > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                            *{sit.note}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </span>
+                <div key={s.name} className="flex items-start py-2 border-b border-stone-100 opacity-50 gap-4 group">
+                  <div className="w-32 shrink-0">
+                    <div className="font-bold text-stone-700">{s.name}</div>
+                    <button 
+                      onClick={() => setSelectedTrait({ name: s.name, description: s.description, type: 'Habilidad Básica' })}
+                      className="text-[9px] text-stone-400 hover:text-stone-900 flex items-center gap-1 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Info size={10} /> Info
+                    </button>
+                  </div>
+                  <button 
+                    onClick={() => performRoll(s.name, 'd4', true, bonus.generalValue)}
+                    className="flex items-center gap-1 shrink-0 w-20 hover:bg-stone-100 rounded px-1 -mx-1 transition-colors"
+                  >
+                    <span className="font-mono font-bold text-stone-500">d4</span>
+                    {displayBonus !== 0 && (
+                      <span className={`text-base font-black ${displayBonus > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {displayBonus > 0 ? '+' : ''}{displayBonus}
+                      </span>
+                    )}
+                  </button>
+                  <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
+                    {bonus.situational.map((sit, idx) => (
+                      <span key={idx} className={`text-[10px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : 'text-red-600'}`}>
+                        ({sit.value > 0 ? '+' : ''}{sit.value} {sit.note})
+                      </span>
+                    ))}
+                  </div>
                 </div>
               );
             })}
@@ -2059,26 +2528,93 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
           </div>
         </div>
       </section>
+
+      {character.advancesList && character.advancesList.length > 0 && (
+        <section className="space-y-6 pt-10 border-t border-stone-200">
+          <div className="flex items-center justify-between">
+            <SectionTitle icon={<TrendingUp size={20} className="text-stone-500" />} title="Historial de Avances" />
+            <button 
+              onClick={() => {
+                const newChar = { ...character };
+                const lastAdvance = newChar.advancesList?.[newChar.advancesList.length - 1];
+                if (!lastAdvance) return;
+
+                // Reverse changes based on type
+                if (lastAdvance.type === 'Attribute') {
+                  const attr = lastAdvance.details.attribute as keyof typeof newChar.attributes;
+                  newChar.attributes[attr] = downgradeDie(newChar.attributes[attr]);
+                } else if (lastAdvance.type === 'Skills') {
+                  const skills = lastAdvance.details.skills as string[];
+                  skills.forEach(s => {
+                    newChar.skills[s] = downgradeDie(newChar.skills[s]);
+                  });
+                } else if (lastAdvance.type === 'Edge') {
+                  const edge = lastAdvance.details.edge as Edge;
+                  newChar.edges = newChar.edges.filter(e => e.name !== edge.name);
+                } else if (lastAdvance.type === 'NewSkill') {
+                  const skillName = lastAdvance.details.skillName as string;
+                  delete newChar.skills[skillName];
+                }
+
+                newChar.advancesList = newChar.advancesList?.slice(0, -1);
+                newChar.advances = (newChar.advances || 0) - 1;
+                newChar.derived = calculateDerived(newChar);
+                onUpdate(newChar);
+              }}
+              className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
+            >
+              Deshacer último avance
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {character.advancesList.map((adv, i) => (
+              <div key={adv.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex items-center gap-4 group hover:bg-stone-100 transition-colors">
+                <div className="w-10 h-10 bg-white border border-stone-200 rounded-xl flex items-center justify-center text-stone-900 font-black text-sm shadow-sm">
+                  {i + 1}
+                </div>
+                <div>
+                  <div className="text-xs font-black text-stone-900 uppercase tracking-tight">{adv.description}</div>
+                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-widest">{getRank(i)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
 
-function DerivedStat({ label, value, onClick, bonus }: { label: string, value: number | string, onClick?: () => void, bonus?: number }) {
+function DerivedStat({ label, value, onClick, bonus, onInfo }: { label: string, value: number | string, onClick?: () => void, bonus?: number, onInfo?: () => void }) {
   return (
-    <button 
-      onClick={onClick}
-      className="flex flex-col items-center justify-center w-24 h-24 bg-white border-2 border-stone-900 rounded-2xl shadow-lg hover:bg-stone-50 transition-all active:scale-95 group relative"
-    >
-      <span className="text-[10px] font-black uppercase text-stone-400 group-hover:text-stone-600">{label}</span>
-      <div className="flex items-baseline">
-        <span className="text-3xl font-black text-stone-900">{value}</span>
-        {bonus !== undefined && bonus !== 0 && (
-          <span className={`text-sm ml-1 font-bold ${bonus > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-            {bonus > 0 ? '+' : ''}{bonus}
-          </span>
-        )}
-      </div>
-    </button>
+    <div className="relative group">
+      <button 
+        onClick={onClick}
+        className="flex flex-col items-center justify-center w-full h-24 bg-white border-2 border-stone-900 rounded-2xl shadow-lg hover:bg-stone-50 transition-all active:scale-95"
+      >
+        <span className="text-[10px] font-black uppercase text-stone-400 group-hover:text-stone-600">{label}</span>
+        <div className="flex items-baseline">
+          <span className="text-3xl font-black text-stone-900">{value}</span>
+          {bonus !== undefined && bonus !== 0 && (
+            <span className={`text-sm ml-1 font-bold ${bonus > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              {bonus > 0 ? '+' : ''}{bonus}
+            </span>
+          )}
+        </div>
+      </button>
+      {onInfo && (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onInfo();
+          }}
+          className="absolute top-2 right-2 p-1 text-stone-300 hover:text-stone-900 transition-colors"
+          title={`Info sobre ${label}`}
+        >
+          <Info size={12} />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -2121,11 +2657,12 @@ function TrackingToken({ icon, label, value, color, onAdd, onSub, statusLabel }:
   );
 }
 
-function SectionTitle({ icon, title }: { icon: React.ReactNode, title: string }) {
+function SectionTitle({ icon, title, extra }: { icon: React.ReactNode, title: string, extra?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3">
       <div className="text-stone-900">{icon}</div>
       <h3 className="text-xl font-black uppercase tracking-tighter text-stone-900">{title}</h3>
+      {extra}
     </div>
   );
 }

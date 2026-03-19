@@ -11,6 +11,7 @@ export interface Skill {
   attribute: string;
   value: Dice | 0;
   isBasic: boolean;
+  description: string;
 }
 
 export interface Hindrance {
@@ -42,6 +43,13 @@ export interface Species {
     attributeBonuses: { [key: string]: Dice };
     skillBonuses?: { [key: string]: Dice };
   }[];
+}
+
+export interface Advance {
+  id: string;
+  type: 'Attribute' | 'Skills' | 'Edge' | 'NewSkill';
+  description: string;
+  details: any;
 }
 
 export interface Character {
@@ -77,4 +85,5 @@ export interface Character {
   wounds?: number;
   fatigue?: number;
   advances?: number;
+  advancesList?: Advance[];
 }
