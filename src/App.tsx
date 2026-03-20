@@ -227,19 +227,42 @@ const calculateHindrancePoints = (hindrances: Hindrance[]) => {
   return Math.min(4, points);
 };
 
+const RANKS = ['Novato', 'Experimentado', 'Veterano', 'Heroico', 'Legendario'];
+
+const getRank = (advances: number) => {
+  if (advances < 5) return 'Novato';
+  if (advances < 9) return 'Experimentado';
+  if (advances < 13) return 'Veterano';
+  if (advances < 17) return 'Heroico';
+  return 'Legendario';
+};
+
 const checkRequirements = (char: Character, requirements: string): { met: boolean; reason?: string } => {
+  // Use the number of advances already taken + 1 to determine the rank of the NEXT advance
+  // If char.advances is undefined (creation), we treat it as rank Novato (0 or 1)
+  const advancesCount = char.advances !== undefined ? char.advances + 1 : 0;
+  const currentRank = getRank(advancesCount);
+  const currentRankIndex = RANKS.indexOf(currentRank);
+
   if (requirements === 'Novato') return { met: true };
   
   const parts = requirements.split(',').map(p => p.trim());
   const unmet: string[] = [];
 
   for (const part of parts) {
-    if (part === 'Novato') continue;
+    if (RANKS.includes(part)) {
+      const reqRankIndex = RANKS.indexOf(part);
+      if (currentRankIndex < reqRankIndex) {
+        unmet.push(`Rango: ${part}`);
+      }
+      continue;
+    }
     
-    // Check for "Mando" (Edge requirement)
-    if (part === 'Mando') {
-      if (!char.edges.some(e => e.name === 'Mando')) {
-        unmet.push('Ventaja: Mando');
+    // Check for Edge requirements (generic)
+    const isEdgeRequirement = EDGES.some(e => e.name === part);
+    if (isEdgeRequirement) {
+      if (!char.edges.some(e => e.name === part)) {
+        unmet.push(`Ventaja: ${part}`);
       }
       continue;
     }
@@ -391,6 +414,14 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   return { generalValue, situational };
 };
 
+const getArmorBonus = (char: Character) => {
+  let armor = 0;
+  if (char.armor && char.armor.length > 0) {
+    armor = Math.max(...char.armor.map(a => a.bonus));
+  }
+  return armor;
+};
+
 const calculateDerived = (char: Character) => {
   const vig = char.attributes.Vigor;
   const pelear = char.skills['Pelear'] || 0;
@@ -432,10 +463,14 @@ const calculateDerived = (char: Character) => {
   if (char.edges.some(e => e.name === 'Bloqueo')) parry += 1;
   if (char.edges.some(e => e.name === 'Fornido')) { size += 1; toughness += 1; }
 
+  // Gear bonuses
+  const armorBonus = getArmorBonus(char);
+  const shieldParry = char.shield?.parryBonus || 0;
+
   return {
     Paso: pace,
-    Parada: parry,
-    Dureza: toughness,
+    Parada: parry + shieldParry,
+    Dureza: toughness + armorBonus,
     Tamaño: size,
     DadoCarrera: `d${dieSteps[runningDieIndex]}`
   };
@@ -637,8 +672,9 @@ export default function App() {
           <CharacterSheetView 
             character={viewingCharacter} 
             onUpdate={(updated) => {
-              setCharacters(prev => prev.map(c => c.id === updated.id ? updated : c));
-              setViewingCharacter(updated);
+              const next = { ...updated, derived: calculateDerived(updated) };
+              setCharacters(prev => prev.map(c => c.id === next.id ? next : c));
+              setViewingCharacter(next);
             }}
           />
         </div>
@@ -1058,10 +1094,18 @@ function renderStep(
                         <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Elige tu Herencia</h4>
                         <div className="grid grid-cols-1 gap-3">
                           {s.heritageChoices.map(choice => (
-                            <button
+                            <div
                               key={choice.name}
+                              role="button"
+                              tabIndex={0}
                               onClick={() => update({ heritageChoice: choice.name })}
-                              className={`p-4 rounded-xl border-2 text-left transition-all ${
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  update({ heritageChoice: choice.name });
+                                }
+                              }}
+                              className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                                 char.heritageChoice === choice.name
                                   ? 'border-stone-900 bg-stone-900 text-white shadow-md'
                                   : 'border-stone-100 bg-white hover:border-stone-300 text-stone-700'
@@ -1071,7 +1115,7 @@ function renderStep(
                               <div className={`text-xs mt-1 ${char.heritageChoice === choice.name ? 'text-stone-300' : 'text-stone-500'}`}>
                                 {choice.description}
                               </div>
-                            </button>
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -1713,12 +1757,31 @@ const upgradeDie = (val: number): Dice => {
   return val as Dice;
 };
 
-const getRank = (advances: number) => {
-  if (advances < 4) return 'Novato';
-  if (advances < 8) return 'Experimentado';
-  if (advances < 12) return 'Veterano';
-  if (advances < 16) return 'Heroico';
-  return 'Legendario';
+const canTakeAttributeAdvance = (char: Character) => {
+  const advances = char.advancesList || [];
+  // Use the number of advances already taken to determine the rank of the NEXT advance
+  const currentAdvanceCount = char.advances || advances.length || 0;
+  const nextAdvanceNumber = currentAdvanceCount + 1;
+  const nextAdvanceRank = getRank(nextAdvanceNumber);
+  
+  if (nextAdvanceRank === 'Legendario') {
+    // In Legendary, once every five advances (every 10 XP)
+    const lastAttributeAdvanceIndex = [...advances].reverse().findIndex(adv => adv.type === 'Attribute');
+    if (lastAttributeAdvanceIndex === -1) return true; // Never taken one
+    
+    // The index in the array is (advanceNumber - 1)
+    const lastAttributeAdvanceNumber = (advances.length - 1 - lastAttributeAdvanceIndex) + 1;
+    const advancesSinceLast = nextAdvanceNumber - lastAttributeAdvanceNumber;
+    return advancesSinceLast >= 5;
+  }
+
+  // Check if any previous advance in the SAME rank was an attribute increase
+  const alreadyTakenInRank = advances.some((adv, idx) => {
+    const advanceNumber = idx + 1;
+    return adv.type === 'Attribute' && getRank(advanceNumber) === nextAdvanceRank;
+  });
+
+  return !alreadyTakenInRank;
 };
 
 const downgradeDie = (val: Dice): Dice => {
@@ -1734,6 +1797,12 @@ const downgradeDie = (val: Dice): Dice => {
 function CharacterSheetView({ character, onUpdate }: { character: Character, onUpdate: (c: Character) => void }) {
   const [selectedTrait, setSelectedTrait] = useState<{ name: string, description: string, type?: string, requirements?: string } | null>(null);
   const [isAddingAdvance, setIsAddingAdvance] = useState(false);
+  const [isAddingWeapon, setIsAddingWeapon] = useState(false);
+  const [isAddingArmor, setIsAddingArmor] = useState(false);
+  const [isAddingShield, setIsAddingShield] = useState(false);
+  const [newWeapon, setNewWeapon] = useState({ name: '', damage: '', range: '', ap: 0, notes: '' });
+  const [newArmor, setNewArmor] = useState({ name: '', bonus: 0, notes: '' });
+  const [newShield, setNewShield] = useState({ name: '', parryBonus: 0, coverBonus: 0, notes: '' });
   const [advanceType, setAdvanceType] = useState<'Attribute' | 'Skills' | 'Edge' | 'NewSkill' | null>(null);
   const [selectedAdvanceSkills, setSelectedAdvanceSkills] = useState<string[]>([]);
   const [selectedAdvanceAttribute, setSelectedAdvanceAttribute] = useState<string | null>(null);
@@ -1820,17 +1889,31 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
   const handleApplyAdvance = () => {
     if (!advanceType) return;
 
-    const newChar = { ...character };
-    newChar.advances = (newChar.advances || 0) + 1;
-    const advanceId = Math.random().toString(36).substr(2, 9);
+    // Deep copy to avoid state mutation issues
+    const newChar = { 
+      ...character,
+      attributes: { ...character.attributes },
+      skills: { ...character.skills },
+      edges: [...character.edges],
+      advancesList: [...(character.advancesList || [])]
+    };
     
     let description = '';
     let details = {};
 
     if (advanceType === 'Attribute') {
       if (!selectedAdvanceAttribute) return;
+      if (!canTakeAttributeAdvance(character)) return;
+
       const attr = selectedAdvanceAttribute as keyof typeof character.attributes;
-      newChar.attributes[attr] = upgradeDie(newChar.attributes[attr]);
+      const limits = getAttributeLimits(attr, character.species, character.heritageChoice, character.hindrances);
+      const currentVal = character.attributes[attr];
+      
+      if (currentVal >= limits.max) {
+        return;
+      }
+
+      newChar.attributes[attr] = upgradeDie(currentVal);
       description = `Aumentar Atributo: ${attr}`;
       details = { attribute: attr };
     } else if (advanceType === 'Skills') {
@@ -1842,6 +1925,8 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
       details = { skills: selectedAdvanceSkills };
     } else if (advanceType === 'Edge') {
       if (!selectedAdvanceEdge) return;
+      const req = checkRequirements(character, selectedAdvanceEdge.requirements);
+      if (!req.met) return;
       newChar.edges = [...newChar.edges, selectedAdvanceEdge];
       description = `Nueva Ventaja: ${selectedAdvanceEdge.name}`;
       details = { edge: selectedAdvanceEdge };
@@ -1852,6 +1937,9 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
       details = { skillName: newSkillName };
     }
 
+    const advanceId = Math.random().toString(36).substr(2, 9);
+    newChar.advances = (newChar.advances || 0) + 1;
+
     const newAdvance: Advance = {
       id: advanceId,
       type: advanceType,
@@ -1859,7 +1947,16 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
       details
     };
 
-    newChar.advancesList = [...(newChar.advancesList || []), newAdvance];
+    newChar.advancesList = [...newChar.advancesList, newAdvance];
+    
+    // Recalculate resources that might change with advances (like Bennies from 'Afortunado')
+    const oldBenniesMax = calculateStartingBennies(character);
+    const newBenniesMax = calculateStartingBennies(newChar);
+    const benniesDelta = newBenniesMax - oldBenniesMax;
+    if (benniesDelta !== 0) {
+      newChar.bennies = (newChar.bennies !== undefined ? newChar.bennies : oldBenniesMax) + benniesDelta;
+    }
+
     newChar.derived = calculateDerived(newChar);
     onUpdate(newChar);
     setIsAddingAdvance(false);
@@ -1868,6 +1965,65 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
     setSelectedAdvanceAttribute(null);
     setSelectedAdvanceEdge(null);
     setNewSkillName('');
+  };
+
+  const handleAddWeapon = () => {
+    if (!newWeapon.name || !newWeapon.damage) return;
+    const newChar = { ...character, weapons: [...(character.weapons || []), newWeapon] };
+    onUpdate(newChar);
+    setNewWeapon({ name: '', damage: '', range: '', ap: 0, notes: '' });
+    setIsAddingWeapon(false);
+  };
+
+  const handleAddArmor = () => {
+    if (!newArmor.name) return;
+    const newChar = { ...character, armor: [...(character.armor || []), newArmor] };
+    newChar.derived = calculateDerived(newChar);
+    onUpdate(newChar);
+    setNewArmor({ name: '', bonus: 0, notes: '' });
+    setIsAddingArmor(false);
+  };
+
+  const handleAddShield = () => {
+    if (!newShield.name) return;
+    const newChar = { ...character, shield: newShield };
+    newChar.derived = calculateDerived(newChar);
+    onUpdate(newChar);
+    setNewShield({ name: '', parryBonus: 0, coverBonus: 0, notes: '' });
+    setIsAddingShield(false);
+  };
+
+  const removeWeapon = (idx: number) => {
+    const newWeapons = [...(character.weapons || [])];
+    newWeapons.splice(idx, 1);
+    onUpdate({ ...character, weapons: newWeapons });
+  };
+
+  const removeArmor = (idx: number) => {
+    const newArmor = [...(character.armor || [])];
+    newArmor.splice(idx, 1);
+    const newChar = { ...character, armor: newArmor };
+    newChar.derived = calculateDerived(newChar);
+    onUpdate(newChar);
+  };
+
+  const removeShield = () => {
+    const newChar = { ...character, shield: undefined };
+    newChar.derived = calculateDerived(newChar);
+    onUpdate(newChar);
+  };
+
+  const removeGear = (idx: number) => {
+    const newGear = [...character.gear];
+    newGear.splice(idx, 1);
+    onUpdate({ ...character, gear: newGear });
+  };
+
+  const [newGearItemLocal, setNewGearItemLocal] = useState('');
+  const handleAddGearLocal = () => {
+    if (!newGearItemLocal.trim()) return;
+    onUpdate({ ...character, gear: [...character.gear, newGearItemLocal.trim()] });
+    setNewGearItemLocal('');
   };
 
   const getFatigueLabel = (val: number) => {
@@ -2028,49 +2184,97 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
               <div className="flex-1 overflow-y-auto pr-2 space-y-8">
                 {!advanceType ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button 
-                      onClick={() => setAdvanceType('Attribute')}
-                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group"
+                    <div 
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        if (canTakeAttributeAdvance(character)) {
+                          setAdvanceType('Attribute');
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          if (canTakeAttributeAdvance(character)) {
+                            setAdvanceType('Attribute');
+                          }
+                        }
+                      }}
+                      className={`p-6 rounded-2xl border transition-all text-left space-y-2 group cursor-pointer ${
+                        canTakeAttributeAdvance(character)
+                          ? 'bg-stone-50 border-stone-100 hover:bg-stone-100'
+                          : 'bg-stone-50/50 border-stone-100 opacity-50 cursor-not-allowed'
+                      }`}
                     >
-                      <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform ${
+                        canTakeAttributeAdvance(character) ? 'bg-amber-100 text-amber-600 group-hover:scale-110' : 'bg-stone-100 text-stone-400'
+                      }`}>
                         <Zap size={20} />
                       </div>
                       <div className="font-black uppercase tracking-widest text-xs text-stone-900">Atributo</div>
-                      <p className="text-[10px] text-stone-500 leading-relaxed">Sube un tipo de dado a un atributo (máx. una vez por Rango).</p>
-                    </button>
+                      <p className="text-[10px] text-stone-500 leading-relaxed">
+                        {canTakeAttributeAdvance(character) 
+                          ? 'Sube un tipo de dado a un atributo (máx. una vez por Rango).'
+                          : 'Ya has subido un atributo en este Rango.'}
+                      </p>
+                    </div>
                     
-                    <button 
+                    <div 
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setAdvanceType('Skills')}
-                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setAdvanceType('Skills');
+                        }
+                      }}
+                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group cursor-pointer"
                     >
                       <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Sword size={20} />
                       </div>
                       <div className="font-black uppercase tracking-widest text-xs text-stone-900">Habilidades</div>
                       <p className="text-[10px] text-stone-500 leading-relaxed">Sube dos habilidades que sean menores que su atributo vinculado.</p>
-                    </button>
+                    </div>
 
-                    <button 
+                    <div 
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setAdvanceType('Edge')}
-                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setAdvanceType('Edge');
+                        }
+                      }}
+                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group cursor-pointer"
                     >
                       <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Award size={20} />
                       </div>
                       <div className="font-black uppercase tracking-widest text-xs text-stone-900">Ventaja</div>
                       <p className="text-[10px] text-stone-500 leading-relaxed">Elige una nueva ventaja para la que cumplas los requisitos.</p>
-                    </button>
+                    </div>
 
-                    <button 
+                    <div 
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setAdvanceType('NewSkill')}
-                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setAdvanceType('NewSkill');
+                        }
+                      }}
+                      className="p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all text-left space-y-2 group cursor-pointer"
                     >
                       <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Plus size={20} />
                       </div>
                       <div className="font-black uppercase tracking-widest text-xs text-stone-900">Nueva Habilidad</div>
                       <p className="text-[10px] text-stone-500 leading-relaxed">Aprende una nueva habilidad a d4.</p>
-                    </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -2084,10 +2288,18 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                     {advanceType === 'Attribute' && (
                       <div className="grid grid-cols-1 gap-2">
                         {ATTRIBUTES.map(attr => (
-                          <button
+                          <div
                             key={attr}
+                            role="button"
+                            tabIndex={0}
                             onClick={() => setSelectedAdvanceAttribute(attr)}
-                            className={`p-4 rounded-xl border transition-all text-left flex items-center justify-between ${
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setSelectedAdvanceAttribute(attr);
+                              }
+                            }}
+                            className={`p-4 rounded-xl border transition-all text-left flex items-center justify-between cursor-pointer ${
                               selectedAdvanceAttribute === attr 
                                 ? 'bg-stone-900 border-stone-900 text-white shadow-lg' 
                                 : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'
@@ -2099,17 +2311,26 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                               <ChevronRight size={14} />
                               <span className="font-mono font-black">{formatDice(upgradeDie(character.attributes[attr as keyof typeof character.attributes]))}</span>
                             </div>
-                          </button>
+                          </div>
                         ))}
                       </div>
                     )}
 
                     {advanceType === 'Skills' && (
                       <div className="space-y-4">
-                        <div className="text-xs font-black uppercase tracking-widest text-stone-400">Selecciona habilidades para subir</div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-black uppercase tracking-widest text-stone-400">Selecciona habilidades para subir</div>
+                          <p className="text-[10px] text-stone-500 italic leading-tight">
+                            Puedes subir 2 habilidades que sean menores que su atributo vinculado, o 1 habilidad que sea igual o mayor.
+                          </p>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {Object.entries(character.skills).map(([name, val]) => {
                             const isSelected = selectedAdvanceSkills.includes(name);
+                            const skillDef = SKILLS.find(s => s.name === name);
+                            const attrVal = skillDef ? character.attributes[skillDef.attribute as keyof typeof character.attributes] : 4;
+                            const isLowerThanAttr = (val as number) < attrVal;
+
                             return (
                               <button
                                 key={name}
@@ -2117,7 +2338,22 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                                   if (isSelected) {
                                     setSelectedAdvanceSkills(prev => prev.filter(s => s !== name));
                                   } else {
-                                    setSelectedAdvanceSkills(prev => [...prev, name]);
+                                    const nextSkills = [...selectedAdvanceSkills, name];
+                                    if (nextSkills.length > 2) return;
+                                    
+                                    if (nextSkills.length === 2) {
+                                      // Both must be lower than their linked attribute
+                                      const allLower = nextSkills.every(sName => {
+                                        const sDef = SKILLS.find(s => s.name === sName);
+                                        if (!sDef) return false;
+                                        const aVal = character.attributes[sDef.attribute as keyof typeof character.attributes];
+                                        const sVal = character.skills[sName];
+                                        return sVal < aVal;
+                                      });
+                                      if (!allLower) return;
+                                    }
+                                    
+                                    setSelectedAdvanceSkills(nextSkills);
                                   }
                                 }}
                                 className={`p-3 rounded-xl border transition-all text-left flex items-center justify-between ${
@@ -2126,8 +2362,17 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                                     : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'
                                 }`}
                               >
-                                <span className="text-xs font-bold">{name}</span>
-                                <span className="font-mono text-xs opacity-60">{formatDice(val as number)}</span>
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-bold">{name}</span>
+                                  <span className="text-[9px] opacity-60 uppercase tracking-tighter">
+                                    ({skillDef?.attribute}: {formatDice(attrVal)})
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-xs opacity-60">{formatDice(val as number)}</span>
+                                  {isSelected && <ChevronRight size={10} />}
+                                  {isSelected && <span className="font-mono text-xs font-black">{formatDice(upgradeDie(val as number))}</span>}
+                                </div>
                               </button>
                             );
                           })}
@@ -2139,20 +2384,47 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                       <div className="space-y-4">
                         <div className="text-xs font-black uppercase tracking-widest text-stone-400">Selecciona una nueva ventaja</div>
                         <div className="grid grid-cols-1 gap-2">
-                          {EDGES.filter(e => !character.edges.some(ce => ce.name === e.name)).map(edge => (
-                            <button
-                              key={edge.name}
-                              onClick={() => setSelectedAdvanceEdge(edge)}
-                              className={`p-4 rounded-xl border transition-all text-left ${
-                                selectedAdvanceEdge?.name === edge.name 
-                                  ? 'bg-stone-900 border-stone-900 text-white shadow-lg' 
-                                  : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'
-                              }`}
-                            >
-                              <div className="font-bold">{edge.name}</div>
-                              <div className="text-[10px] opacity-60 mt-1">{edge.requirements}</div>
-                            </button>
-                          ))}
+                          {EDGES.filter(e => !character.edges.some(ce => ce.name === e.name)).map(edge => {
+                            const req = checkRequirements(character, edge.requirements);
+                            return (
+                              <div
+                                key={edge.name}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => {
+                                  if (req.met) {
+                                    setSelectedAdvanceEdge(edge);
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    if (req.met) {
+                                      setSelectedAdvanceEdge(edge);
+                                    }
+                                  }
+                                }}
+                                className={`p-4 rounded-xl border transition-all text-left ${
+                                  !req.met 
+                                    ? 'bg-stone-50/50 border-stone-100 opacity-50 cursor-not-allowed'
+                                    : selectedAdvanceEdge?.name === edge.name 
+                                      ? 'bg-stone-900 border-stone-900 text-white shadow-lg cursor-pointer' 
+                                      : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100 cursor-pointer'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="font-bold">{edge.name}</div>
+                                  {!req.met && <AlertCircle size={14} className="text-red-400" />}
+                                </div>
+                                <div className="text-[10px] opacity-60 mt-1">Requisitos: {edge.requirements}</div>
+                                {!req.met && (
+                                  <div className="text-[9px] font-black text-red-500 uppercase tracking-widest mt-2">
+                                    {req.reason}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -2165,13 +2437,19 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                             <button
                               key={skill.name}
                               onClick={() => setNewSkillName(skill.name)}
-                              className={`p-3 rounded-xl border transition-all text-left ${
+                              className={`p-3 rounded-xl border transition-all text-left flex items-center justify-between ${
                                 newSkillName === skill.name 
                                   ? 'bg-stone-900 border-stone-900 text-white shadow-md' 
                                   : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'
                               }`}
                             >
-                              <span className="text-xs font-bold">{skill.name}</span>
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold">{skill.name}</span>
+                                <span className="text-[9px] opacity-60 uppercase tracking-tighter">
+                                  ({skill.attribute}: {formatDice(character.attributes[skill.attribute as keyof typeof character.attributes])})
+                                </span>
+                              </div>
+                              {newSkillName === skill.name && <span className="font-mono text-xs font-black">d4</span>}
                             </button>
                           ))}
                         </div>
@@ -2185,12 +2463,91 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                 <div className="mt-8 pt-6 border-t border-stone-100">
                   <button 
                     onClick={handleApplyAdvance}
-                    className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all shadow-lg active:scale-95"
+                    disabled={
+                      (advanceType === 'Edge' && (!selectedAdvanceEdge || !checkRequirements(character, selectedAdvanceEdge.requirements).met)) ||
+                      (advanceType === 'Attribute' && (!selectedAdvanceAttribute || !canTakeAttributeAdvance(character))) ||
+                      (advanceType === 'Skills' && selectedAdvanceSkills.length === 0) ||
+                      (advanceType === 'NewSkill' && (!newSkillName || newSkillName.length === 0))
+                    }
+                    className={`w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all shadow-lg active:scale-95 ${
+                      ((advanceType === 'Edge' && (!selectedAdvanceEdge || !checkRequirements(character, selectedAdvanceEdge.requirements).met)) ||
+                      (advanceType === 'Attribute' && (!selectedAdvanceAttribute || !canTakeAttributeAdvance(character))) ||
+                      (advanceType === 'Skills' && selectedAdvanceSkills.length === 0) ||
+                      (advanceType === 'NewSkill' && (!newSkillName || newSkillName.length === 0)))
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                    }`}
                   >
                     Confirmar Avance
                   </button>
                 </div>
               )}
+            </motion.div>
+          </div>
+        )}
+
+        {isAddingWeapon && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-200 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-stone-900" />
+              <button onClick={() => setIsAddingWeapon(false)} className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900"><X size={20} /></button>
+              <h3 className="text-2xl font-black text-stone-900 uppercase tracking-tighter mb-6">Nueva Arma</h3>
+              <div className="space-y-4">
+                <input type="text" placeholder="Nombre (ej: Espada Larga)" value={newWeapon.name} onChange={e => setNewWeapon({...newWeapon, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
+                <input type="text" placeholder="Daño (ej: FUE+d8)" value={newWeapon.damage} onChange={e => setNewWeapon({...newWeapon, damage: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
+                <input type="text" placeholder="Alcance (opcional)" value={newWeapon.range} onChange={e => setNewWeapon({...newWeapon, range: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
+                <input type="number" placeholder="AP (opcional)" value={newWeapon.ap} onChange={e => setNewWeapon({...newWeapon, ap: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
+                <textarea placeholder="Notas" value={newWeapon.notes} onChange={e => setNewWeapon({...newWeapon, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl h-24" />
+                <button onClick={handleAddWeapon} className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all">Añadir Arma</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {isAddingArmor && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-200 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-stone-900" />
+              <button onClick={() => setIsAddingArmor(false)} className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900"><X size={20} /></button>
+              <h3 className="text-2xl font-black text-stone-900 uppercase tracking-tighter mb-6">Nueva Armadura</h3>
+              <div className="space-y-4">
+                <input type="text" placeholder="Nombre (ej: Armadura de Cuero)" value={newArmor.name} onChange={e => setNewArmor({...newArmor, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
+                <input type="number" placeholder="Bono de Armadura (ej: 2)" value={newArmor.bonus} onChange={e => setNewArmor({...newArmor, bonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
+                <textarea placeholder="Notas" value={newArmor.notes} onChange={e => setNewArmor({...newArmor, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl h-24" />
+                <button onClick={handleAddArmor} className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all">Añadir Armadura</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {isAddingShield && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-200 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-stone-900" />
+              <button onClick={() => setIsAddingShield(false)} className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900"><X size={20} /></button>
+              <h3 className="text-2xl font-black text-stone-900 uppercase tracking-tighter mb-6">Nuevo Escudo</h3>
+              <div className="space-y-4">
+                <input type="text" placeholder="Nombre (ej: Escudo Mediano)" value={newShield.name} onChange={e => setNewShield({...newShield, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
+                <input type="number" placeholder="Bono a la Parada (ej: 2)" value={newShield.parryBonus} onChange={e => setNewShield({...newShield, parryBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
+                <input type="number" placeholder="Bono de Cobertura (ej: 2)" value={newShield.coverBonus} onChange={e => setNewShield({...newShield, coverBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
+                <textarea placeholder="Notas" value={newShield.notes} onChange={e => setNewShield({...newShield, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl h-24" />
+                <button onClick={handleAddShield} className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all">Añadir Escudo</button>
+              </div>
             </motion.div>
           </div>
         )}
@@ -2234,19 +2591,22 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
           </div>
         </div>
         
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8">
           <div className="text-right">
             <div className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-1">Avances</div>
             <div className="text-3xl font-black text-stone-900 leading-none">{character.advances || 0}</div>
           </div>
-          <button 
-            onClick={() => setIsAddingAdvance(true)}
-            className="group relative flex items-center gap-3 px-6 py-4 bg-stone-900 text-white rounded-2xl hover:bg-stone-800 transition-all active:scale-95 shadow-xl overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <TrendingUp size={20} className="relative z-10" />
-            <span className="relative z-10 font-black uppercase tracking-widest text-xs">Avanzar</span>
-          </button>
+
+          <div className="flex flex-col items-end gap-1">
+            <button 
+              onClick={() => setIsAddingAdvance(true)}
+              className="group relative flex items-center gap-3 px-6 py-4 bg-stone-900 text-white rounded-2xl hover:bg-stone-800 transition-all active:scale-95 shadow-xl overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <TrendingUp size={20} className="relative z-10" />
+              <span className="relative z-10 font-black uppercase tracking-widest text-xs">Avanzar</span>
+            </button>
+          </div>
         </div>
       </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -2276,11 +2636,11 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 
       {/* Tracking Section: Bennies, Wounds, Fatigue, Advances */}
       <div className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-8 border-y border-stone-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-8 border-y border-stone-100">
           <TrackingToken 
             icon={<Dice5 size={18} />} 
             label="Benis" 
-            value={character.bennies || 0} 
+            value={character.bennies ?? calculateStartingBennies(character)} 
             color="bg-amber-50 text-amber-700 border-amber-200"
             onAdd={() => updatePlayState('bennies', 1)}
             onSub={() => updatePlayState('bennies', -1)}
@@ -2303,14 +2663,6 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
             onSub={() => updatePlayState('fatigue', -1)}
             statusLabel={getFatigueLabel(character.fatigue || 0)}
           />
-          <TrackingToken 
-            icon={<TrendingUp size={18} />} 
-            label="Avances" 
-            value={character.advances || 0} 
-            color="bg-emerald-50 text-emerald-700 border-emerald-200"
-            onAdd={() => updatePlayState('advances', 1)}
-            onSub={() => updatePlayState('advances', -1)}
-          />
         </div>
         
         {totalPenalty > 0 && (
@@ -2326,14 +2678,22 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
           <SectionTitle icon={<User size={20} className="text-stone-400" />} title="Capacidades de Especie" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
             {speciesData.abilities.map((a, i) => (
-              <button 
+              <div 
                 key={i} 
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedTrait({ name: a.name, description: a.description, type: 'Capacidad de Especie' })}
-                className="text-left space-y-1 p-2 -m-2 rounded-lg hover:bg-stone-100 transition-colors group"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedTrait({ name: a.name, description: a.description, type: 'Capacidad de Especie' });
+                  }
+                }}
+                className="text-left space-y-1 p-2 -m-2 rounded-lg hover:bg-stone-100 transition-colors group cursor-pointer"
               >
                 <div className="text-sm font-black text-stone-900 uppercase tracking-tight group-hover:text-stone-700">{a.name}</div>
                 <p className="text-xs text-stone-600 leading-relaxed line-clamp-2">{a.description}</p>
-              </button>
+              </div>
             ))}
           </div>
         </section>
@@ -2355,10 +2715,18 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
               const bonus = getAttributeBonus(character, name);
               const displayBonus = bonus.generalValue - totalPenalty;
               return (
-                <button 
+                <div 
                   key={name} 
                   onClick={() => performRoll(name, formatDice(val), true, bonus.generalValue)}
-                  className="flex items-center justify-between p-4 bg-stone-50 rounded-xl border border-stone-100 hover:bg-stone-100 transition-all active:scale-[0.98] group"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      performRoll(name, formatDice(val), true, bonus.generalValue);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  className="flex items-center justify-between p-4 bg-stone-50 rounded-xl border border-stone-100 hover:bg-stone-100 transition-all active:scale-[0.98] group cursor-pointer"
                 >
                   <div className="flex flex-col items-start">
                     <span className="font-bold text-stone-500 uppercase text-xs tracking-widest group-hover:text-stone-700">{name}</span>
@@ -2372,7 +2740,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                       <Info size={10} /> Info
                     </button>
                   </div>
-                  <span className="font-mono font-black text-2xl flex items-center">
+                  <div className="font-mono font-black text-2xl flex items-center">
                     {formatDice(val)}
                     <div className="flex items-center gap-2 ml-2">
                       {displayBonus !== 0 && (
@@ -2391,8 +2759,8 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                         </div>
                       ))}
                     </div>
-                  </span>
-                </button>
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -2515,19 +2883,106 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
         </section>
       </div>
 
-      <section className="space-y-6">
-        <SectionTitle icon={<Backpack size={20} className="text-blue-500" />} title="Equipo" />
-        <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
-          <div className="flex flex-wrap gap-3">
-            {character.gear.map((item, i) => (
-              <div key={i} className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm font-medium shadow-sm">
-                {item}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <section className="space-y-6">
+          <SectionTitle icon={<Sword size={20} className="text-stone-500" />} title="Combate" />
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Armas</h4>
+                <button onClick={() => setIsAddingWeapon(true)} className="p-1 text-stone-400 hover:text-stone-900 transition-colors"><Plus size={16} /></button>
               </div>
-            ))}
-            {character.gear.length === 0 && <span className="text-stone-400 italic">Sin equipo...</span>}
+              <div className="grid grid-cols-1 gap-2">
+                {character.weapons?.map((w, idx) => (
+                  <div key={idx} className="p-4 bg-white border border-stone-200 rounded-xl shadow-sm group relative">
+                    <button onClick={() => removeWeapon(idx)} className="absolute top-2 right-2 p-1 text-stone-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-black text-stone-900 uppercase tracking-tight">{w.name}</div>
+                      <button onClick={() => performRoll(`Daño: ${w.name}`, w.damage, false, 0, true)} className="px-3 py-1 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-stone-800 transition-colors">Dañar</button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-[10px] font-bold uppercase tracking-widest text-stone-500">
+                      <div>Daño: <span className="text-stone-900">{w.damage}</span></div>
+                      {w.range && <div>Alcance: <span className="text-stone-900">{w.range}</span></div>}
+                      {w.ap !== 0 && <div>AP: <span className="text-stone-900">{w.ap}</span></div>}
+                    </div>
+                    {w.notes && <p className="text-[10px] text-stone-400 italic mt-2">{w.notes}</p>}
+                  </div>
+                ))}
+                {(!character.weapons || character.weapons.length === 0) && <p className="text-xs text-stone-400 italic">Sin armas registradas.</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Armadura</h4>
+                  <button onClick={() => setIsAddingArmor(true)} className="p-1 text-stone-400 hover:text-stone-900 transition-colors"><Plus size={16} /></button>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {character.armor?.map((a, idx) => (
+                    <div key={idx} className="p-3 bg-white border border-stone-200 rounded-xl shadow-sm group relative">
+                      <button onClick={() => removeArmor(idx)} className="absolute top-2 right-2 p-1 text-stone-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
+                      <div className="font-bold text-stone-900 text-sm">{a.name}</div>
+                      <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Bono: +{a.bonus}</div>
+                    </div>
+                  ))}
+                  {(!character.armor || character.armor.length === 0) && <p className="text-xs text-stone-400 italic">Sin armadura registrada.</p>}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Escudo</h4>
+                  {!character.shield ? (
+                    <button onClick={() => setIsAddingShield(true)} className="p-1 text-stone-400 hover:text-stone-900 transition-colors"><Plus size={16} /></button>
+                  ) : (
+                    <button onClick={removeShield} className="p-1 text-stone-400 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
+                  )}
+                </div>
+                {character.shield ? (
+                  <div className="p-3 bg-white border border-stone-200 rounded-xl shadow-sm">
+                    <div className="font-bold text-stone-900 text-sm">{character.shield.name}</div>
+                    <div className="flex gap-4 text-[10px] font-bold text-stone-500 uppercase tracking-widest">
+                      <div>Parada: +{character.shield.parryBonus}</div>
+                      <div>Cobertura: +{character.shield.coverBonus}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-stone-400 italic">Sin escudo registrado.</p>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <section className="space-y-6">
+          <SectionTitle icon={<Backpack size={20} className="text-blue-500" />} title="Equipo" />
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newGearItemLocal}
+                onChange={(e) => setNewGearItemLocal(e.target.value)}
+                placeholder="Añadir objeto..."
+                className="flex-1 p-2 bg-stone-50 border border-stone-200 rounded-lg text-sm"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddGearLocal()}
+              />
+              <button onClick={handleAddGearLocal} className="p-2 bg-stone-900 text-white rounded-lg"><Plus size={16} /></button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {character.gear.map((item, idx) => (
+                <div key={idx} className="p-3 bg-white border border-stone-200 rounded-xl text-stone-700 font-medium flex justify-between items-center group">
+                  <span className="text-sm">{item}</span>
+                  <button onClick={() => removeGear(idx)} className="text-stone-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
+                </div>
+              ))}
+              {character.gear.length === 0 && (
+                <p className="text-stone-400 italic col-span-full">Sin equipo registrado.</p>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
 
       {character.advancesList && character.advancesList.length > 0 && (
         <section className="space-y-6 pt-10 border-t border-stone-200">
@@ -2558,6 +3013,15 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 
                 newChar.advancesList = newChar.advancesList?.slice(0, -1);
                 newChar.advances = (newChar.advances || 0) - 1;
+                
+                // Recalculate resources that might change when undoing advances (like Bennies from 'Afortunado')
+                const oldBenniesMax = calculateStartingBennies(character);
+                const newBenniesMax = calculateStartingBennies(newChar);
+                const benniesDelta = newBenniesMax - oldBenniesMax;
+                if (benniesDelta !== 0) {
+                  newChar.bennies = (newChar.bennies !== undefined ? newChar.bennies : oldBenniesMax) + benniesDelta;
+                }
+
                 newChar.derived = calculateDerived(newChar);
                 onUpdate(newChar);
               }}
@@ -2568,19 +3032,113 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {character.advancesList.map((adv, i) => (
-              <div key={adv.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex items-center gap-4 group hover:bg-stone-100 transition-colors">
-                <div className="w-10 h-10 bg-white border border-stone-200 rounded-xl flex items-center justify-center text-stone-900 font-black text-sm shadow-sm">
-                  {i + 1}
-                </div>
-                <div>
+              <div key={adv.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col gap-1 group hover:bg-stone-100 transition-colors">
+                <div className="flex items-center justify-between">
                   <div className="text-xs font-black text-stone-900 uppercase tracking-tight">{adv.description}</div>
-                  <div className="text-[9px] text-stone-400 font-bold uppercase tracking-widest">{getRank(i)}</div>
+                  <div className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Avance {i + 1}</div>
                 </div>
+                <div className="text-[9px] text-stone-400 font-bold uppercase tracking-widest">{getRank(i + 1)}</div>
               </div>
             ))}
           </div>
         </section>
       )}
+
+      <AnimatePresence>
+        {isAddingWeapon && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100">
+              <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">Nueva Arma</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
+                  <input type="text" value={newWeapon.name} onChange={e => setNewWeapon({...newWeapon, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Espada Larga" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Daño</label>
+                    <input type="text" value={newWeapon.damage} onChange={e => setNewWeapon({...newWeapon, damage: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Fue+d8" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">AP</label>
+                    <input type="number" value={newWeapon.ap} onChange={e => setNewWeapon({...newWeapon, ap: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Alcance</label>
+                  <input type="text" value={newWeapon.range} onChange={e => setNewWeapon({...newWeapon, range: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: 12/24/48" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
+                  <textarea value={newWeapon.notes} onChange={e => setNewWeapon({...newWeapon, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-8">
+                <button onClick={() => setIsAddingWeapon(false)} className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs">Cancelar</button>
+                <button onClick={handleAddWeapon} className="flex-1 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-colors uppercase tracking-widest text-xs">Guardar</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {isAddingArmor && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100">
+              <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">Nueva Armadura</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
+                  <input type="text" value={newArmor.name} onChange={e => setNewArmor({...newArmor, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Cota de Malla" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono de Armadura</label>
+                  <input type="number" value={newArmor.bonus} onChange={e => setNewArmor({...newArmor, bonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
+                  <textarea value={newArmor.notes} onChange={e => setNewArmor({...newArmor, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-8">
+                <button onClick={() => setIsAddingArmor(false)} className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs">Cancelar</button>
+                <button onClick={handleAddArmor} className="flex-1 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-colors uppercase tracking-widest text-xs">Guardar</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {isAddingShield && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100">
+              <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">Nuevo Escudo</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
+                  <input type="text" value={newShield.name} onChange={e => setNewShield({...newShield, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Escudo Mediano" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono Parada</label>
+                    <input type="number" value={newShield.parryBonus} onChange={e => setNewShield({...newShield, parryBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono Cobertura</label>
+                    <input type="number" value={newShield.coverBonus} onChange={e => setNewShield({...newShield, coverBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
+                  <textarea value={newShield.notes} onChange={e => setNewShield({...newShield, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-8">
+                <button onClick={() => setIsAddingShield(false)} className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs">Cancelar</button>
+                <button onClick={handleAddShield} className="flex-1 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-colors uppercase tracking-widest text-xs">Guardar</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -2588,9 +3146,17 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 function DerivedStat({ label, value, onClick, bonus, onInfo }: { label: string, value: number | string, onClick?: () => void, bonus?: number, onInfo?: () => void }) {
   return (
     <div className="relative group">
-      <button 
+      <div 
+        role="button"
+        tabIndex={0}
         onClick={onClick}
-        className="flex flex-col items-center justify-center w-full h-24 bg-white border-2 border-stone-900 rounded-2xl shadow-lg hover:bg-stone-50 transition-all active:scale-95"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick?.();
+          }
+        }}
+        className="flex flex-col items-center justify-center w-full h-24 bg-white border-2 border-stone-900 rounded-2xl shadow-lg hover:bg-stone-50 transition-all active:scale-95 cursor-pointer"
       >
         <span className="text-[10px] font-black uppercase text-stone-400 group-hover:text-stone-600">{label}</span>
         <div className="flex items-baseline">
@@ -2601,7 +3167,7 @@ function DerivedStat({ label, value, onClick, bonus, onInfo }: { label: string, 
             </span>
           )}
         </div>
-      </button>
+      </div>
       {onInfo && (
         <button 
           onClick={(e) => {

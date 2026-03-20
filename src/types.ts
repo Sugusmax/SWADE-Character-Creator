@@ -69,6 +69,24 @@ export interface Character {
   hindrances: Hindrance[];
   edges: Edge[];
   gear: string[];
+  weapons?: {
+    name: string;
+    damage: string;
+    range?: string;
+    ap?: number;
+    notes?: string;
+  }[];
+  armor?: {
+    name: string;
+    bonus: number;
+    notes?: string;
+  }[];
+  shield?: {
+    name: string;
+    parryBonus: number;
+    coverBonus: number;
+    notes?: string;
+  };
   derived: {
     Paso: number;
     Parada: number;
@@ -86,4 +104,5 @@ export interface Character {
   fatigue?: number;
   advances?: number;
   advancesList?: Advance[];
+  xp?: number;
 }

@@ -643,6 +643,11 @@ export const EDGES: Edge[] = [
     effects: 'Tu héroe puede realizar un ataque de Pelea adicional por asalto con una penalización de -2 a todas sus tiradas de Pelea ese turno.' 
   },
   { 
+    name: 'Frenesí mejorado', 
+    requirements: 'Veterano, Frenesí', 
+    effects: 'Como Frenesí, pero el héroe ignora la penalización de -2.' 
+  },
+  { 
     name: 'Hueso Duro de Roer', 
     requirements: 'Novato, Vigor d8+', 
     effects: 'Tu héroe puede ignorar un nivel de penalización por Heridas.' 
@@ -651,6 +656,11 @@ export const EDGES: Edge[] = [
     name: 'Inspiración', 
     requirements: 'Novato, Mando', 
     effects: 'Los aliados bajo el mando de tu héroe pueden repetir sus tiradas de Espíritu para recuperarse del estado Aturdido.' 
+  },
+  { 
+    name: 'Líder de hombres', 
+    requirements: 'Experimentado, Mando', 
+    effects: 'Los aliados bajo el mando del héroe añaden +1 a sus tiradas de Espíritu para recuperarse del estado Aturdido (esto se apila con Inspiración).' 
   },
   { 
     name: 'Ladrón', 
