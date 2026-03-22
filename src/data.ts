@@ -146,6 +146,58 @@ export const SKILLS: Omit<Skill, 'value'>[] = [
   { name: 'Sigilo', attribute: 'Agilidad', isBasic: true, description: 'Habilidad para moverse sin ser visto ni oído.' },
   { name: 'Supervivencia', attribute: 'Astucia', isBasic: false, description: 'Habilidad para encontrar comida, agua y refugio en la naturaleza.' },
   { name: 'Tácticas', attribute: 'Astucia', isBasic: false, description: 'Habilidad para planificar y ejecutar estrategias militares o de combate.' },
+  { name: 'Concentración', attribute: 'Espíritu', isBasic: false, description: 'Habilidad para usar poderes mediante la fuerza de voluntad pura.' },
+];
+
+export const ARCANE_BACKGROUNDS = [
+  { name: 'Magia', skill: 'Hechicería', powerPoints: 10, powers: 3 },
+  { name: 'Milagros', skill: 'Fe', powerPoints: 10, powers: 3 },
+  { name: 'Psiónica', skill: 'Psiónica', powerPoints: 10, powers: 3 },
+  { name: 'Ciencia Extraña', skill: 'Ciencia Extraña', powerPoints: 15, powers: 2 },
+  { name: 'Dotado', skill: 'Concentración', powerPoints: 15, powers: 1 },
+];
+
+export const POWERS: Power[] = [
+  { name: 'Armadura', rank: 'Novato', points: '2', range: 'Toque', duration: '5 (1/asalto)', description: 'Otorga +2 a la Armadura (+4 con un aumento).' },
+  { name: 'Aturdir', rank: 'Novato', points: '2', range: 'Cono o Plantilla Mediana', duration: 'Instantánea', description: 'Los objetivos deben resistir con Vigor o quedar Aturdidos.' },
+  { name: 'Aumento/Reducción de Rasgo', rank: 'Novato', points: '2', range: 'Astucia', duration: '5 (1/asalto)', description: 'Aumenta o reduce un Atributo o Habilidad en un tipo de dado (dos con un aumento).' },
+  { name: 'Barrera', rank: 'Novato', points: '2', range: 'Astucia', duration: '5 (1/asalto)', description: 'Crea una sección de muro de 5" (10m) de largo.' },
+  { name: 'Ceguera', rank: 'Novato', points: '2', range: 'Astucia', duration: 'Instantánea', description: 'El objetivo debe resistir con Vigor o quedar cegado.' },
+  { name: 'Confusión', rank: 'Novato', points: '1', range: 'Astucia', duration: 'Instantánea', description: 'El objetivo debe resistir con Astucia o quedar Distraído y Vulnerable.' },
+  { name: 'Curación', rank: 'Novato', points: '3', range: 'Toque', duration: 'Instantánea', description: 'Sana una herida sufrida en la última hora (dos con un aumento).' },
+  { name: 'Deflexión', rank: 'Novato', points: '2', range: 'Astucia', duration: '5 (1/asalto)', description: 'Los ataques a distancia contra el objetivo sufren un -2 (-4 con un aumento).' },
+  { name: 'Detectar/Ocultar Arcano', rank: 'Novato', points: '2', range: 'Vista', duration: '5 (Detectar) / 1 hora (Ocultar)', description: 'Permite ver lo invisible/mágico o esconderlo.' },
+  { name: 'Disfraz', rank: 'Novato', points: '2', range: 'Toque', duration: '10 minutos (1/10 min)', description: 'Cambia la apariencia física del objetivo.' },
+  { name: 'Dormir', rank: 'Novato', points: '2', range: 'Astucia', duration: '10 minutos (1/10 min)', description: 'El objetivo debe resistir con Espíritu o caer dormido.' },
+  { name: 'Empatía', rank: 'Novato', points: '1', range: 'Astucia', duration: '5 (1/asalto)', description: 'Otorga +2 a las tiradas de Persuadir contra el objetivo.' },
+  { name: 'Enmarañar', rank: 'Novato', points: '2', range: 'Astucia', duration: 'Instantánea', description: 'Atrapa a los objetivos en redes, lianas, etc.' },
+  { name: 'Escudo', rank: 'Novato', points: '1', range: 'Toque', duration: '5 (1/asalto)', description: 'Otorga +2 a la Parada (+4 con un aumento).' },
+  { name: 'Explosión', rank: 'Novato', points: '3', range: 'Astucia x2', duration: 'Instantánea', description: 'Causa 2d6 de daño en una Plantilla Mediana.' },
+  { name: 'Hablar Idiomas', rank: 'Novato', points: '1', range: 'Astucia', duration: '10 minutos (1/10 min)', description: 'Permite hablar y entender cualquier idioma.' },
+  { name: 'Luz/Oscuridad', rank: 'Novato', points: '2', range: 'Astucia', duration: '10 minutos (1/10 min)', description: 'Crea luz u oscuridad en una Plantilla Grande.' },
+  { name: 'Miedo', rank: 'Novato', points: '2', range: 'Astucia', duration: 'Instantánea', description: 'Causa una tirada de Miedo a los objetivos.' },
+  { name: 'Proyectil', rank: 'Novato', points: '1-3', range: 'Astucia x2', duration: 'Instantánea', description: 'Lanza proyectiles mágicos que causan 2d6 de daño.' },
+  { name: 'Puñetazo', rank: 'Novato', points: '1', range: 'Toque', duration: '5 (1/asalto)', description: 'Aumenta el daño de los ataques desarmados en +2.' },
+  { name: 'Relieve', rank: 'Novato', points: '1', range: 'Toque', duration: 'Instantánea', description: 'Elimina un nivel de Fatiga o el estado Aturdido.' },
+  { name: 'Sonido/Silencio', rank: 'Novato', points: '1', range: 'Astucia x2', duration: 'Instantánea (Sonido) / 5 (Silencio)', description: 'Crea sonidos o silencio absoluto.' },
+  { name: 'Telequinesis', rank: 'Novato', points: '5', range: 'Astucia', duration: '5 (1/asalto)', description: 'Mueve objetos con la mente usando Espíritu.' },
+  { name: 'Velocidad', rank: 'Novato', points: '2', range: 'Astucia', duration: '5 (1/asalto)', description: 'Dobla el Paso del objetivo e ignora penalizaciones por terreno difícil.' },
+  { name: 'Volar', rank: 'Novato', points: '3', range: 'Astucia', duration: '5 (1/asalto)', description: 'Permite al objetivo volar con Paso 12.' },
+  { name: 'Zancada', rank: 'Novato', points: '1', range: 'Astucia', duration: '5 (1/asalto)', description: 'Aumenta el Paso en +2.' },
+  
+  { name: 'Caminar por las Paredes', rank: 'Experimentado', points: '2', range: 'Toque', duration: '5 (1/asalto)', description: 'Permite caminar por superficies verticales o techos.' },
+  { name: 'Chequeo de Miedo', rank: 'Experimentado', points: '2', range: 'Astucia', duration: 'Instantánea', description: 'Obliga a los objetivos a realizar una tirada de Miedo.' },
+  { name: 'Disipar', rank: 'Experimentado', points: '1', range: 'Astucia', duration: 'Instantánea', description: 'Anula los efectos de otros poderes.' },
+  { name: 'Divinación', rank: 'Experimentado', points: '5', range: 'Personal', duration: '1 minuto', description: 'Permite obtener información del pasado, presente o futuro.' },
+  { name: 'Golpe', rank: 'Experimentado', points: '2', range: 'Toque', duration: '5 (1/asalto)', description: 'Aumenta el daño de un arma en +2 (+4 con un aumento).' },
+  { name: 'Invisibilidad', rank: 'Experimentado', points: '5', range: 'Personal', duration: '5 (1/asalto)', description: 'Vuelve al objetivo invisible (-4 a ser impactado).' },
+  { name: 'Lectura de Mentes', rank: 'Experimentado', points: '2', range: 'Astucia', duration: 'Instantánea', description: 'Permite leer los pensamientos superficiales del objetivo.' },
+  { name: 'Marioneta', rank: 'Experimentado', points: '3', range: 'Astucia', duration: '5 (1/asalto)', description: 'Controla las acciones del objetivo.' },
+  { name: 'Teletransporte', rank: 'Experimentado', points: '2', range: 'Astucia', duration: 'Instantánea', description: 'Mueve al objetivo hasta 12" (24m) de distancia.' },
+  
+  { name: 'Curación Mayor', rank: 'Veterano', points: '10', range: 'Toque', duration: 'Instantánea', description: 'Sana cualquier número de heridas o incluso miembros perdidos.' },
+  { name: 'Drenar Puntos de Poder', rank: 'Veterano', points: '3', range: 'Astucia', duration: 'Instantánea', description: 'Roba 1d6 puntos de poder al objetivo.' },
+  { name: 'Resurrección', rank: 'Veterano', points: '30', range: 'Toque', duration: 'Instantánea', description: 'Devuelve la vida a un fallecido recientemente.' },
 ];
 
 export const HINDRANCES: Hindrance[] = [
@@ -568,24 +620,49 @@ export const EDGES: Edge[] = [
     effects: 'Tu héroe parece tener una suerte increíble. Recibe un beni adicional al comienzo de cada sesión de juego.' 
   },
   { 
+    name: 'Agitador', 
+    requirements: 'Experimentado, Espíritu d8+', 
+    effects: 'Tu héroe puede usar las habilidades Intimidar o Provocar contra todos los enemigos en un área de plantilla de ráfaga pequeña.' 
+  },
+  { 
     name: 'Alerta', 
     requirements: 'Novato', 
     effects: 'Tu héroe siempre está atento a su entorno. Recibe un bono de +2 a todas sus tiradas de Notar.' 
   },
   { 
-    name: 'Ambidextro', 
+    name: 'Ambas manos', 
+    requirements: 'Novato, Agilidad d8+', 
+    effects: 'Tu héroe es experto en luchar con un arma en cada mano. Si realiza un ataque con cada mano (cuerpo a cuerpo), no sufre la penalización por acción múltiple.' 
+  },
+  { 
+    name: 'Ambidiestro', 
     requirements: 'Novato, Agilidad d8+', 
     effects: 'Tu héroe puede usar ambas manos con la misma habilidad. Ignora la penalización de -2 por usar la mano torpe.' 
   },
   { 
+    name: 'Amenazador', 
+    requirements: 'Experimentado, Intimidar d8+', 
+    effects: 'Tu héroe es verdaderamente aterrador. Recibe un bono de +2 a todas sus tiradas de Intimidar.' 
+  },
+  { 
+    name: 'Aristócrata', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe proviene de la nobleza o de una familia de gran prestigio. Recibe un bono de +2 a las tiradas de Persuadir cuando trata con la alta sociedad o autoridades.' 
+  },
+  { 
     name: 'Arma Distintiva', 
-    requirements: 'Novato, Habilidad de combate d8+', 
+    requirements: 'Novato, Pelear o Disparar d8+', 
     effects: 'Tu héroe tiene un arma especial con la que ha entrenado extensamente. Recibe un bono de +1 a las tiradas de ataque y +1 a la Parada mientras empuñe ese arma específica.' 
   },
   { 
     name: 'As', 
     requirements: 'Novato, Agilidad d8+', 
     effects: 'Tu héroe es un piloto o conductor excepcional. Recibe un bono de +2 a las tiradas de Conducir, Pilotar y Navegar. Además, puede gastar benis para realizar tiradas de Vigor por su vehículo para ignorar Heridas.' 
+  },
+  { 
+    name: 'Asesino', 
+    requirements: 'Novato, Agilidad d8+, Pelear d6+, Sigilo d8+', 
+    effects: 'Tu héroe es un maestro de la muerte silenciosa. Añade +2 a sus tiradas de daño cuando ataca a un enemigo por sorpresa o por la espalda.' 
   },
   { 
     name: 'Atractivo', 
@@ -598,24 +675,69 @@ export const EDGES: Edge[] = [
     effects: 'Tu héroe puede atacar a todos los enemigos adyacentes con una sola acción. Realiza una única tirada de Pelea con una penalización de -2 y compárala con la Parada de cada oponente.' 
   },
   { 
+    name: 'Barrido mejorado', 
+    requirements: 'Experimentado, Barrido', 
+    effects: 'Como Barrido, pero el héroe ignora la penalización de -2.' 
+  },
+  { 
+    name: 'Beni adicional', 
+    requirements: 'Legendario', 
+    effects: 'Tu héroe es una leyenda viviente y recibe un beni adicional al comienzo de cada sesión.' 
+  },
+  { 
     name: 'Berserk', 
     requirements: 'Novato', 
-    effects: 'Cuando tu héroe sufre una Herida, debe realizar una tirada de Espíritu o entrar en un estado de furia ciega. Recibe un bono de +2 a las tiradas de Pelea y Fuerza, y +2 a la Dureza, pero no puede usar habilidades que requieran concentración.' 
+    effects: 'Cuando tu héroe sufre una Herida, debe realizar una tirada de Espíritu o entrar en un estado de furia ciega. Recibe un bono de +2 a las tiradas de Pelea y Fuerza, y +2 a la Dureza (en furia), pero no puede usar habilidades que requieran concentración.' 
   },
   { 
     name: 'Bloqueo', 
-    requirements: 'Novato, Pelear d6+', 
+    requirements: 'Experimentado, Pelear d8+', 
     effects: 'Tu héroe es experto en defenderse en combate cuerpo a cuerpo. Su Parada aumenta en +1.' 
+  },
+  { 
+    name: 'Bloqueo mejorado', 
+    requirements: 'Veterano, Bloqueo', 
+    effects: 'Tu héroe es un maestro de la defensa. Su Parada aumenta en un total de +2.' 
+  },
+  { 
+    name: 'Bruto', 
+    requirements: 'Novato, Fuerza d6+, Vigor d6+', 
+    effects: 'Tu héroe es un luchador nato que usa su fuerza bruta. Puede usar su Fuerza en lugar de Agilidad para calcular su movimiento y para resistir ciertas maniobras de combate.' 
+  },
+  { 
+    name: 'Calculador', 
+    requirements: 'Novato, Astucia d8+', 
+    effects: 'Tu héroe es un estratega frío. Si obtiene un 5 o menos en su carta de acción, puede ignorar hasta 2 puntos de penalización por cobertura o iluminación en su primer ataque.' 
   },
   { 
     name: 'Carismático', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: 'Tu héroe tiene una personalidad magnética. Puede repetir una tirada de Persuadir fallida una vez por sesión.' 
+    effects: 'Tu héroe tiene una personalidad magnética. Recibe un beni adicional que solo puede usarse para repetir tiradas de Persuadir o Interpretar.' 
+  },
+  { 
+    name: 'Chatarrero', 
+    requirements: 'Novato, Afortunado', 
+    effects: 'Tu héroe tiene un talento especial para encontrar objetos útiles. Una vez por sesión, puede encontrar un objeto útil que necesite en ese momento.' 
+  },
+  { 
+    name: 'Concentración', 
+    requirements: 'Experimentado, Trasfondo Arcano', 
+    effects: 'La duración de los poderes con mantenimiento se duplica antes de tener que pagar el coste de mantenimiento.' 
+  },
+  { 
+    name: 'Conexiones', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe tiene una red de contactos en una organización o grupo social. Puede pedir favores, información o equipo una vez por sesión.' 
   },
   { 
     name: 'Contraataque', 
-    requirements: 'Novato, Pelear d8+', 
+    requirements: 'Experimentado, Pelear d8+', 
     effects: 'Una vez por asalto, si un enemigo falla un ataque de Pelea contra tu héroe, este puede realizar un ataque de Pelea inmediato contra ese enemigo como acción gratuita.' 
+  },
+  { 
+    name: 'Contraataque mejorado', 
+    requirements: 'Veterano, Contraataque', 
+    effects: 'Tu héroe puede realizar un contraataque contra todos los enemigos que fallen un ataque de Pelea contra él en el mismo asalto.' 
   },
   { 
     name: 'Curandero', 
@@ -623,23 +745,73 @@ export const EDGES: Edge[] = [
     effects: 'Tu héroe tiene un don para la medicina. Recibe un bono de +2 a todas las tiradas de Sanar.' 
   },
   { 
+    name: 'Desenfundado rápido', 
+    requirements: 'Novato, Agilidad d8+', 
+    effects: 'Tu héroe puede desenvainar un arma (o sacarla de su funda) como acción gratuita. Además, si tiene que realizar una tirada de Agilidad para ver quién actúa primero en un duelo, recibe un bono de +2.' 
+  },
+  { 
     name: 'Difícil de Matar', 
-    requirements: 'Novato, Espíritu d8+', 
+    requirements: 'Novato, Espíritu d6+', 
     effects: 'Tu héroe es increíblemente resistente. Ignora las penalizaciones por Heridas al realizar tiradas de Incapacitación.' 
   },
   { 
+    name: 'Drenaje de alma', 
+    requirements: 'Experimentado, Trasfondo Arcano, Habilidad arcana d8+', 
+    effects: 'Cuando el héroe se queda sin Puntos de Poder, puede realizar una tirada de Espíritu para obtener 5 PP a cambio de sufrir un nivel de fatiga.' 
+  },
+  { 
+    name: 'Duro de pelar', 
+    requirements: 'Veterano, Difícil de Matar', 
+    effects: 'Si tu héroe resultase muerto, realiza una tirada de Espíritu. Si tiene éxito, queda Incapacitado en su lugar.' 
+  },
+  { 
+    name: 'Erudito', 
+    requirements: 'Novato, Habilidad elegida d8+', 
+    effects: 'Tu héroe es un experto en un campo de estudio específico. Elige una habilidad de conocimiento (como Ciencias, Historia o Investigación). Recibe un bono de +2 a todas las tiradas de esa habilidad.' 
+  },
+  { 
     name: 'Esquiva', 
-    requirements: 'Novato, Agilidad d8+', 
+    requirements: 'Experimentado, Agilidad d8+', 
     effects: 'Tu héroe es experto en evitar ataques a distancia. Los ataques de disparo contra él sufren una penalización de -2.' 
   },
   { 
+    name: 'Esquiva mejorada', 
+    requirements: 'Veterano, Esquiva', 
+    effects: 'Tu héroe es casi imposible de alcanzar a distancia. Los ataques de disparo contra él sufren una penalización de -4.' 
+  },
+  { 
+    name: 'Experto', 
+    requirements: 'Legendario, Profesional', 
+    effects: 'El dado de la habilidad elegida en Profesional aumenta a d12+2.' 
+  },
+  { 
+    name: 'Fama', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe es conocido por sus hazañas. Recibe un bono de +1 a las tiradas de Persuadir con aquellos que lo reconozcan.' 
+  },
+  { 
+    name: 'Fama mejorada', 
+    requirements: 'Experimentado, Fama', 
+    effects: 'Tu héroe es una celebridad. El bono de Persuadir aumenta a +2.' 
+  },
+  { 
+    name: 'Fervor', 
+    requirements: 'Experimentado, Mando', 
+    effects: 'Los aliados en el Radio de Mando de tu héroe añaden +1 a sus tiradas de daño en combate cuerpo a cuerpo.' 
+  },
+  { 
+    name: 'Finta', 
+    requirements: 'Novato, Pelear d8+', 
+    effects: 'Tu héroe es un maestro del engaño en combate. Puede realizar una finta (usando Pelear contra la Parada del objetivo) para que este quede Distraído o Vulnerable.' 
+  },
+  { 
     name: 'Fornido', 
-    requirements: 'Novato, Fuerza d8+, Vigor d8+', 
-    effects: 'Tu héroe es excepcionalmente robusto. Su Tamaño aumenta en +1 y su Dureza en +1. Además, puede cargar más peso sin penalización.' 
+    requirements: 'Novato, Fuerza d6+, Vigor d6+', 
+    effects: 'Tu héroe es excepcionalmente robusto. Su Tamaño aumenta en +1 y su Dureza en +1. Además, su Fuerza se considera un tipo de dado superior a efectos de Carga.' 
   },
   { 
     name: 'Frenesí', 
-    requirements: 'Novato, Pelear d8+', 
+    requirements: 'Experimentado, Pelear d8+', 
     effects: 'Tu héroe puede realizar un ataque de Pelea adicional por asalto con una penalización de -2 a todas sus tiradas de Pelea ese turno.' 
   },
   { 
@@ -648,34 +820,159 @@ export const EDGES: Edge[] = [
     effects: 'Como Frenesí, pero el héroe ignora la penalización de -2.' 
   },
   { 
-    name: 'Hueso Duro de Roer', 
-    requirements: 'Novato, Vigor d8+', 
-    effects: 'Tu héroe puede ignorar un nivel de penalización por Heridas.' 
+    name: 'Golpe de poder', 
+    requirements: 'Novato, Pelear d10+', 
+    effects: 'Tu héroe puede sacrificar precisión por potencia. Puede restar 2 a su tirada de Pelea para añadir +4 al daño si impacta.' 
+  },
+  { 
+    name: 'Humillar', 
+    requirements: 'Experimentado, Provocar d8+', 
+    effects: 'Tu héroe puede usar la habilidad Provocar para hacer que un enemigo quede Vulnerable además de Distraído.' 
+  },
+  { 
+    name: 'Ímpetu', 
+    requirements: 'Novato, Espíritu d8+', 
+    effects: 'Tu héroe tiene una energía y entusiasmo contagiosos. Recibe un bono de +2 a sus tiradas cuando gasta un beni para repetir una tirada.' 
+  },
+  { 
+    name: 'Indomable', 
+    requirements: 'Experimentado, Espíritu d8+', 
+    effects: 'Tu héroe es increíblemente difícil de doblegar. Recibe un bonificador de +2 a sus tiradas para resistir poderes o ataques sociales.' 
   },
   { 
     name: 'Inspiración', 
     requirements: 'Novato, Mando', 
-    effects: 'Los aliados bajo el mando de tu héroe pueden repetir sus tiradas de Espíritu para recuperarse del estado Aturdido.' 
+    effects: 'Los aliados en el Radio de Mando de tu héroe reciben un bono de +1 a sus tiradas de Espíritu para recuperarse del estado Sacudido.' 
+  },
+  { 
+    name: 'Inspiración heroica', 
+    requirements: 'Heroico, Inspiración', 
+    effects: 'Los aliados bajo el mando de tu héroe pueden repetir cualquier tirada de Espíritu fallida, no solo para recuperarse de estar Aturdidos.' 
+  },
+  { 
+    name: 'Instinto asesino', 
+    requirements: 'Experimentado', 
+    effects: 'Tu héroe tiene un instinto letal. Puede repetir cualquier tirada de dados de daño que obtenga un 1 en el dado de habilidad (no en el dado salvaje).' 
+  },
+  { 
+    name: 'Investigador', 
+    requirements: 'Novato, Astucia d8+, Investigar d8+', 
+    effects: 'Tu héroe es un experto en encontrar información. Recibe un bono de +2 a todas las tiradas de Investigar y Notar (cuando busca pistas).' 
+  },
+  { 
+    name: 'Investigador jefe', 
+    requirements: 'Experimentado, Investigador', 
+    effects: 'Tu héroe puede realizar una tirada de Investigación en la mitad del tiempo normal y con un bono adicional de +2.' 
+  },
+  { 
+    name: 'Ladrón', 
+    requirements: 'Novato, Agilidad d8+, Sigilo d6+, Latrocinio d6+, Atletismo d6+', 
+    effects: 'Tu héroe es un experto en infiltración y robo. Recibe un bono de +1 a las tiradas de Sigilo en entornos urbanos, Latrocinio y Atletismo para trepar.' 
   },
   { 
     name: 'Líder de hombres', 
     requirements: 'Experimentado, Mando', 
-    effects: 'Los aliados bajo el mando del héroe añaden +1 a sus tiradas de Espíritu para recuperarse del estado Aturdido (esto se apila con Inspiración).' 
+    effects: 'Los aliados bajo el mando del héroe añaden +1 a sus tiradas de Espíritu para recuperarse del estado Sacudido (esto se apila con Inspiración).' 
   },
   { 
-    name: 'Ladrón', 
-    requirements: 'Novato, Agilidad d8+, Sigilo d8+, Atletismo d8+', 
-    effects: 'Tu héroe es un experto en infiltración y robo. Recibe un bono de +2 a las tiradas de Sigilo en entornos urbanos y a las tiradas de Atletismo para trepar.' 
+    name: 'Líder nato', 
+    requirements: 'Experimentado, Espíritu d8+, Mando', 
+    effects: 'Tu héroe puede entregar sus propios benis a cualquier aliado que se encuentre en su Radio de Mando.' 
+  },
+  { 
+    name: 'Lingüista', 
+    requirements: 'Novato, Astucia d6+', 
+    effects: 'Tu héroe tiene un don para los idiomas. Conoce un número de idiomas adicionales igual a la mitad de su dado de Astucia.' 
+  },
+  { 
+    name: 'Luchador improvisado', 
+    requirements: 'Experimentado, Astucia d6+', 
+    effects: 'Tu héroe puede convertir cualquier cosa en un arma. Ignora la penalización de -2 por usar armas improvisadas.' 
   },
   { 
     name: 'Mando', 
-    requirements: 'Novato, Espíritu d8+', 
-    effects: 'Tu héroe es un líder natural. Los aliados en su Radio de Mando (5 casillas) reciben un bono de +1 a sus tiradas de Espíritu para recuperarse de estar Aturdidos.' 
+    requirements: 'Novato, Espíritu d6+', 
+    effects: 'Tu héroe es un líder natural. Los aliados en su Radio de Mando pueden repetir sus tiradas de Espíritu para recuperarse del estado Sacudido.' 
   },
   { 
-    name: 'Nervios de Acero', 
+    name: 'Mandíbula de hierro', 
+    requirements: 'Novato, Vigor d8+', 
+    effects: 'Tu héroe es capaz de encajar golpes que dejarían fuera de combate a otros. Recibe un bono de +2 a las tiradas de Vigor para resistir el estado Aturdido.' 
+  },
+  { 
+    name: 'Manitas', 
+    requirements: 'Novato, Astucia d10+', 
+    effects: 'Tu héroe tiene una amplia gama de conocimientos básicos. No sufre la penalización de -2 por usar habilidades en las que no tiene entrenamiento (excepto habilidades arcanas).' 
+  },
+  { 
+    name: '¡Mantener la línea!', 
+    requirements: 'Experimentado, Mando', 
+    effects: 'Los aliados en el Radio de Mando de tu héroe añaden +1 a su Dureza.' 
+  },
+  { 
+    name: 'Maestro', 
+    requirements: 'Heroico, Habilidad d12+', 
+    effects: 'Elige una habilidad en la que tengas d12+. Tu héroe puede repetir una tirada fallida de esa habilidad una vez por sesión.' 
+  },
+  { 
+    name: 'Maestro de armas', 
+    requirements: 'Maestro, Pelear d12+', 
+    effects: 'Tu héroe es un maestro en el uso de armas de cuerpo a cuerpo. Su Parada aumenta en +1.' 
+  },
+  { 
+    name: 'Maestro de combate', 
+    requirements: 'Maestro, Pelear d12+', 
+    effects: 'Tu héroe es un maestro en el combate cuerpo a cuerpo. Ignora hasta 2 puntos de penalizaciones por acciones múltiples si una de ellas es un ataque de Pelea.' 
+  },
+  { 
+    name: 'Maestro Legendario', 
+    requirements: 'Legendario, Experto', 
+    effects: 'El dado de la habilidad elegida en Experto aumenta a d12+3.' 
+  },
+  { 
+    name: 'Matagigantes', 
+    requirements: 'Veterano', 
+    effects: 'Tu héroe es un experto en enfrentarse a criaturas mucho más grandes que él. Recibe un bonificador de +1d6 al daño cuando ataca a una criatura de Tamaño 4 o superior.' 
+  },
+  { 
+    name: 'McGyver', 
+    requirements: 'Novato, Astucia d6+, Reparar d6+, Notar d8+', 
+    effects: 'Tu héroe puede improvisar herramientas y dispositivos con casi cualquier cosa. Puede realizar tiradas de Reparar sin herramientas y crear dispositivos temporales útiles.' 
+  },
+  { 
+    name: 'Mentalista', 
+    requirements: 'Experimentado, Astucia d8+, Trasfondo Arcano (Psiónica)', 
+    effects: 'Tu héroe recibe un bono de +2 a todas sus tiradas enfrentadas cuando usa poderes psiónicos.' 
+  },
+  { 
+    name: 'Montaraz', 
+    requirements: 'Novato, Espíritu d6+, Supervivencia d8+', 
+    effects: 'Tu héroe es un experto en la vida al aire libre. Recibe un bono de +2 a las tiradas de Supervivencia y Sigilo en entornos naturales.' 
+  },
+  { 
+    name: 'Muy Afortunado', 
+    requirements: 'Novato, Afortunado', 
+    effects: 'Tu héroe tiene una suerte excepcional. Recibe un beni adicional al comienzo de cada sesión (esto se apila con Afortunado, para un total de dos benis adicionales).' 
+  },
+  { 
+    name: 'Muy Atractivo', 
+    requirements: 'Novato, Atractivo', 
+    effects: 'Tu héroe es una belleza de leyenda. Recibe un bono de +2 a las tiradas de Persuadir e Interpretar.' 
+  },
+  { 
+    name: 'Muy Rico', 
+    requirements: 'Novato, Rico', 
+    effects: 'Tu héroe es inmensamente rico. Empieza con cinco veces el dinero inicial y tiene unos ingresos muy elevados.' 
+  },
+  { 
+    name: 'Nervios de acero', 
     requirements: 'Novato, Vigor d8+', 
     effects: 'Tu héroe puede ignorar un nivel de penalización por Heridas.' 
+  },
+  { 
+    name: 'Nervios de acero mejorados', 
+    requirements: 'Novato, Nervios de acero', 
+    effects: 'Tu héroe ignora hasta dos niveles de penalización por Heridas.' 
   },
   { 
     name: 'Pies Ligeros', 
@@ -683,9 +980,84 @@ export const EDGES: Edge[] = [
     effects: 'Tu héroe es muy rápido. Su Paso aumenta en +2 y su dado de carrera aumenta en un tipo de dado.' 
   },
   { 
+    name: 'Pistolero', 
+    requirements: 'Novato, Agilidad d8+', 
+    effects: 'Tu héroe es experto en usar dos armas de fuego simultáneamente. Si realiza un ataque con cada mano (a distancia), no sufre la penalización por acción múltiple.' 
+  },
+  { 
+    name: 'Presencia de mando', 
+    requirements: 'Experimentado, Mando', 
+    effects: 'El Radio de Mando de tu héroe aumenta a 10 casillas (20 metros).' 
+  },
+  { 
+    name: 'Primer golpe', 
+    requirements: 'Novato, Agilidad d8+', 
+    effects: 'Una vez por asalto, tu héroe puede realizar un ataque de Pelea gratuito contra cualquier enemigo que se mueva a una posición adyacente a él.' 
+  },
+  { 
+    name: 'Primer golpe mejorado', 
+    requirements: 'Heroico, Primer golpe', 
+    effects: 'Como Primer golpe, pero el héroe puede realizar un ataque gratuito contra cada enemigo que se mueva a una posición adyacente.' 
+  },
+  { 
+    name: 'Profesional', 
+    requirements: 'Legendario, Habilidad d12+', 
+    effects: 'Elige una habilidad en la que tengas d12+. El dado de esa habilidad aumenta a d12+1.' 
+  },
+  { 
+    name: 'Pulso firme', 
+    requirements: 'Novato, Agilidad d8+', 
+    effects: 'Tu héroe ignora la penalización por plataforma inestable y reduce a la mitad la penalización por movimiento al disparar.' 
+  },
+  { 
+    name: 'Rápido', 
+    requirements: 'Novato, Agilidad d8+', 
+    effects: 'Tu héroe tiene unos reflejos asombrosos. Si roba una carta de acción de valor 5 o inferior, puede descartarla y robar una nueva hasta obtener una superior a 5.' 
+  },
+  { 
+    name: 'Recarga rápida', 
+    requirements: 'Experimentado, Espíritu d6+, Trasfondo Arcano', 
+    effects: 'Tu héroe recupera 10 Puntos de Poder por cada hora de descanso o actividad ligera.' 
+  },
+  { 
+    name: 'Recarga rápida mejorada', 
+    requirements: 'Veterano, Recarga rápida', 
+    effects: 'Tu héroe recupera 20 Puntos de Poder por cada hora de descanso o actividad ligera.' 
+  },
+  { 
     name: 'Reflejos de Combate', 
     requirements: 'Novato', 
-    effects: 'Tu héroe reacciona rápidamente en combate. Recibe un bono de +2 a las tiradas de Espíritu para recuperarse del estado Aturdido.' 
+    effects: 'Tu héroe reacciona rápidamente en combate. Recibe un bono de +2 a las tiradas de Espíritu para recuperarse del estado Sacudido.' 
+  },
+  { 
+    name: 'Réplica', 
+    requirements: 'Experimentado, Astucia d6+, Provocar d6+', 
+    effects: 'Si un enemigo falla una tirada de Provocar contra tu héroe, este queda Distraído automáticamente.' 
+  },
+  { 
+    name: 'Resistencia arcana', 
+    requirements: 'Novato, Espíritu d8+', 
+    effects: 'La magia y otros efectos sobrenaturales tienen más dificultades para afectar a este héroe. Recibe un bono de +2 a las tiradas de Rasgo para resistir poderes y +2 a la Armadura contra daño provocado por poderes.' 
+  },
+  { 
+    name: 'Resistencia arcana mejorada', 
+    requirements: 'Novato, Resistencia arcana', 
+    effects: 'Como Resistencia arcana, pero el bono aumenta a +4.' 
+  },
+  { 
+    name: 'Resistente', 
+    requirements: 'Legendario, Vigor d10+', 
+    effects: 'Tu héroe es una leyenda de la resistencia. Su Dureza aumenta en +1 adicional.' 
+  },
+  { 
+    name: 'Retirada', 
+    requirements: 'Novato, Agilidad d8+', 
+    effects: 'Tu héroe es experto en salir de situaciones peligrosas. Los enemigos no reciben un ataque gratuito cuando el héroe se retira del combate cuerpo a cuerpo.' 
+  },
+  { 
+    name: 'Retirada mejorada', 
+    requirements: 'Novato, Retirada', 
+    effects: 'Como Retirada, pero el héroe puede retirarse incluso si está rodeado por múltiples enemigos.' 
   },
   { 
     name: 'Rico', 
@@ -693,14 +1065,99 @@ export const EDGES: Edge[] = [
     effects: 'Tu héroe tiene acceso a una gran cantidad de recursos económicos. Empieza con el triple del dinero inicial y tiene un salario o ingresos regulares.' 
   },
   { 
+    name: '¡Rock and Roll!', 
+    requirements: 'Experimentado, Disparar d8+', 
+    effects: 'Tu héroe sabe cómo manejar el retroceso de las armas automáticas. Ignora la penalización por fuego de supresión o ráfaga si no se mueve en su turno.' 
+  },
+  { 
+    name: 'Sanador Rápido', 
+    requirements: 'Novato, Vigor d8+', 
+    effects: 'Tu héroe se recupera de las heridas con una rapidez asombrosa. Recibe un bono de +2 a sus tiradas de Vigor para la curación natural.' 
+  },
+  { 
+    name: 'Sangre fría', 
+    requirements: 'Experimentado, Astucia d8+', 
+    effects: 'Tu héroe mantiene la calma bajo presión. Roba una carta de acción adicional en combate y quédate con la mejor.' 
+  },
+  { 
+    name: 'Sangre fría mejorada', 
+    requirements: 'Veterano, Sangre fría', 
+    effects: 'Como Sangre fría, pero el héroe roba dos cartas adicionales y se queda con la mejor.' 
+  },
+  { 
     name: 'Sentir el Peligro', 
     requirements: 'Novato', 
     effects: 'Tu héroe tiene un sexto sentido para las emboscadas. Realiza una tirada de Notar con un bono de +2 para detectar ataques sorpresa o trampas.' 
   },
   { 
-    name: 'Trasfondo Arcano', 
+    name: 'Sin piedad', 
+    requirements: 'Experimentado', 
+    effects: 'Tu héroe no muestra clemencia. Puede gastar un beni para añadir +1d6 al daño de un ataque que ya haya impactado.' 
+  },
+  { 
+    name: 'Soldado', 
+    requirements: 'Novato, Fuerza d6+, Vigor d6+', 
+    effects: 'Tu héroe ha recibido entrenamiento militar. Su Fuerza se considera un tipo de dado superior para determinar la Carga y los requisitos de Fuerza de las armas y armaduras.' 
+  },
+  { 
+    name: 'Táctico', 
+    requirements: 'Experimentado, Astucia d8+, Tácticas d8+', 
+    effects: 'Al comienzo del combate, el héroe realiza una tirada de Tácticas. Con un éxito, roba una carta de acción adicional para el grupo (dos con un aumento).' 
+  },
+  { 
+    name: 'Táctico veterano', 
+    requirements: 'Veterano, Táctico', 
+    effects: 'Como Táctico, pero el héroe roba dos cartas de acción adicionales para el grupo (tres con un aumento).' 
+  },
+  { 
+    name: 'Tirador', 
+    requirements: 'Experimentado, Atletismo o Disparar d8+', 
+    effects: 'Tu héroe es un tirador paciente. Si no se mueve en su turno, ignora hasta 2 puntos de penalización por cobertura, iluminación o disparar a larga distancia.' 
+  },
+  { 
+    name: 'Tirador de élite', 
+    requirements: 'Experimentado, Atletismo d8+ o Disparar d8+', 
+    effects: 'Tu héroe es un tirador excepcional. Si obtiene un Joker en su carta de iniciativa, dobla el daño de sus ataques de Disparar o Atletismo (lanzar).' 
+  },
+  { 
+    name: 'Trasfondo Arcano (Magia)', 
     requirements: 'Novato', 
-    effects: 'Tu héroe tiene la capacidad de usar magia, milagros, superpoderes o ciencia extraña. Recibe un número inicial de poderes y puntos de poder según el tipo de trasfondo.' 
+    effects: 'Tu héroe puede usar magia. Habilidad: Hechicería (Astucia). Puntos de Poder: 10. Poderes iniciales: 3.' 
+  },
+  { 
+    name: 'Trasfondo Arcano (Milagros)', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe puede realizar milagros. Habilidad: Fe (Espíritu). Puntos de Poder: 10. Poderes iniciales: 3.' 
+  },
+  { 
+    name: 'Trasfondo Arcano (Psiónica)', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe tiene poderes mentales. Habilidad: Psiónica (Astucia). Puntos de Poder: 10. Poderes iniciales: 3.' 
+  },
+  { 
+    name: 'Trasfondo Arcano (Ciencia Extraña)', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe crea inventos extraños. Habilidad: Ciencia Extraña (Astucia). Puntos de Poder: 15. Poderes iniciales: 2.' 
+  },
+  { 
+    name: 'Trasfondo Arcano (Dotado)', 
+    requirements: 'Novato', 
+    effects: 'Tu héroe tiene un talento innato. Habilidad: Concentración (Espíritu). Puntos de Poder: 15. Poderes iniciales: 1.' 
+  },
+  { 
+    name: 'Puntos de poder adicionales', 
+    requirements: 'Novato, Trasfondo Arcano', 
+    effects: 'Tu héroe aumenta sus puntos de poder máximos en 5.' 
+  },
+  { 
+    name: 'Nuevo poder', 
+    requirements: 'Novato, Trasfondo Arcano', 
+    effects: 'Tu héroe aprende un nuevo poder de su rango o inferior.' 
+  },
+  { 
+    name: 'Valiente', 
+    requirements: 'Novato, Espíritu d6+', 
+    effects: 'Tu héroe es excepcionalmente valiente. Recibe un bono de +2 a todas sus tiradas de Miedo.' 
   },
   { 
     name: 'Voluntad de Hierro', 

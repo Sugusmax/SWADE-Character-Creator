@@ -52,6 +52,15 @@ export interface Advance {
   details: any;
 }
 
+export interface Power {
+  name: string;
+  rank: 'Novato' | 'Experimentado' | 'Veterano' | 'Heroico' | 'Legendario';
+  points: string;
+  range: string;
+  duration: string;
+  description: string;
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -86,6 +95,11 @@ export interface Character {
     parryBonus: number;
     coverBonus: number;
     notes?: string;
+  };
+  powers?: Power[];
+  powerPoints?: {
+    max: number;
+    current: number;
   };
   derived: {
     Paso: number;
