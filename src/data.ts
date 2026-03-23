@@ -1,5 +1,5 @@
 
-import { Species, Skill, Hindrance, Edge } from './types';
+import { Species, Skill, Hindrance, Edge, Power } from './types';
 
 export const SPECIES: Species[] = [
   { 
@@ -150,11 +150,41 @@ export const SKILLS: Omit<Skill, 'value'>[] = [
 ];
 
 export const ARCANE_BACKGROUNDS = [
-  { name: 'Magia', skill: 'Hechicería', powerPoints: 10, powers: 3 },
-  { name: 'Milagros', skill: 'Fe', powerPoints: 10, powers: 3 },
-  { name: 'Psiónica', skill: 'Psiónica', powerPoints: 10, powers: 3 },
-  { name: 'Ciencia Extraña', skill: 'Ciencia Extraña', powerPoints: 15, powers: 2 },
-  { name: 'Dotado', skill: 'Concentración', powerPoints: 15, powers: 1 },
+  { 
+    name: 'Magia', 
+    skill: 'Hechicería', 
+    powerPoints: 10, 
+    powers: 3,
+    description: 'Los magos van desde los clásicos hechiceros de fantasía a los modernos ocultistas que han descubierto antiguos y terribles secretos. Sus poderes suelen provenir de la manipulación de energías místicas mediante rituales, palabras de poder o gestos específicos. Habilidad: Hechicería (Astucia).'
+  },
+  { 
+    name: 'Milagros', 
+    skill: 'Fe', 
+    powerPoints: 10, 
+    powers: 3,
+    description: 'Los personajes con este trasfondo son canales de una deidad o fuerza superior. Sus poderes son dones divinos que se manifiestan a través de su fe y devoción. Habilidad: Fe (Espíritu).'
+  },
+  { 
+    name: 'Psiónica', 
+    skill: 'Psiónica', 
+    powerPoints: 10, 
+    powers: 3,
+    description: 'Los psiónicos son individuos que han aprendido a liberar el potencial latente de su propia mente. Sus poderes son manifestaciones de su voluntad y fuerza mental. Habilidad: Psiónica (Astucia).'
+  },
+  { 
+    name: 'Ciencia Extraña', 
+    skill: 'Ciencia Extraña', 
+    powerPoints: 15, 
+    powers: 2,
+    description: 'Los científicos extraños son inventores geniales (o locos) que crean artefactos que desafían las leyes de la física convencional. Sus poderes están ligados a sus inventos. Habilidad: Ciencia Extraña (Astucia).'
+  },
+  { 
+    name: 'Dotado', 
+    skill: 'Concentración', 
+    powerPoints: 15, 
+    powers: 1,
+    description: 'Los dotados son individuos con un talento sobrenatural innato que no requiere estudio ni fe, simplemente sucede. Habilidad: Concentración (Espíritu).'
+  },
 ];
 
 export const POWERS: Power[] = [
@@ -1120,39 +1150,19 @@ export const EDGES: Edge[] = [
     effects: 'Tu héroe es un tirador excepcional. Si obtiene un Joker en su carta de iniciativa, dobla el daño de sus ataques de Disparar o Atletismo (lanzar).' 
   },
   { 
-    name: 'Trasfondo Arcano (Magia)', 
+    name: 'Trasfondo Arcano', 
     requirements: 'Novato', 
-    effects: 'Tu héroe puede usar magia. Habilidad: Hechicería (Astucia). Puntos de Poder: 10. Poderes iniciales: 3.' 
-  },
-  { 
-    name: 'Trasfondo Arcano (Milagros)', 
-    requirements: 'Novato', 
-    effects: 'Tu héroe puede realizar milagros. Habilidad: Fe (Espíritu). Puntos de Poder: 10. Poderes iniciales: 3.' 
-  },
-  { 
-    name: 'Trasfondo Arcano (Psiónica)', 
-    requirements: 'Novato', 
-    effects: 'Tu héroe tiene poderes mentales. Habilidad: Psiónica (Astucia). Puntos de Poder: 10. Poderes iniciales: 3.' 
-  },
-  { 
-    name: 'Trasfondo Arcano (Ciencia Extraña)', 
-    requirements: 'Novato', 
-    effects: 'Tu héroe crea inventos extraños. Habilidad: Ciencia Extraña (Astucia). Puntos de Poder: 15. Poderes iniciales: 2.' 
-  },
-  { 
-    name: 'Trasfondo Arcano (Dotado)', 
-    requirements: 'Novato', 
-    effects: 'Tu héroe tiene un talento innato. Habilidad: Concentración (Espíritu). Puntos de Poder: 15. Poderes iniciales: 1.' 
+    effects: 'Este es el primer paso para que tu personaje tenga acceso a poderes sobrenaturales. Al elegir esta ventaja, debes seleccionar un tipo específico de Trasfondo Arcano (Magia, Milagros, Psiónica, Ciencia Extraña o Dotado). Cada uno tiene su propia habilidad, puntos de poder iniciales y número de poderes conocidos.' 
   },
   { 
     name: 'Puntos de poder adicionales', 
     requirements: 'Novato, Trasfondo Arcano', 
-    effects: 'Tu héroe aumenta sus puntos de poder máximos en 5.' 
+    effects: 'Tu héroe aumenta sus puntos de poder máximos en 5. Se puede elegir más de una vez, pero solo una por rango.' 
   },
   { 
     name: 'Nuevo poder', 
     requirements: 'Novato, Trasfondo Arcano', 
-    effects: 'Tu héroe aprende un nuevo poder de su rango o inferior.' 
+    effects: 'Tu héroe aprende un nuevo poder de su rango o inferior. Se puede elegir más de una vez.' 
   },
   { 
     name: 'Valiente', 
