@@ -606,9 +606,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Aristócrata') && skillName === 'Persuadir') {
     situational.push({ value: 2, note: 'Alta sociedad/autoridades' });
   }
-  if (hasEdge(char, 'Asesino')) {
-    situational.push({ value: 2, note: 'Daño (Sorpresa/Espalda)' });
-  }
   if (hasEdge(char, 'Erudito')) {
     situational.push({ value: 2, note: 'Habilidad elegida' });
   }
@@ -857,6 +854,9 @@ const getDamageBonus = (char: Character, weaponName: string): BonusInfo => {
   if (hasEdge(char, 'Berserk')) {
     // Berserk applies to melee damage. We'll assume for now it applies if they are in fury.
     situational.push({ value: 2, note: 'Cuerpo a cuerpo (en furia)' });
+  }
+  if (hasEdge(char, 'Asesino')) {
+    situational.push({ value: 2, note: 'Sorpresa o ataque por la espalda' });
   }
   
   return { generalValue, modifiers, situational };
