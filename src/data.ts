@@ -820,7 +820,7 @@ export const EDGES: Edge[] = [
     effects: 'Tu héroe es conocido por sus hazañas. Recibe un bono de +1 a las tiradas de Persuadir con aquellos que lo reconozcan.' 
   },
   { 
-    name: 'Fama mejorada', 
+    name: 'Muy Famoso', 
     requirements: 'Experimentado, Fama', 
     effects: 'Tu héroe mantiene los beneficios de Fama y los mejora: cuando lo reconocen, su bono a Persuadir pasa de +1 a +2.' 
   },

@@ -494,38 +494,35 @@ const sortByString = (a: string, b: string) => {
 
 const isImprovedEdge = (name: string): boolean => {
   if (!name) return false;
+  if (name.toLowerCase().startsWith('muy ')) return true;
   const improvedKeywords = ['mejorado', 'mejorada', 'mejorados', 'mejoradas'];
   return improvedKeywords.some(kw => name.toLowerCase().includes(kw));
 };
 
-const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): Edge[] => {
-  if (!newEdge) return currentEdges || [];
-  if (!currentEdges) return [newEdge];
-  const improvedKeywords = ['mejorado', 'mejorada', 'mejorados', 'mejoradas'];
-  const isImproved = improvedKeywords.some(kw => newEdge.name && newEdge.name.toLowerCase().includes(kw));
-  
-  if (!isImproved) {
-    return [...currentEdges, newEdge].sort(sortByName);
-  }
-
-  const edgeToReplace = currentEdges.find(existing => {
+const getEdgeToReplace = (currentEdges: Edge[], newEdge: Edge): Edge | undefined => {
+  if (!currentEdges || !newEdge || !isImprovedEdge(newEdge.name)) return undefined;
+  return currentEdges.find(existing => {
     if (!existing || !existing.name || !newEdge.requirements) return false;
-    // Check if existing edge name is in requirements
+    // If the previous edge is explicitly required, it is the replacement target.
     const inRequirements = newEdge.requirements.toLowerCase().includes(existing.name.toLowerCase());
     if (!inRequirements) return false;
-    
-    // Check if new edge name contains existing edge name
-    const nameMatch = newEdge.name.toLowerCase().includes(existing.name.toLowerCase());
-    if (nameMatch) return true;
-    
-    return false;
+    return true;
   });
+};
 
+const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): { edges: Edge[]; replacedEdge?: Edge } => {
+  if (!newEdge) return { edges: currentEdges || [] };
+  if (!currentEdges) return { edges: [newEdge] };
+
+  const edgeToReplace = getEdgeToReplace(currentEdges, newEdge);
   if (edgeToReplace) {
-    return [...currentEdges.filter(e => e.name !== edgeToReplace.name), newEdge].sort(sortByName);
+    return {
+      edges: [...currentEdges.filter(e => e.name !== edgeToReplace.name), newEdge].sort(sortByName),
+      replacedEdge: edgeToReplace
+    };
   }
 
-  return [...currentEdges, newEdge].sort(sortByName);
+  return { edges: [...currentEdges, newEdge].sort(sortByName) };
 };
 
 interface SituationalBonus {
@@ -663,7 +660,7 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Fama') && skillName === 'Persuadir') {
     situational.push({ value: 1, note: 'Si es reconocido' });
   }
-  if (hasEdge(char, 'Fama mejorada') && skillName === 'Persuadir') {
+  if ((hasEdge(char, 'Muy Famoso') || hasEdge(char, 'Fama mejorada')) && skillName === 'Persuadir') {
     situational.push({ value: 2, note: 'Si es reconocido' });
   }
   if (hasEdge(char, 'Acaparador') && skillName === 'Notar') {
@@ -2111,7 +2108,7 @@ function renderStep(
                           }
                           
                           if (canPickFree) {
-                            const nextEdges = getEdgesAfterReplacement(char.edges, selectedEdge);
+                            const { edges: nextEdges } = getEdgesAfterReplacement(char.edges, selectedEdge);
                             const nextChar = { ...char, edges: nextEdges };
                             update({ 
                               edges: nextEdges,
@@ -2123,7 +2120,7 @@ function renderStep(
                               type: 'edge',
                               cost: 2,
                               onConfirm: () => {
-                                const nextEdges = getEdgesAfterReplacement(char.edges, selectedEdge);
+                                const { edges: nextEdges } = getEdgesAfterReplacement(char.edges, selectedEdge);
                                 const nextSpentHP = { ...char.spentHindrancePoints, edges: (char.spentHindrancePoints.edges || 0) + 1 };
                                 const nextChar = { ...char, edges: nextEdges, spentHindrancePoints: nextSpentHP };
                                 update({ 
@@ -2657,9 +2654,10 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
       if (!selectedAdvanceEdge) return;
       const req = checkRequirements(character, selectedAdvanceEdge.requirements);
       if (!req.met) return;
-      newChar.edges = getEdgesAfterReplacement(newChar.edges, selectedAdvanceEdge);
+      const { edges: nextEdges, replacedEdge } = getEdgesAfterReplacement(newChar.edges, selectedAdvanceEdge);
+      newChar.edges = nextEdges;
       description = `Nueva Ventaja: ${selectedAdvanceEdge.name}`;
-      details = { edge: selectedAdvanceEdge };
+      details = { edge: selectedAdvanceEdge, replacedEdge };
 
       // Initialize Arcane Background if needed
       if (selectedAdvanceEdge.name.startsWith('Trasfondo Arcano (')) {
@@ -3971,10 +3969,16 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                   });
                 } else if (lastAdvance.type === 'Edge') {
                   const edge = lastAdvance.details.edge as Edge;
+                  const replacedEdge = lastAdvance.details.replacedEdge as Edge | undefined;
                   // Remove only one instance of the edge to handle multiple takes of same edge (like Nuevo poder)
                   const edgeIdx = newChar.edges.findIndex(e => e.name === edge.name);
                   if (edgeIdx !== -1) {
                     newChar.edges = [...newChar.edges.slice(0, edgeIdx), ...newChar.edges.slice(edgeIdx + 1)];
+                  }
+
+                  // If this edge replaced a previous one (e.g. Fama -> Muy Famoso), restore it on undo.
+                  if (replacedEdge && !newChar.edges.some(e => e.name === replacedEdge.name)) {
+                    newChar.edges = [...newChar.edges, replacedEdge].sort(sortByName);
                   }
 
                   // If undoing 'Nuevo poder', remove the last power if needed
