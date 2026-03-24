@@ -871,6 +871,15 @@ const getArmorBonus = (char: Character) => {
   return armor;
 };
 
+const isWearingHeavyArmor = (char: Character) => {
+  if (!char?.armor || char.armor.length === 0) return false;
+  return char.armor.some(a => a && (
+    (a.bonus || 0) >= 3 ||
+    a.notes?.toLowerCase().includes('pesada') ||
+    a.name?.toLowerCase().includes('pesada')
+  ));
+};
+
 const calculateDerived = (char: Character) => {
   if (!char) return { Paso: 6, Parada: 2, Dureza: 4, Tamaño: 0, DadoCarrera: 'd6' };
   const vig = char.attributes?.Vigor || 4;
@@ -909,10 +918,7 @@ const calculateDerived = (char: Character) => {
 
   // Edges that modify (Applied after base adjustments)
   if (hasEdge(char, 'Pies Ligeros')) { pace += 2; runningDieIndex = Math.min(4, runningDieIndex + 1); }
-  
-  const isWearingHeavyArmor = char.armor?.some(a => a && (a.bonus >= 3 || a.notes?.toLowerCase().includes('pesada') || a.name?.toLowerCase().includes('pesada')));
-  if (hasEdge(char, 'Acróbata') && !isWearingHeavyArmor) parry += 1;
-  
+
   if (hasEdge(char, 'Bloqueo')) parry += 1;
   if (hasEdge(char, 'Bloqueo mejorado')) parry += 1; // Total +2
   if (hasEdge(char, 'Maestro de armas')) parry += 1;
@@ -3477,7 +3483,10 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
           <DerivedStat 
             label="Parada" 
             value={character.derived.Parada} 
-            situational={hasEdge(character, 'Arma Distintiva') ? [{ value: 1, note: 'Con arma específica' }] : []}
+            situational={[
+              ...(hasEdge(character, 'Arma Distintiva') ? [{ value: 1, note: 'Con arma específica' }] : []),
+              ...(hasEdge(character, 'Acróbata') && !isWearingHeavyArmor(character) ? [{ value: 1, note: 'Sin armadura pesada' }] : []),
+            ]}
             onInfo={() => setSelectedTrait({ name: 'Parada', description: DERIVED_DESCRIPTIONS['Parada'], type: 'Estadística Derivada' })}
           />
           <DerivedStat 
