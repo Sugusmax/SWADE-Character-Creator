@@ -707,7 +707,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Barrido mejorado', 
     requirements: 'Experimentado, Barrido', 
-    effects: 'Tu héroe mantiene todos los beneficios de Barrido (atacar a todos los enemigos adyacentes con una sola tirada de Pelea), pero ahora realiza ese Barrido sin la penalización de -2.' 
+    effects: 'Como Barrido, pero el héroe ignora la penalización de -2.' 
   },
   { 
     name: 'Beni adicional', 
@@ -727,7 +727,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Bloqueo mejorado', 
     requirements: 'Veterano, Bloqueo', 
-    effects: 'Tu héroe mantiene los beneficios de Bloqueo y mejora su defensa hasta un total de +2 a la Parada (incluyendo el +1 de Bloqueo).' 
+    effects: 'Tu héroe es un maestro de la defensa. Su Parada aumenta en un total de +2.' 
   },
   { 
     name: 'Bruto', 
@@ -767,7 +767,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Contraataque mejorado', 
     requirements: 'Veterano, Contraataque', 
-    effects: 'Tu héroe mantiene Contraataque y lo mejora: en lugar de un solo contraataque por asalto, puede realizar un contraataque contra cada enemigo que falle un ataque de Pelea contra él en ese asalto.' 
+    effects: 'Tu héroe puede realizar un contraataque contra todos los enemigos que fallen un ataque de Pelea contra él en el mismo asalto.' 
   },
   { 
     name: 'Curandero', 
@@ -807,7 +807,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Esquiva mejorada', 
     requirements: 'Veterano, Esquiva', 
-    effects: 'Tu héroe mantiene Esquiva y la mejora: la penalización a los ataques de disparo contra él pasa de -2 a -4.' 
+    effects: 'Tu héroe es casi imposible de alcanzar a distancia. Los ataques de disparo contra él sufren una penalización de -4.' 
   },
   { 
     name: 'Experto', 
@@ -820,9 +820,9 @@ export const EDGES: Edge[] = [
     effects: 'Tu héroe es conocido por sus hazañas. Recibe un bono de +1 a las tiradas de Persuadir con aquellos que lo reconozcan.' 
   },
   { 
-    name: 'Muy Famoso', 
+    name: 'Fama mejorada', 
     requirements: 'Experimentado, Fama', 
-    effects: 'Tu héroe mantiene los beneficios de Fama y los mejora: cuando lo reconocen, su bono a Persuadir pasa de +1 a +2.' 
+    effects: 'Tu héroe es una celebridad. El bono de Persuadir aumenta a +2.' 
   },
   { 
     name: 'Fervor', 
@@ -847,7 +847,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Frenesí mejorado', 
     requirements: 'Veterano, Frenesí', 
-    effects: 'Tu héroe mantiene Frenesí (un ataque de Pelea adicional por asalto), pero ahora realiza esos ataques sin la penalización de -2 a Pelea.' 
+    effects: 'Como Frenesí, pero el héroe ignora la penalización de -2.' 
   },
   { 
     name: 'Golpe de poder', 
@@ -877,7 +877,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Inspiración heroica', 
     requirements: 'Heroico, Inspiración', 
-    effects: 'Tu héroe mantiene Inspiración (+1 a Espíritu para recuperarse de Sacudido) y la mejora: los aliados bajo su mando también pueden repetir cualquier tirada de Espíritu fallida, no solo las de recuperación de Sacudido.' 
+    effects: 'Los aliados bajo el mando de tu héroe pueden repetir cualquier tirada de Espíritu fallida, no solo para recuperarse de estar Aturdidos.' 
   },
   { 
     name: 'Instinto asesino', 
@@ -982,17 +982,17 @@ export const EDGES: Edge[] = [
   { 
     name: 'Muy Afortunado', 
     requirements: 'Novato, Afortunado', 
-    effects: 'Tu héroe mantiene Afortunado y lo mejora: recibe un beni adicional extra al comienzo de cada sesión. Junto con Afortunado, suma un total de +2 benis por sesión.' 
+    effects: 'Tu héroe tiene una suerte excepcional. Recibe un beni adicional al comienzo de cada sesión (esto se apila con Afortunado, para un total de dos benis adicionales).' 
   },
   { 
     name: 'Muy Atractivo', 
     requirements: 'Novato, Atractivo', 
-    effects: 'Tu héroe mantiene Atractivo y lo mejora: el bono a Persuadir e Interpretar aumenta de +1 a +2.' 
+    effects: 'Tu héroe es una belleza de leyenda. Recibe un bono de +2 a las tiradas de Persuadir e Interpretar.' 
   },
   { 
     name: 'Muy Rico', 
     requirements: 'Novato, Rico', 
-    effects: 'Tu héroe mantiene Rico y lo mejora: en lugar de comenzar con triple dinero inicial, comienza con cinco veces el dinero inicial y cuenta con ingresos muy elevados.' 
+    effects: 'Tu héroe es inmensamente rico. Empieza con cinco veces el dinero inicial y tiene unos ingresos muy elevados.' 
   },
   { 
     name: 'Nervios de acero', 
@@ -1002,7 +1002,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Nervios de acero mejorados', 
     requirements: 'Novato, Nervios de acero', 
-    effects: 'Tu héroe mantiene Nervios de acero y lo mejora: en lugar de ignorar 1 nivel de penalización por Heridas, ignora hasta 2 niveles.' 
+    effects: 'Tu héroe ignora hasta dos niveles de penalización por Heridas.' 
   },
   { 
     name: 'Pies Ligeros', 
@@ -1027,7 +1027,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Primer golpe mejorado', 
     requirements: 'Heroico, Primer golpe', 
-    effects: 'Tu héroe mantiene Primer golpe y lo mejora: en vez de un solo ataque gratuito por asalto, puede realizar un ataque gratuito contra cada enemigo que entre en adyacencia.' 
+    effects: 'Como Primer golpe, pero el héroe puede realizar un ataque gratuito contra cada enemigo que se mueva a una posición adyacente.' 
   },
   { 
     name: 'Profesional', 
@@ -1052,7 +1052,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Recarga rápida mejorada', 
     requirements: 'Veterano, Recarga rápida', 
-    effects: 'Tu héroe mantiene Recarga rápida y la mejora: la recuperación de Puntos de Poder por hora de descanso o actividad ligera aumenta de 10 a 20.' 
+    effects: 'Tu héroe recupera 20 Puntos de Poder por cada hora de descanso o actividad ligera.' 
   },
   { 
     name: 'Reflejos de Combate', 
@@ -1072,7 +1072,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Resistencia arcana mejorada', 
     requirements: 'Novato, Resistencia arcana', 
-    effects: 'Tu héroe mantiene Resistencia arcana y la mejora: sus bonificadores para resistir poderes y su Armadura contra daño de poderes aumentan de +2 a +4.' 
+    effects: 'Como Resistencia arcana, pero el bono aumenta a +4.' 
   },
   { 
     name: 'Resistente', 
@@ -1087,7 +1087,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Retirada mejorada', 
     requirements: 'Novato, Retirada', 
-    effects: 'Tu héroe mantiene Retirada (sin ataques gratuitos al retirarse) y la mejora: puede retirarse incluso cuando está rodeado por múltiples enemigos.' 
+    effects: 'Como Retirada, pero el héroe puede retirarse incluso si está rodeado por múltiples enemigos.' 
   },
   { 
     name: 'Rico', 
@@ -1112,7 +1112,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Sangre fría mejorada', 
     requirements: 'Veterano, Sangre fría', 
-    effects: 'Tu héroe mantiene Sangre fría y la mejora: en combate roba dos cartas adicionales (en lugar de una) y se queda con la mejor.' 
+    effects: 'Como Sangre fría, pero el héroe roba dos cartas adicionales y se queda con la mejor.' 
   },
   { 
     name: 'Sentir el Peligro', 
@@ -1137,7 +1137,7 @@ export const EDGES: Edge[] = [
   { 
     name: 'Táctico veterano', 
     requirements: 'Veterano, Táctico', 
-    effects: 'Tu héroe mantiene Táctico y lo mejora: al inicio del combate sigue haciendo la tirada de Tácticas, pero ahora roba dos cartas de acción adicionales para el grupo (tres con un aumento).' 
+    effects: 'Como Táctico, pero el héroe roba dos cartas de acción adicionales para el grupo (tres con un aumento).' 
   },
   { 
     name: 'Tirador', 
