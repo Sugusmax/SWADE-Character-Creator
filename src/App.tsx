@@ -528,6 +528,50 @@ const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): Edge[] =
   return [...currentEdges, newEdge].sort(sortByName);
 };
 
+const ARCANE_SKILLS = new Set(['Hechicería', 'Fe', 'Psiónica', 'Ciencia Extraña', 'Concentración']);
+
+const getScholarSkillFromEdge = (edgeName: string): string | null => {
+  if (!edgeName) return null;
+  const match = edgeName.match(/^Erudito \((.+)\)$/i);
+  return match ? match[1].trim() : null;
+};
+
+const buildScholarEdge = (baseEdge: Edge, char: Character): Edge | null => {
+  if (!baseEdge || baseEdge.name !== 'Erudito') return baseEdge;
+
+  const availableKnowledgeSkills = SKILLS
+    .filter(s => s.attribute === 'Astucia' && !s.isBasic && !ARCANE_SKILLS.has(s.name))
+    .map(s => s.name);
+
+  const alreadySelected = new Set(
+    (char.edges || [])
+      .map(e => getScholarSkillFromEdge(e.name))
+      .filter((name): name is string => Boolean(name))
+      .map(name => name.toLowerCase())
+  );
+
+  const selectable = availableKnowledgeSkills.filter(name => !alreadySelected.has(name.toLowerCase()));
+  if (selectable.length === 0) {
+    alert('Ya elegiste todas las habilidades disponibles para Erudito.');
+    return null;
+  }
+
+  const choice = window.prompt(`Elige la habilidad para Erudito:\n${selectable.join(', ')}`);
+  if (!choice) return null;
+
+  const selectedSkill = selectable.find(name => name.toLowerCase() === choice.trim().toLowerCase());
+  if (!selectedSkill) {
+    alert('Habilidad no válida para Erudito.');
+    return null;
+  }
+
+  return {
+    ...baseEdge,
+    name: `Erudito (${selectedSkill})`,
+    effects: `Tu héroe es un experto en ${selectedSkill}. Recibe un bono de +2 al total de las tiradas de esta habilidad. Puedes elegir Erudito varias veces, pero con habilidades distintas.`
+  };
+};
+
 interface SituationalBonus {
   value: number;
   note: string;
@@ -609,8 +653,10 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Asesino')) {
     situational.push({ value: 2, note: 'Daño (Sorpresa/Espalda)' });
   }
-  if (hasEdge(char, 'Erudito')) {
-    situational.push({ value: 2, note: 'Habilidad elegida' });
+  const scholarBonusApplies = (char.edges || []).some(e => getScholarSkillFromEdge(e.name)?.toLowerCase() === skillName.toLowerCase());
+  if (scholarBonusApplies) {
+    generalValue += 2;
+    modifiers.push({ name: 'Erudito', value: 2 });
   }
   if (hasEdge(char, 'Indomable')) {
     situational.push({ value: 2, note: 'Resistir poderes/ataques sociales' });
@@ -2021,7 +2067,7 @@ function renderStep(
       const availableHP_Edges = totalHP_Edges - spentHP_Edges;
       
       const selectedEdge = EDGES.find(e => e.name.toLowerCase() === previewEdgeName.toLowerCase());
-      const alreadyHasEdge = hasEdge(char, previewEdgeName);
+      const alreadyHasEdge = previewEdgeName === 'Erudito' ? false : hasEdge(char, previewEdgeName);
 
       return (
         <div className="space-y-6">
@@ -2098,14 +2144,16 @@ function renderStep(
                       <button 
                         onClick={() => {
                           if (alreadyHasEdge || !req.met) return;
+                          const edgeToAdd = selectedEdge.name === 'Erudito' ? buildScholarEdge(selectedEdge, char) : selectedEdge;
+                          if (!edgeToAdd) return;
                           
-                          if (selectedEdge.name === 'Trasfondo Arcano') {
+                          if (edgeToAdd.name === 'Trasfondo Arcano') {
                             setShowArcaneModal(true);
                             return;
                           }
                           
                           if (canPickFree) {
-                            const nextEdges = getEdgesAfterReplacement(char.edges, selectedEdge);
+                            const nextEdges = getEdgesAfterReplacement(char.edges, edgeToAdd);
                             const nextChar = { ...char, edges: nextEdges };
                             update({ 
                               edges: nextEdges,
@@ -2117,7 +2165,7 @@ function renderStep(
                               type: 'edge',
                               cost: 2,
                               onConfirm: () => {
-                                const nextEdges = getEdgesAfterReplacement(char.edges, selectedEdge);
+                                const nextEdges = getEdgesAfterReplacement(char.edges, edgeToAdd);
                                 const nextSpentHP = { ...char.spentHindrancePoints, edges: (char.spentHindrancePoints.edges || 0) + 1 };
                                 const nextChar = { ...char, edges: nextEdges, spentHindrancePoints: nextSpentHP };
                                 update({ 
@@ -2538,6 +2586,27 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 
   const isIncapacitated = (character.wounds || 0) >= 4 || (character.fatigue || 0) >= 3;
   const totalPenalty = getWoundPenalty(character) + getFatiguePenalty(character);
+  const isAnyOverlayOpen = Boolean(
+    isAddingAdvance ||
+    isAddingWeapon ||
+    isAddingArmor ||
+    isAddingShield ||
+    isAddingPower ||
+    selectedTrait ||
+    rollResult ||
+    showArcaneModal
+  );
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    if (isAnyOverlayOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isAnyOverlayOpen]);
 
   const performRoll = (traitName: string, dieStr: string, isTraitRoll: boolean = true, traitModifier: number = 0, explodes: boolean = true, modifiers: AppliedModifier[] = []) => {
     // Handle d12+X format
@@ -2651,13 +2720,15 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
       if (!selectedAdvanceEdge) return;
       const req = checkRequirements(character, selectedAdvanceEdge.requirements);
       if (!req.met) return;
-      newChar.edges = getEdgesAfterReplacement(newChar.edges, selectedAdvanceEdge);
-      description = `Nueva Ventaja: ${selectedAdvanceEdge.name}`;
-      details = { edge: selectedAdvanceEdge };
+      const edgeToAdd = selectedAdvanceEdge.name === 'Erudito' ? buildScholarEdge(selectedAdvanceEdge, newChar) : selectedAdvanceEdge;
+      if (!edgeToAdd) return;
+      newChar.edges = getEdgesAfterReplacement(newChar.edges, edgeToAdd);
+      description = `Nueva Ventaja: ${edgeToAdd.name}`;
+      details = { edge: edgeToAdd };
 
       // Initialize Arcane Background if needed
-      if (selectedAdvanceEdge.name.startsWith('Trasfondo Arcano (')) {
-        const abName = selectedAdvanceEdge.name.match(/\((.*)\)/)?.[1];
+      if (edgeToAdd.name.startsWith('Trasfondo Arcano (')) {
+        const abName = edgeToAdd.name.match(/\((.*)\)/)?.[1];
         const ab = ARCANE_BACKGROUNDS.find(a => a.name === abName);
         if (ab) {
           newChar.powerPoints = { current: ab.powerPoints, max: ab.powerPoints };
@@ -3152,6 +3223,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                         <div className="grid grid-cols-1 gap-2">
                           {[...EDGES].sort(sortByName).filter(e => {
                             if (e.name === 'Trasfondo Arcano' && getArcaneBackground(character)) return false;
+                            if (e.name === 'Erudito') return true;
                             return !hasEdge(character, e.name);
                           }).map((edge, index) => {
                             const req = checkRequirements(character, edge.requirements);
