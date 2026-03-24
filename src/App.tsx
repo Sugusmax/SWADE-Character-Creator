@@ -528,6 +528,39 @@ const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): Edge[] =
   return [...currentEdges, newEdge].sort(sortByName);
 };
 
+const ARCANE_SKILLS = new Set(['Hechicería', 'Fe', 'Psiónica', 'Ciencia Extraña', 'Concentración']);
+
+const getScholarSkillFromEdge = (edgeName: string): string | null => {
+  if (!edgeName) return null;
+  const match = edgeName.match(/^Erudito \((.+)\)$/i);
+  return match ? match[1].trim() : null;
+};
+
+const getAvailableScholarSkills = (char: Character): string[] => {
+  const availableKnowledgeSkills = SKILLS
+    .filter(s => s.attribute === 'Astucia' && !s.isBasic && !ARCANE_SKILLS.has(s.name))
+    .map(s => s.name);
+
+  const alreadySelected = new Set(
+    (char.edges || [])
+      .map(e => getScholarSkillFromEdge(e.name))
+      .filter((name): name is string => Boolean(name))
+      .map(name => name.toLowerCase())
+  );
+
+  return availableKnowledgeSkills.filter(name => !alreadySelected.has(name.toLowerCase()));
+};
+
+const buildScholarEdge = (baseEdge: Edge, selectedSkill: string): Edge => {
+  if (!baseEdge || baseEdge.name !== 'Erudito') return baseEdge;
+
+  return {
+    ...baseEdge,
+    name: `Erudito (${selectedSkill})`,
+    effects: `Tu héroe es un experto en ${selectedSkill}. Recibe un bono de +2 al total de las tiradas de esta habilidad. Puedes elegir Erudito varias veces, pero con habilidades distintas.`
+  };
+};
+
 interface SituationalBonus {
   value: number;
   note: string;
@@ -609,8 +642,10 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Asesino')) {
     situational.push({ value: 2, note: 'Daño (Sorpresa/Espalda)' });
   }
-  if (hasEdge(char, 'Erudito')) {
-    situational.push({ value: 2, note: 'Habilidad elegida' });
+  const scholarBonusApplies = (char.edges || []).some(e => getScholarSkillFromEdge(e.name)?.toLowerCase() === skillName.toLowerCase());
+  if (scholarBonusApplies) {
+    generalValue += 2;
+    modifiers.push({ name: 'Erudito', value: 2 });
   }
   if (hasEdge(char, 'Indomable')) {
     situational.push({ value: 2, note: 'Resistir poderes/ataques sociales' });
@@ -950,6 +985,10 @@ export default function App() {
   } | null>(null);
   const [characterToDelete, setCharacterToDelete] = useState<Character | null>(null);
   const [showArcaneModal, setShowArcaneModal] = useState(false);
+  const [showScholarModal, setShowScholarModal] = useState(false);
+  const [scholarOptions, setScholarOptions] = useState<string[]>([]);
+  const [selectedScholarSkill, setSelectedScholarSkill] = useState('');
+  const [pendingScholarEdgeAdd, setPendingScholarEdgeAdd] = useState<{ edge: Edge; useFreePick: boolean } | null>(null);
 
   // Load characters from localStorage
   useEffect(() => {
@@ -1205,6 +1244,10 @@ export default function App() {
                     setPendingHindranceSpend,
                     previewEdgeName,
                     setPreviewEdgeName,
+                    setShowScholarModal,
+                    setScholarOptions,
+                    setSelectedScholarSkill,
+                    setPendingScholarEdgeAdd,
                     nextStep,
                     setShowArcaneModal
                   })}
@@ -1359,6 +1402,48 @@ export default function App() {
                   });
                   setShowArcaneModal(false);
                 }
+              }}
+            />
+
+            <ScholarSkillModal
+              isOpen={showScholarModal}
+              skills={scholarOptions}
+              selectedSkill={selectedScholarSkill}
+              onSelectSkill={setSelectedScholarSkill}
+              onClose={() => {
+                setShowScholarModal(false);
+                setPendingScholarEdgeAdd(null);
+              }}
+              onConfirm={() => {
+                if (!currentCharacter || !pendingScholarEdgeAdd || !selectedScholarSkill) return;
+                const edgeToAdd = buildScholarEdge(pendingScholarEdgeAdd.edge, selectedScholarSkill);
+                const finalizeAddition = (isFree: boolean) => {
+                  const nextEdges = getEdgesAfterReplacement(currentCharacter.edges, edgeToAdd);
+                  const nextSpentHP = isFree
+                    ? currentCharacter.spentHindrancePoints
+                    : { ...currentCharacter.spentHindrancePoints, edges: (currentCharacter.spentHindrancePoints.edges || 0) + 1 };
+                  const nextChar = { ...currentCharacter, edges: nextEdges, spentHindrancePoints: nextSpentHP };
+
+                  updateCharacter({
+                    edges: nextEdges,
+                    spentHindrancePoints: nextSpentHP,
+                    bennies: calculateStartingBennies(nextChar)
+                  });
+                };
+
+                if (pendingScholarEdgeAdd.useFreePick) {
+                  finalizeAddition(true);
+                } else {
+                  setPendingHindranceSpend({
+                    type: 'edge',
+                    cost: 2,
+                    onConfirm: () => finalizeAddition(false)
+                  });
+                }
+
+                setShowScholarModal(false);
+                setPendingScholarEdgeAdd(null);
+                setPreviewEdgeName('');
               }}
             />
           </div>
@@ -1521,6 +1606,10 @@ function renderStep(
     } | null) => void;
     previewEdgeName: string;
     setPreviewEdgeName: (name: string) => void;
+    setShowScholarModal: (show: boolean) => void;
+    setScholarOptions: (skills: string[]) => void;
+    setSelectedScholarSkill: (skill: string) => void;
+    setPendingScholarEdgeAdd: (val: { edge: Edge; useFreePick: boolean } | null) => void;
     nextStep: () => void;
     setShowArcaneModal: (show: boolean) => void;
   }
@@ -1533,6 +1622,10 @@ function renderStep(
     setPendingHindranceSpend,
     previewEdgeName,
     setPreviewEdgeName,
+    setShowScholarModal,
+    setScholarOptions,
+    setSelectedScholarSkill,
+    setPendingScholarEdgeAdd,
     nextStep,
     setShowArcaneModal
   } = extras;
@@ -2021,7 +2114,7 @@ function renderStep(
       const availableHP_Edges = totalHP_Edges - spentHP_Edges;
       
       const selectedEdge = EDGES.find(e => e.name.toLowerCase() === previewEdgeName.toLowerCase());
-      const alreadyHasEdge = hasEdge(char, previewEdgeName);
+      const alreadyHasEdge = previewEdgeName === 'Erudito' ? false : hasEdge(char, previewEdgeName);
 
       return (
         <div className="space-y-6">
@@ -2098,14 +2191,27 @@ function renderStep(
                       <button 
                         onClick={() => {
                           if (alreadyHasEdge || !req.met) return;
+                          if (selectedEdge.name === 'Erudito') {
+                            const options = getAvailableScholarSkills(char);
+                            if (options.length === 0) {
+                              alert('Ya elegiste todas las habilidades disponibles para Erudito.');
+                              return;
+                            }
+                            setScholarOptions(options);
+                            setSelectedScholarSkill(options[0]);
+                            setPendingScholarEdgeAdd({ edge: selectedEdge, useFreePick: canPickFree });
+                            setShowScholarModal(true);
+                            return;
+                          }
+                          const edgeToAdd = selectedEdge;
                           
-                          if (selectedEdge.name === 'Trasfondo Arcano') {
+                          if (edgeToAdd.name === 'Trasfondo Arcano') {
                             setShowArcaneModal(true);
                             return;
                           }
                           
                           if (canPickFree) {
-                            const nextEdges = getEdgesAfterReplacement(char.edges, selectedEdge);
+                            const nextEdges = getEdgesAfterReplacement(char.edges, edgeToAdd);
                             const nextChar = { ...char, edges: nextEdges };
                             update({ 
                               edges: nextEdges,
@@ -2117,7 +2223,7 @@ function renderStep(
                               type: 'edge',
                               cost: 2,
                               onConfirm: () => {
-                                const nextEdges = getEdgesAfterReplacement(char.edges, selectedEdge);
+                                const nextEdges = getEdgesAfterReplacement(char.edges, edgeToAdd);
                                 const nextSpentHP = { ...char.spentHindrancePoints, edges: (char.spentHindrancePoints.edges || 0) + 1 };
                                 const nextChar = { ...char, edges: nextEdges, spentHindrancePoints: nextSpentHP };
                                 update({ 
@@ -2501,6 +2607,76 @@ function ArcaneBackgroundModal({ isOpen, onClose, onSelect }: { isOpen: boolean,
   );
 }
 
+function ScholarSkillModal({
+  isOpen,
+  skills,
+  selectedSkill,
+  onSelectSkill,
+  onClose,
+  onConfirm
+}: {
+  isOpen: boolean;
+  skills: string[];
+  selectedSkill: string;
+  onSelectSkill: (skill: string) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-stone-200"
+      >
+        <div className="p-6 border-b border-stone-100">
+          <h3 className="text-xl font-black text-stone-900">Elegir habilidad para Erudito</h3>
+          <p className="text-sm text-stone-600 mt-1">
+            Selecciona una habilidad de conocimiento basada en Astucia (no arcana).
+          </p>
+        </div>
+
+        <div className="p-6 space-y-2 max-h-[50vh] overflow-y-auto custom-scrollbar">
+          {skills.map(skill => (
+            <button
+              key={skill}
+              type="button"
+              onClick={() => onSelectSkill(skill)}
+              className={`w-full text-left p-4 rounded-xl border transition-all ${
+                selectedSkill === skill
+                  ? 'bg-stone-900 text-white border-stone-900 shadow-md'
+                  : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+              }`}
+            >
+              <span className="font-bold">{skill}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6 bg-stone-50 border-t border-stone-100 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2 rounded-xl border border-stone-200 bg-white text-stone-600 font-bold hover:bg-stone-100 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={!selectedSkill}
+            className="px-5 py-2 rounded-xl bg-stone-900 text-white font-black uppercase tracking-wide hover:bg-stone-800 disabled:opacity-40 transition-colors"
+          >
+            Confirmar
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function CharacterSheetView({ character, onUpdate }: { character: Character, onUpdate: (c: Character) => void }) {
   const [selectedTrait, setSelectedTrait] = useState<{ name: string, description: string, type?: string, requirements?: string } | null>(null);
   const [isAddingAdvance, setIsAddingAdvance] = useState(false);
@@ -2516,6 +2692,9 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
   const [selectedAdvanceAttribute, setSelectedAdvanceAttribute] = useState<string | null>(null);
   const [selectedAdvanceEdge, setSelectedAdvanceEdge] = useState<Edge | null>(null);
   const [showArcaneModal, setShowArcaneModal] = useState(false);
+  const [showScholarModal, setShowScholarModal] = useState(false);
+  const [scholarOptions, setScholarOptions] = useState<string[]>([]);
+  const [selectedScholarSkill, setSelectedScholarSkill] = useState('');
   const [newSkillName, setNewSkillName] = useState<string>('');
 
   // Use a ref to always have the latest character state in closures (like modal callbacks)
@@ -2538,6 +2717,27 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 
   const isIncapacitated = (character.wounds || 0) >= 4 || (character.fatigue || 0) >= 3;
   const totalPenalty = getWoundPenalty(character) + getFatiguePenalty(character);
+  const isAnyOverlayOpen = Boolean(
+    isAddingAdvance ||
+    isAddingWeapon ||
+    isAddingArmor ||
+    isAddingShield ||
+    isAddingPower ||
+    selectedTrait ||
+    rollResult ||
+    showArcaneModal
+  );
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    if (isAnyOverlayOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isAnyOverlayOpen]);
 
   const performRoll = (traitName: string, dieStr: string, isTraitRoll: boolean = true, traitModifier: number = 0, explodes: boolean = true, modifiers: AppliedModifier[] = []) => {
     // Handle d12+X format
@@ -2608,7 +2808,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
     onUpdate({ ...character, [field]: newVal });
   };
 
-  const handleApplyAdvance = () => {
+  const handleApplyAdvance = (scholarSkill?: string) => {
     if (!advanceType) return;
 
     // Deep copy to avoid state mutation issues
@@ -2651,13 +2851,28 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
       if (!selectedAdvanceEdge) return;
       const req = checkRequirements(character, selectedAdvanceEdge.requirements);
       if (!req.met) return;
-      newChar.edges = getEdgesAfterReplacement(newChar.edges, selectedAdvanceEdge);
-      description = `Nueva Ventaja: ${selectedAdvanceEdge.name}`;
-      details = { edge: selectedAdvanceEdge };
+      let edgeToAdd = selectedAdvanceEdge;
+      if (selectedAdvanceEdge.name === 'Erudito') {
+        if (!scholarSkill) {
+          const options = getAvailableScholarSkills(newChar);
+          if (options.length === 0) {
+            alert('Ya elegiste todas las habilidades disponibles para Erudito.');
+            return;
+          }
+          setScholarOptions(options);
+          setSelectedScholarSkill(options[0]);
+          setShowScholarModal(true);
+          return;
+        }
+        edgeToAdd = buildScholarEdge(selectedAdvanceEdge, scholarSkill);
+      }
+      newChar.edges = getEdgesAfterReplacement(newChar.edges, edgeToAdd);
+      description = `Nueva Ventaja: ${edgeToAdd.name}`;
+      details = { edge: edgeToAdd };
 
       // Initialize Arcane Background if needed
-      if (selectedAdvanceEdge.name.startsWith('Trasfondo Arcano (')) {
-        const abName = selectedAdvanceEdge.name.match(/\((.*)\)/)?.[1];
+      if (edgeToAdd.name.startsWith('Trasfondo Arcano (')) {
+        const abName = edgeToAdd.name.match(/\((.*)\)/)?.[1];
         const ab = ARCANE_BACKGROUNDS.find(a => a.name === abName);
         if (ab) {
           newChar.powerPoints = { current: ab.powerPoints, max: ab.powerPoints };
@@ -2702,6 +2917,9 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
     setSelectedAdvanceSkills([]);
     setSelectedAdvanceAttribute(null);
     setSelectedAdvanceEdge(null);
+    setShowScholarModal(false);
+    setScholarOptions([]);
+    setSelectedScholarSkill('');
     setNewSkillName('');
 
     if (isArcaneAdvance) {
@@ -3152,6 +3370,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                         <div className="grid grid-cols-1 gap-2">
                           {[...EDGES].sort(sortByName).filter(e => {
                             if (e.name === 'Trasfondo Arcano' && getArcaneBackground(character)) return false;
+                            if (e.name === 'Erudito') return true;
                             return !hasEdge(character, e.name);
                           }).map((edge, index) => {
                             const req = checkRequirements(character, edge.requirements);
@@ -3352,6 +3571,26 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
               setSelectedAdvanceEdge(updatedEdge);
             }
             setShowArcaneModal(false);
+          }}
+        />
+
+        <ScholarSkillModal
+          isOpen={showScholarModal}
+          skills={scholarOptions}
+          selectedSkill={selectedScholarSkill}
+          onSelectSkill={setSelectedScholarSkill}
+          onClose={() => {
+            setShowScholarModal(false);
+            setScholarOptions([]);
+            setSelectedScholarSkill('');
+          }}
+          onConfirm={() => {
+            if (!selectedScholarSkill) return;
+            const skill = selectedScholarSkill;
+            setShowScholarModal(false);
+            setScholarOptions([]);
+            setSelectedScholarSkill('');
+            handleApplyAdvance(skill);
           }}
         />
 
