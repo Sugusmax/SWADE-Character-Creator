@@ -2538,6 +2538,27 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 
   const isIncapacitated = (character.wounds || 0) >= 4 || (character.fatigue || 0) >= 3;
   const totalPenalty = getWoundPenalty(character) + getFatiguePenalty(character);
+  const hasOpenModal = Boolean(
+    isAddingAdvance ||
+    isAddingWeapon ||
+    isAddingArmor ||
+    isAddingShield ||
+    isAddingPower ||
+    selectedTrait ||
+    rollResult ||
+    showArcaneModal
+  );
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    if (hasOpenModal) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [hasOpenModal]);
 
   const performRoll = (traitName: string, dieStr: string, isTraitRoll: boolean = true, traitModifier: number = 0, explodes: boolean = true, modifiers: AppliedModifier[] = []) => {
     // Handle d12+X format
