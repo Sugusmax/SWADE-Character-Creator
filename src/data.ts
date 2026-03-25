@@ -796,8 +796,8 @@ export const EDGES: Edge[] = [
   },
   { 
     name: 'Erudito', 
-    requirements: 'Novato, Habilidad elegida d8+', 
-    effects: 'Tu héroe es un experto en un campo de estudio específico. Elige una habilidad de conocimiento (como Ciencias, Historia o Investigación). Recibe un bono de +2 a todas las tiradas de esa habilidad.' 
+    requirements: 'Novato, Habilidad de conocimiento d8+', 
+    effects: 'Tu héroe es un experto en un campo de estudio específico. Elige una habilidad de conocimiento (Ciencias, Humanidades, Idioma, Investigar u Ocultismo) que tengas a d8 o más. Recibe un bono de +2 a todas las tiradas de esa habilidad. Puedes elegir esta ventaja varias veces, aplicándola a una habilidad distinta cada vez.' 
   },
   { 
     name: 'Esquiva', 
