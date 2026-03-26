@@ -7,6 +7,7 @@ export interface Attribute {
 }
 
 export interface Skill {
+  id: string;
   name: string;
   attribute: string;
   value: Dice | 0;
@@ -15,29 +16,36 @@ export interface Skill {
 }
 
 export interface Hindrance {
+  id: string;
+  instanceId?: string;
   name: string;
   type: 'Menor' | 'Mayor';
   description: string;
 }
 
 export interface Edge {
+  id: string;
+  instanceId?: string;
   name: string;
   requirements: string;
   effects: string;
 }
 
 export interface SpeciesAbility {
+  id: string;
   name: string;
   description: string;
 }
 
 export interface Species {
+  id: string;
   name: string;
   description: string;
   abilities: SpeciesAbility[];
   attributeBonuses?: { [key: string]: Dice };
   skillBonuses?: { [key: string]: Dice };
   heritageChoices?: {
+    id: string;
     name: string;
     description: string;
     attributeBonuses: { [key: string]: Dice };
@@ -53,6 +61,8 @@ export interface Advance {
 }
 
 export interface Power {
+  id: string;
+  instanceId?: string;
   name: string;
   rank: 'Novato' | 'Experimentado' | 'Veterano' | 'Heroico' | 'Legendario';
   points: string;
@@ -79,6 +89,7 @@ export interface Character {
   edges: Edge[];
   gear: string[];
   weapons?: {
+    instanceId?: string;
     name: string;
     damage: string;
     range?: string;
@@ -86,11 +97,13 @@ export interface Character {
     notes?: string;
   }[];
   armor?: {
+    instanceId?: string;
     name: string;
     bonus: number;
     notes?: string;
   }[];
   shield?: {
+    instanceId?: string;
     name: string;
     parryBonus: number;
     coverBonus: number;

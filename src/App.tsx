@@ -49,6 +49,13 @@ const STEPS = [
   'Resumen'
 ];
 
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
+};
+
 const INITIAL_CHARACTER: Character = {
   id: '',
   name: '',
@@ -453,9 +460,15 @@ const checkRequirements = (char: Character, requirements: string): { met: boolea
         // Special case for "Habilidad de conocimiento"
         else if (name === 'Habilidad de conocimiento') {
           const knowledgeSkills = ['Ciencias', 'Humanidades', 'Idioma', 'Investigar', 'Ocultismo'];
-          const highestKnowledge = Math.max(0, ...knowledgeSkills.map(s => skills[s] || 0));
-          if (highestKnowledge < minVal) {
-            unmet.push(`Habilidad de conocimiento ${formatDice(minVal)}+`);
+          const alreadyChosen = edges
+            .filter(e => e && e.name.startsWith('Erudito ('))
+            .map(e => e.name.match(/\((.+)\)/)?.[1])
+            .filter(Boolean) as string[];
+          
+          const availableSkills = knowledgeSkills.filter(s => (skills[s] || 0) >= minVal && !alreadyChosen.includes(s));
+          
+          if (availableSkills.length === 0) {
+            unmet.push(`Habilidad de conocimiento ${formatDice(minVal)}+ (disponible)`);
           }
         }
         // Special case for generic "Habilidad" or "Habilidad elegida"
@@ -608,6 +621,16 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Ladrón') && skillName === 'Latrocinio') {
     generalValue += 1;
     modifiers.push({ name: 'Ladrón', value: 1 });
+  }
+  
+  // Erudito
+  if (char.edges) {
+    char.edges.forEach(e => {
+      if (e && e.name.startsWith(`Erudito (${skillName})`)) {
+        generalValue += 2;
+        modifiers.push({ name: 'Erudito', value: 2 });
+      }
+    });
   }
   
   // Situational Edges
@@ -1001,7 +1024,7 @@ export default function App() {
   }, [characterToDelete]);
 
   const startNewCharacter = () => {
-    setCurrentCharacter({ ...INITIAL_CHARACTER, id: crypto.randomUUID() });
+    setCurrentCharacter({ ...INITIAL_CHARACTER, id: generateId() });
     setCurrentStep(0);
     setIsCreating(true);
   };
@@ -1050,12 +1073,31 @@ export default function App() {
     reader.onload = (event) => {
       try {
         const char = JSON.parse(event.target?.result as string);
-        if (char.id) {
-          const importedChar = { 
+        if (char && typeof char === 'object') {
+          // Ensure all items have instanceId if they don't (for backward compatibility)
+          const ensureInstanceIds = (items: any[] = [], prefix: string) => 
+            items.map((item, i) => {
+              if (typeof item === 'string') return item; // For gear which is string[]
+              return {
+                ...item,
+                instanceId: item.instanceId || `${prefix}-${item.id || i}-${Math.random().toString(36).substr(2, 5)}`
+              };
+            });
+
+          const importedChar: Character = { 
             ...char, 
-            id: crypto.randomUUID(),
-            derived: calculateDerived(char)
+            id: generateId(),
+            hindrances: ensureInstanceIds(char.hindrances, 'hindrance'),
+            edges: ensureInstanceIds(char.edges, 'edge'),
+            powers: ensureInstanceIds(char.powers, 'power'),
+            weapons: ensureInstanceIds(char.weapons, 'weapon'),
+            armor: ensureInstanceIds(char.armor, 'armor'),
+            advancesList: (char.advancesList || []).map((adv: any, i: number) => ({
+              ...adv,
+              id: adv.id || `adv-${i}-${Math.random().toString(36).substr(2, 5)}`
+            })),
           };
+          importedChar.derived = calculateDerived(importedChar);
           setCharacters(prev => [...prev, importedChar]);
         }
       } catch (err) {
@@ -1343,6 +1385,8 @@ export default function App() {
                 if (!currentCharacter) return;
                 
                 const abEdge = { 
+                  id: ab.id,
+                  instanceId: `edge-${Math.random().toString(36).substr(2, 9)}`,
                   name: `Trasfondo Arcano (${ab.name})`, 
                   requirements: 'Novato', 
                   effects: ab.description 
@@ -1408,6 +1452,8 @@ export default function App() {
                 if (!currentCharacter) return;
                 
                 const scholarEdge = { 
+                  id: 'edge-erudito',
+                  instanceId: `edge-${Math.random().toString(36).substr(2, 9)}`,
                   name: `Erudito (${skillName})`, 
                   requirements: 'Novato, Habilidad de conocimiento d8+', 
                   effects: `Recibe un bono de +2 a todas las tiradas de ${skillName}.` 
@@ -1679,7 +1725,7 @@ function renderStep(
             <label className="text-xs font-black uppercase tracking-widest text-stone-400 mb-4 block">Selecciona una Especie</label>
             {[...SPECIES].sort(sortByName).map(s => (
               <button
-                key={s.name}
+                key={s.id}
                 onClick={() => {
                   const nextChar = { ...char, species: s.name, heritageChoice: undefined };
                   update({ 
@@ -1767,7 +1813,7 @@ function renderStep(
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2">
             {[...char.hindrances].sort(sortByName).map((h, i) => (
-              <div key={`${h.name}-${h.type}-${i}`} className="px-4 py-2 bg-red-50 border border-red-100 text-red-700 rounded-full flex items-center gap-2 text-sm font-bold shadow-sm">
+              <div key={h.instanceId || `h-wiz-${i}`} className="px-4 py-2 bg-red-50 border border-red-100 text-red-700 rounded-full flex items-center gap-2 text-sm font-bold shadow-sm">
                 <span>{h.name} ({h.type})</span>
                 <button onClick={() => {
                   const nextHindrances = char.hindrances.filter((_, idx) => idx !== i);
@@ -1849,7 +1895,8 @@ function renderStep(
                 <button
                   onClick={() => {
                     if (hasHindrance(char, currentPreview.name, currentPreview.type)) return;
-                    const nextHindrances = [...char.hindrances, currentPreview];
+                    const hindranceWithId = { ...currentPreview, instanceId: `hindrance-${Math.random().toString(36).substr(2, 9)}` };
+                    const nextHindrances = [...char.hindrances, hindranceWithId];
                     const nextChar = { ...char, hindrances: nextHindrances };
                     update({ 
                       hindrances: nextHindrances,
@@ -2017,7 +2064,7 @@ function renderStep(
               const attrVal = char.attributes[skill.attribute as keyof typeof char.attributes];
               
               return (
-                <div key={`${skill.name}-${skill.attribute}`} className="p-4 bg-white border border-stone-200 rounded-xl flex items-center justify-between group hover:border-stone-400 transition-colors">
+                <div key={skill.id} className="p-4 bg-white border border-stone-200 rounded-xl flex items-center justify-between group hover:border-stone-400 transition-colors">
                   <div>
                     <div className="font-bold text-sm flex items-center gap-2">
                       {skill.name}
@@ -2117,7 +2164,7 @@ function renderStep(
       const availableHP_Edges = totalHP_Edges - spentHP_Edges;
       
       const selectedEdge = EDGES.find(e => e.name.toLowerCase() === previewEdgeName.toLowerCase());
-      const alreadyHasEdge = hasEdge(char, previewEdgeName);
+      const alreadyHasEdge = previewEdgeName === 'Erudito' ? false : hasEdge(char, previewEdgeName);
 
       return (
         <div className="space-y-6">
@@ -2158,7 +2205,7 @@ function renderStep(
                   {[...EDGES].sort(sortByName).map(e => {
                     const req = checkRequirements(char, e.requirements);
                     return (
-                      <option key={`${e.name}-${e.requirements}`} value={e.name} className={!req.met ? 'text-stone-300' : ''}>
+                      <option key={e.id} value={e.name} className={!req.met ? 'text-stone-300' : ''}>
                         {e.name} {!req.met ? '🔒' : ''}
                       </option>
                     );
@@ -2206,7 +2253,8 @@ function renderStep(
                           }
                           
                           if (canPickFree) {
-                            const nextEdges = getEdgesAfterReplacement(char.edges, selectedEdge);
+                            const edgeWithId = { ...selectedEdge, instanceId: `edge-${Math.random().toString(36).substr(2, 9)}` };
+                            const nextEdges = getEdgesAfterReplacement(char.edges, edgeWithId);
                             const nextChar = { ...char, edges: nextEdges };
                             update({ 
                               edges: nextEdges,
@@ -2218,7 +2266,8 @@ function renderStep(
                               type: 'edge',
                               cost: 2,
                               onConfirm: () => {
-                                const nextEdges = getEdgesAfterReplacement(char.edges, selectedEdge);
+                                const edgeWithId = { ...selectedEdge, instanceId: `edge-${Math.random().toString(36).substr(2, 9)}` };
+                                const nextEdges = getEdgesAfterReplacement(char.edges, edgeWithId);
                                 const nextSpentHP = { ...char.spentHindrancePoints, edges: (char.spentHindrancePoints.edges || 0) + 1 };
                                 const nextChar = { ...char, edges: nextEdges, spentHindrancePoints: nextSpentHP };
                                 update({ 
@@ -2250,7 +2299,7 @@ function renderStep(
               {[...char.edges].sort(sortByName).map((edge, index) => {
                 const improved = isImprovedEdge(edge.name);
                 return (
-                  <div key={`${edge.name}-${index}`} className={`p-4 border rounded-xl flex items-center justify-between group transition-all ${
+                  <div key={edge.instanceId || `${edge.name}-${index}`} className={`p-4 border rounded-xl flex items-center justify-between group transition-all ${
                     improved 
                       ? 'bg-amber-50 border-amber-200 hover:border-amber-400' 
                       : 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
@@ -2338,7 +2387,7 @@ function renderStep(
                   const hasPower = char.powers?.some(cp => cp.name === p.name);
                   return (
                     <div 
-                      key={`${p.name}-${p.rank}`}
+                      key={p.id}
                       className={`p-4 border rounded-xl transition-all ${
                         hasPower 
                           ? 'bg-stone-100 border-stone-200 opacity-50' 
@@ -2346,7 +2395,8 @@ function renderStep(
                       }`}
                       onClick={() => {
                         if (hasPower || (char.powers?.length || 0) >= maxPowers) return;
-                        update({ powers: [...(char.powers || []), p] });
+                        const powerWithId = { ...p, instanceId: `power-${Math.random().toString(36).substr(2, 9)}` };
+                        update({ powers: [...(char.powers || []), powerWithId] });
                       }}
                     >
                       <div className="flex justify-between items-start mb-1">
@@ -2368,7 +2418,7 @@ function renderStep(
               <h4 className="font-black uppercase tracking-widest text-stone-400 text-xs">Tus Poderes</h4>
               <div className="space-y-3">
                 {char.powers?.map((p, idx) => (
-                  <div key={`${p.name}-${idx}`} className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-between group animate-in fade-in slide-in-from-right-4">
+                  <div key={p.instanceId || `p-wiz-${idx}`} className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-between group animate-in fade-in slide-in-from-right-4">
                     <div>
                       <div className="font-bold text-amber-900">{p.name}</div>
                       <div className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">{p.points} PP | {p.range} | {p.duration}</div>
@@ -2513,7 +2563,7 @@ function renderStep(
                 <h4 className="text-xs font-black uppercase tracking-widest text-stone-400 mb-4 border-b border-stone-100 pb-2">Desventajas</h4>
                 <div className="space-y-2">
                   {char.hindrances.length > 0 ? char.hindrances.map((h, i) => (
-                    <div key={`${h.name}-${h.type}-${i}`} className="p-3 bg-stone-50 rounded-xl border border-stone-100">
+                    <div key={h.instanceId || `h-prev-${i}`} className="p-3 bg-stone-50 rounded-xl border border-stone-100">
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm font-bold text-stone-700">{h.name}</span>
                         <span className={`text-[10px] font-black uppercase tracking-widest ${h.type === 'Mayor' ? 'text-red-500' : 'text-amber-600'}`}>{h.type}</span>
@@ -2530,7 +2580,7 @@ function renderStep(
                 <h4 className="text-xs font-black uppercase tracking-widest text-stone-400 mb-4 border-b border-stone-100 pb-2">Ventajas</h4>
                 <div className="space-y-2">
                   {char.edges.length > 0 ? char.edges.map((e, i) => (
-                    <div key={`${e.name}-${i}`} className="p-3 bg-stone-50 rounded-xl border border-stone-100">
+                    <div key={e.instanceId || `e-prev-${i}`} className="p-3 bg-stone-50 rounded-xl border border-stone-100">
                       <span className="text-sm font-bold text-stone-700 block mb-1">{e.name}</span>
                       <p className="text-[10px] text-stone-500 italic line-clamp-2">{e.effects}</p>
                     </div>
@@ -2647,7 +2697,7 @@ function ArcaneBackgroundModal({ isOpen, onClose, onSelect }: { isOpen: boolean,
         <div className="p-6 max-h-[70vh] overflow-y-auto space-y-4 custom-scrollbar">
           {ARCANE_BACKGROUNDS.map(ab => (
             <button
-              key={ab.name}
+              key={ab.id}
               onClick={() => onSelect(ab)}
               className="w-full text-left p-6 bg-stone-50 border border-stone-200 rounded-2xl hover:border-amber-400 hover:bg-amber-50 transition-all group relative overflow-hidden"
             >
@@ -2688,7 +2738,12 @@ function ScholarModal({ isOpen, onClose, onSelect, char }: { isOpen: boolean, on
   if (!isOpen) return null;
 
   const knowledgeSkills = ['Ciencias', 'Humanidades', 'Idioma', 'Investigar', 'Ocultismo'];
-  const eligibleSkills = knowledgeSkills.filter(s => (char.skills[s] || 0) >= 8);
+  const alreadyChosen = (char.edges || [])
+    .filter(e => e && e.name.startsWith('Erudito ('))
+    .map(e => e.name.match(/\((.+)\)/)?.[1])
+    .filter(Boolean) as string[];
+    
+  const eligibleSkills = knowledgeSkills.filter(s => (char.skills[s] || 0) >= 8 && !alreadyChosen.includes(s));
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
@@ -2874,6 +2929,8 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
       advancesList: [...(character.advancesList || [])]
     };
     
+    const advanceId = Math.random().toString(36).substr(2, 9);
+    newChar.advances = (newChar.advances || 0) + 1;
     let description = '';
     let details = {};
 
@@ -2905,9 +2962,11 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
       if (!selectedAdvanceEdge) return;
       const req = checkRequirements(character, selectedAdvanceEdge.requirements);
       if (!req.met) return;
-      newChar.edges = getEdgesAfterReplacement(newChar.edges, selectedAdvanceEdge);
+      
+      const edgeWithId = { ...selectedAdvanceEdge, instanceId: `edge-${advanceId}` };
+      newChar.edges = getEdgesAfterReplacement(newChar.edges, edgeWithId);
       description = `Nueva Ventaja: ${selectedAdvanceEdge.name}`;
-      details = { edge: selectedAdvanceEdge };
+      details = { edge: edgeWithId };
 
       // Initialize Arcane Background if needed
       if (selectedAdvanceEdge.name.startsWith('Trasfondo Arcano (')) {
@@ -2924,9 +2983,6 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
       description = `Nueva Habilidad: ${newSkillName}`;
       details = { skillName: newSkillName };
     }
-
-    const advanceId = Math.random().toString(36).substr(2, 9);
-    newChar.advances = (newChar.advances || 0) + 1;
 
     const newAdvance: Advance = {
       id: advanceId,
@@ -2965,7 +3021,8 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 
   const handleAddWeapon = () => {
     if (!newWeapon.name || !newWeapon.damage) return;
-    const newChar = { ...character, weapons: [...(character.weapons || []), newWeapon] };
+    const weaponWithId = { ...newWeapon, instanceId: `weapon-${Math.random().toString(36).substr(2, 9)}` };
+    const newChar = { ...character, weapons: [...(character.weapons || []), weaponWithId] };
     onUpdate(newChar);
     setNewWeapon({ name: '', damage: '', range: '', ap: 0, notes: '' });
     setIsAddingWeapon(false);
@@ -2973,7 +3030,8 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 
   const handleAddArmor = () => {
     if (!newArmor.name) return;
-    const newChar = { ...character, armor: [...(character.armor || []), newArmor] };
+    const armorWithId = { ...newArmor, instanceId: `armor-${Math.random().toString(36).substr(2, 9)}` };
+    const newChar = { ...character, armor: [...(character.armor || []), armorWithId] };
     newChar.derived = calculateDerived(newChar);
     onUpdate(newChar);
     setNewArmor({ name: '', bonus: 0, notes: '' });
@@ -2982,7 +3040,8 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 
   const handleAddShield = () => {
     if (!newShield.name) return;
-    const newChar = { ...character, shield: newShield };
+    const shieldWithId = { ...newShield, instanceId: `shield-${Math.random().toString(36).substr(2, 9)}` };
+    const newChar = { ...character, shield: shieldWithId };
     newChar.derived = calculateDerived(newChar);
     onUpdate(newChar);
     setNewShield({ name: '', parryBonus: 0, coverBonus: 0, notes: '' });
@@ -3507,7 +3566,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                   <button 
                     onClick={handleApplyAdvance}
                     disabled={
-                      (advanceType === 'Edge' && (!selectedAdvanceEdge || !checkRequirements(character, selectedAdvanceEdge.requirements).met || selectedAdvanceEdge.name === 'Trasfondo Arcano')) ||
+                      (advanceType === 'Edge' && (!selectedAdvanceEdge || !checkRequirements(character, selectedAdvanceEdge.requirements).met || selectedAdvanceEdge.name === 'Trasfondo Arcano' || selectedAdvanceEdge.name === 'Erudito')) ||
                       (advanceType === 'Attribute' && (!selectedAdvanceAttribute || !canTakeAttributeAdvance(character))) ||
                       (advanceType === 'Skills' && selectedAdvanceSkills.length === 0) ||
                       (advanceType === 'NewSkill' && (!newSkillName || newSkillName.length === 0))
@@ -3525,72 +3584,6 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                   </button>
                 </div>
               )}
-            </motion.div>
-          </div>
-        )}
-
-        {isAddingWeapon && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4 overscroll-none">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-200 relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 w-full h-2 bg-stone-900" />
-              <button onClick={() => setIsAddingWeapon(false)} className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900"><X size={20} /></button>
-              <h3 className="text-2xl font-black text-stone-900 uppercase tracking-tighter mb-6">Nueva Arma</h3>
-              <div className="space-y-4">
-                <input type="text" placeholder="Nombre (ej: Espada Larga)" value={newWeapon.name} onChange={e => setNewWeapon({...newWeapon, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
-                <input type="text" placeholder="Daño (ej: FUE+d8)" value={newWeapon.damage} onChange={e => setNewWeapon({...newWeapon, damage: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
-                <input type="text" placeholder="Alcance (opcional)" value={newWeapon.range} onChange={e => setNewWeapon({...newWeapon, range: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
-                <input type="number" placeholder="AP (opcional)" value={newWeapon.ap} onChange={e => setNewWeapon({...newWeapon, ap: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
-                <textarea placeholder="Notas" value={newWeapon.notes} onChange={e => setNewWeapon({...newWeapon, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl h-24" />
-                <button onClick={handleAddWeapon} className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all">Añadir Arma</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {isAddingArmor && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4 overscroll-none">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-200 relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 w-full h-2 bg-stone-900" />
-              <button onClick={() => setIsAddingArmor(false)} className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900"><X size={20} /></button>
-              <h3 className="text-2xl font-black text-stone-900 uppercase tracking-tighter mb-6">Nueva Armadura</h3>
-              <div className="space-y-4">
-                <input type="text" placeholder="Nombre (ej: Armadura de Cuero)" value={newArmor.name} onChange={e => setNewArmor({...newArmor, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
-                <input type="number" placeholder="Bono de Armadura (ej: 2)" value={newArmor.bonus} onChange={e => setNewArmor({...newArmor, bonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
-                <textarea placeholder="Notas" value={newArmor.notes} onChange={e => setNewArmor({...newArmor, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl h-24" />
-                <button onClick={handleAddArmor} className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all">Añadir Armadura</button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {isAddingShield && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4 overscroll-none">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-200 relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 w-full h-2 bg-stone-900" />
-              <button onClick={() => setIsAddingShield(false)} className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900"><X size={20} /></button>
-              <h3 className="text-2xl font-black text-stone-900 uppercase tracking-tighter mb-6">Nuevo Escudo</h3>
-              <div className="space-y-4">
-                <input type="text" placeholder="Nombre (ej: Escudo Mediano)" value={newShield.name} onChange={e => setNewShield({...newShield, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
-                <input type="number" placeholder="Bono a la Parada (ej: 2)" value={newShield.parryBonus} onChange={e => setNewShield({...newShield, parryBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
-                <input type="number" placeholder="Bono de Cobertura (ej: 2)" value={newShield.coverBonus} onChange={e => setNewShield({...newShield, coverBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl" />
-                <textarea placeholder="Notas" value={newShield.notes} onChange={e => setNewShield({...newShield, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl h-24" />
-                <button onClick={handleAddShield} className="w-full py-4 bg-stone-900 text-white rounded-xl font-bold hover:bg-stone-800 transition-all">Añadir Escudo</button>
-              </div>
             </motion.div>
           </div>
         )}
@@ -3948,7 +3941,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
               const bonus = getSkillBonus(character, s.name);
               const displayBonus = bonus.generalValue - totalPenalty;
               return (
-                <div key={`${s.name}-basic-sheet`} className="flex items-start py-2 border-b border-stone-100 gap-4 group">
+                <div key={s.id} className="flex items-start py-2 border-b border-stone-100 gap-4 group">
                   <div className="w-32 shrink-0">
                     <div className="font-bold text-stone-700">{s.name}</div>
                     <button 
@@ -3989,7 +3982,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
           <div className="flex flex-wrap gap-2">
             {[...character.hindrances].sort(sortByName).map((h, i) => (
               <button 
-                key={`${h.name}-${h.type}-${i}`} 
+                key={h.instanceId || `h-${i}`} 
                 onClick={() => setSelectedTrait({ name: h.name, description: h.description, type: `Desventaja ${h.type}` })}
                 className="px-4 py-2 bg-red-50 border border-red-100 rounded-lg text-sm font-bold text-red-700 hover:bg-red-100 transition-all active:scale-95 text-left"
               >
@@ -4006,7 +3999,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
               const improved = isImprovedEdge(e.name);
               return (
                 <button 
-                  key={`${e.name}-${i}`} 
+                  key={e.instanceId || `e-${i}`} 
                   onClick={() => setSelectedTrait({ name: e.name, description: e.effects, type: 'Ventaja', requirements: e.requirements })}
                   className={`px-4 py-2 border rounded-lg text-sm font-bold shadow-sm transition-all active:scale-95 text-left flex items-center gap-2 ${
                     improved 
@@ -4088,7 +4081,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
             {character.powers?.map((p, i) => (
               <div 
-                key={`${p.name}-${i}`} 
+                key={p.instanceId || `p-${i}`} 
                 role="button"
                 tabIndex={0}
                 onClick={() => setSelectedTrait({ name: p.name, description: p.description, type: 'Poder Arcano' })}
@@ -4131,7 +4124,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
               </div>
               <div className="grid grid-cols-1 gap-2">
                 {character.weapons?.map((w, idx) => (
-                  <div key={`${w.name}-${idx}`} className="p-4 bg-white border border-stone-200 rounded-xl shadow-sm group relative">
+                  <div key={w.instanceId || `w-${idx}`} className="p-4 bg-white border border-stone-200 rounded-xl shadow-sm group relative">
                     <button onClick={() => removeWeapon(idx)} className="absolute top-2 right-2 p-1 text-stone-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
                     <div className="flex items-center justify-between mb-2">
                       <div className="font-black text-stone-900 uppercase tracking-tight">{w.name}</div>
@@ -4160,7 +4153,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                 </div>
                 <div className="grid grid-cols-1 gap-2">
                   {character.armor?.map((a, idx) => (
-                    <div key={`${a.name}-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl shadow-sm group relative">
+                    <div key={a.instanceId || `a-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl shadow-sm group relative">
                       <button onClick={() => removeArmor(idx)} className="absolute top-2 right-2 p-1 text-stone-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
                       <div className="font-bold text-stone-900 text-sm">{a.name}</div>
                       <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Bono: +{a.bonus}</div>
@@ -4211,7 +4204,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {character.gear.map((item, idx) => (
-                <div key={`${item}-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl text-stone-700 font-medium flex justify-between items-center group">
+                <div key={`gear-${idx}-${item}`} className="p-3 bg-white border border-stone-200 rounded-xl text-stone-700 font-medium flex justify-between items-center group">
                   <span className="text-sm">{item}</span>
                   <button onClick={() => removeGear(idx)} className="text-stone-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
                 </div>
@@ -4298,7 +4291,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {character.advancesList.map((adv, i) => (
-              <div key={`${adv.id}-${i}`} className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col gap-1 group hover:bg-stone-100 transition-colors">
+              <div key={adv.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col gap-1 group hover:bg-stone-100 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="text-xs font-black text-stone-900 uppercase tracking-tight">{adv.description}</div>
                   <div className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Avance {i + 1}</div>
