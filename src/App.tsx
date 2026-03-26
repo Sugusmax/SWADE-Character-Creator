@@ -626,16 +626,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     modifiers.push({ name: 'Ladrón', value: 1 });
   }
   
-  // Erudito
-  if (char.edges) {
-    char.edges.forEach(e => {
-      if (e && e.name.startsWith(`Erudito (${skillName})`)) {
-        generalValue += 2;
-        modifiers.push({ name: 'Erudito', value: 2 });
-      }
-    });
-  }
-  
   // Situational Edges
   if (hasEdge(char, 'Aristócrata') && skillName === 'Persuadir') {
     situational.push({ value: 2, note: 'Alta sociedad/autoridades' });
@@ -1066,22 +1056,28 @@ export default function App() {
     if (Capacitor.isNativePlatform()) {
       try {
         const writeResult = await Filesystem.writeFile({
-          path: filename,
+          path: `exports/${filename}`,
           data: jsonContent,
-          directory: Directory.Cache,
+          directory: Directory.Documents,
           encoding: Encoding.UTF8,
           recursive: true,
         });
 
-        await Share.share({
-          title: 'Exportar ficha',
-          text: 'Guardar o compartir archivo JSON',
-          url: writeResult.uri,
-          dialogTitle: 'Guardar ficha',
-        });
+        const canShareResult = await Share.canShare();
+        if (canShareResult.value) {
+          await Share.share({
+            title: 'Exportar ficha',
+            text: 'Archivo JSON de personaje',
+            files: [writeResult.uri],
+            dialogTitle: 'Guardar o compartir ficha',
+          });
+        } else {
+          window.alert(`Archivo guardado en: ${writeResult.uri}`);
+        }
         return;
       } catch (err) {
         console.error('Failed to export character on native platform', err);
+        window.alert('No se pudo exportar la ficha en Android. Revisa permisos de almacenamiento y vuelve a intentar.');
       }
     }
 
