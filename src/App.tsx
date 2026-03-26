@@ -34,6 +34,9 @@ import {
   Minus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { Character, Dice, Species, Skill, Hindrance, Edge, Advance } from './types';
 import { SPECIES, ATTRIBUTES, SKILLS, HINDRANCES, EDGES, ARCANE_BACKGROUNDS, POWERS } from './data';
 
@@ -1056,11 +1059,36 @@ export default function App() {
     setCharacters(prev => prev.filter(c => c.id !== id));
   };
 
-  const exportCharacter = (char: Character) => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(char));
+  const exportCharacter = async (char: Character) => {
+    const filename = `${char.name || 'personaje'}.json`.replace(/[\\/:*?"<>|]/g, '_');
+    const jsonContent = JSON.stringify(char, null, 2);
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const writeResult = await Filesystem.writeFile({
+          path: filename,
+          data: jsonContent,
+          directory: Directory.Cache,
+          encoding: Encoding.UTF8,
+          recursive: true,
+        });
+
+        await Share.share({
+          title: 'Exportar ficha',
+          text: 'Guardar o compartir archivo JSON',
+          url: writeResult.uri,
+          dialogTitle: 'Guardar ficha',
+        });
+        return;
+      } catch (err) {
+        console.error('Failed to export character on native platform', err);
+      }
+    }
+
+    const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(jsonContent)}`;
     const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `${char.name || 'personaje'}.json`);
+    downloadAnchorNode.setAttribute('href', dataStr);
+    downloadAnchorNode.setAttribute('download', filename);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
