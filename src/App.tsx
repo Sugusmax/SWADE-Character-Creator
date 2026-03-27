@@ -34,9 +34,6 @@ import {
   Minus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
 import { Character, Dice, Species, Skill, Hindrance, Edge, Advance } from './types';
 import { SPECIES, ATTRIBUTES, SKILLS, HINDRANCES, EDGES, ARCANE_BACKGROUNDS, POWERS } from './data';
 
@@ -638,8 +635,11 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     if (edge.name.startsWith('Erudito (')) {
       const chosenSkill = edge.name.match(/\((.*)\)/)?.[1];
       if (chosenSkill === skillName) {
-        generalValue += 2;
-        modifiers.push({ name: edge.name, value: 2 });
+        // Check if we already added this specific modifier to avoid duplicates
+        if (!modifiers.some(m => m.name === edge.name)) {
+          generalValue += 2;
+          modifiers.push({ name: edge.name, value: 2 });
+        }
       }
     }
   });
@@ -981,8 +981,8 @@ export default function App() {
     onConfirm: () => void;
   } | null>(null);
   const [characterToDelete, setCharacterToDelete] = useState<Character | null>(null);
-  const [showArcaneModal, setShowArcaneModal] = useState(false);
-  const [showScholarModal, setShowScholarModal] = useState(false);
+  const [arcaneModalOnSelect, setArcaneModalOnSelect] = useState<((ab: any) => void) | null>(null);
+  const [scholarModalOnSelect, setScholarModalOnSelect] = useState<((skill: string) => void) | null>(null);
 
   // Load characters from localStorage
   useEffect(() => {
@@ -1001,9 +1001,10 @@ export default function App() {
     localStorage.setItem('sw_characters', JSON.stringify(characters));
   }, [characters]);
 
-  // Lock body scroll when character deletion modal is open
+  // Lock body scroll when any modal is open
   useEffect(() => {
-    if (characterToDelete) {
+    const isModalOpen = !!characterToDelete || !!arcaneModalOnSelect || !!scholarModalOnSelect || !!pendingHindranceSpend;
+    if (isModalOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
     } else {
@@ -1014,7 +1015,7 @@ export default function App() {
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [characterToDelete]);
+  }, [characterToDelete, arcaneModalOnSelect, scholarModalOnSelect, pendingHindranceSpend]);
 
   const startNewCharacter = () => {
     setCurrentCharacter({ ...INITIAL_CHARACTER, id: generateId() });
@@ -1049,42 +1050,11 @@ export default function App() {
     setCharacters(prev => prev.filter(c => c.id !== id));
   };
 
-  const exportCharacter = async (char: Character) => {
-    const filename = `${char.name || 'personaje'}.json`.replace(/[\\/:*?"<>|]/g, '_');
-    const jsonContent = JSON.stringify(char, null, 2);
-
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const writeResult = await Filesystem.writeFile({
-          path: `exports/${filename}`,
-          data: jsonContent,
-          directory: Directory.Documents,
-          encoding: Encoding.UTF8,
-          recursive: true,
-        });
-
-        const canShareResult = await Share.canShare();
-        if (canShareResult.value) {
-          await Share.share({
-            title: 'Exportar ficha',
-            text: 'Archivo JSON de personaje',
-            files: [writeResult.uri],
-            dialogTitle: 'Guardar o compartir ficha',
-          });
-        } else {
-          window.alert(`Archivo guardado en: ${writeResult.uri}`);
-        }
-        return;
-      } catch (err) {
-        console.error('Failed to export character on native platform', err);
-        window.alert('No se pudo exportar la ficha en Android. Revisa permisos de almacenamiento y vuelve a intentar.');
-      }
-    }
-
-    const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(jsonContent)}`;
+  const exportCharacter = (char: Character) => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(char));
     const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute('href', dataStr);
-    downloadAnchorNode.setAttribute('download', filename);
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `${char.name || 'personaje'}.json`);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
@@ -1240,7 +1210,9 @@ export default function App() {
               const next = { ...updated, derived: calculateDerived(updated) };
               setCharacters(prev => prev.map(c => c.id === next.id ? next : c));
               setViewingCharacter(next);
-            }}
+            }} 
+            onOpenArcaneModal={setArcaneModalOnSelect}
+            onOpenScholarModal={setScholarModalOnSelect}
           />
         </div>
       </div>
@@ -1304,8 +1276,8 @@ export default function App() {
                     previewEdgeName,
                     setPreviewEdgeName,
                     nextStep,
-                    setShowArcaneModal,
-                    setShowScholarModal
+                    setArcaneModalOnSelect,
+                    setScholarModalOnSelect
                   })}
                 </motion.div>
               </AnimatePresence>
@@ -1398,131 +1370,31 @@ export default function App() {
             </AnimatePresence>
 
             <ArcaneBackgroundModal 
-              isOpen={showArcaneModal} 
+              isOpen={!!arcaneModalOnSelect} 
               onClose={() => {
-                setShowArcaneModal(false);
+                setArcaneModalOnSelect(null);
                 if (previewEdgeName === 'Trasfondo Arcano') {
                   setPreviewEdgeName('');
                 }
               }}
               onSelect={(ab) => {
-                if (!currentCharacter) return;
-                
-                const abEdge = { 
-                  id: ab.id,
-                  instanceId: `edge-${Math.random().toString(36).substr(2, 9)}`,
-                  name: `Trasfondo Arcano (${ab.name})`, 
-                  requirements: 'Novato', 
-                  effects: ab.description 
-                };
-                
-                const freeEdges = currentCharacter.species === 'Humano' ? 1 : 0;
-                const canPickFree = currentCharacter.edges.length < freeEdges;
-                const totalHP = calculateHindrancePoints(currentCharacter.hindrances);
-                const spentHP = (currentCharacter.spentHindrancePoints?.attributes || 0) * 2 + 
-                                 (currentCharacter.spentHindrancePoints?.skills || 0) * 1 + 
-                                 (currentCharacter.spentHindrancePoints?.edges || 0) * 2;
-                const availableHP_Edges = totalHP - spentHP;
-
-                const finalizeAddition = (isFree: boolean) => {
-                  const nextEdges = [...currentCharacter.edges, abEdge];
-                  const nextSpentHP = isFree 
-                    ? currentCharacter.spentHindrancePoints 
-                    : { ...currentCharacter.spentHindrancePoints, edges: (currentCharacter.spentHindrancePoints.edges || 0) + 1 };
-                  
-                  const nextChar = { 
-                    ...currentCharacter, 
-                    edges: nextEdges,
-                    spentHindrancePoints: nextSpentHP,
-                    powerPoints: { max: ab.powerPoints, current: ab.powerPoints },
-                    powers: []
-                  };
-                  
-                  updateCharacter({
-                    edges: nextEdges,
-                    spentHindrancePoints: nextSpentHP,
-                    powerPoints: { max: ab.powerPoints, current: ab.powerPoints },
-                    powers: [],
-                    bennies: calculateStartingBennies(nextChar)
-                  });
-                  
-                  setShowArcaneModal(false);
-                  setPreviewEdgeName('');
-                };
-
-                if (canPickFree) {
-                  finalizeAddition(true);
-                } else if (availableHP_Edges >= 2) {
-                  setPendingHindranceSpend({
-                    type: 'edge',
-                    cost: 2,
-                    onConfirm: () => finalizeAddition(false)
-                  });
-                  setShowArcaneModal(false);
-                }
+                arcaneModalOnSelect?.(ab);
+                setArcaneModalOnSelect(null);
               }}
             />
 
             <ScholarModal 
-              isOpen={showScholarModal}
+              isOpen={!!scholarModalOnSelect}
               char={currentCharacter || INITIAL_CHARACTER}
               onClose={() => {
-                setShowScholarModal(false);
+                setScholarModalOnSelect(null);
                 if (previewEdgeName === 'Erudito') {
                   setPreviewEdgeName('');
                 }
               }}
               onSelect={(skillName) => {
-                if (!currentCharacter) return;
-                
-                const scholarEdge = { 
-                  id: 'edge-erudito',
-                  instanceId: `edge-${Math.random().toString(36).substr(2, 9)}`,
-                  name: `Erudito (${skillName})`, 
-                  requirements: 'Novato, Habilidad de conocimiento d8+', 
-                  effects: `Recibe un bono de +2 a todas las tiradas de ${skillName}.` 
-                };
-                
-                const freeEdges = currentCharacter.species === 'Humano' ? 1 : 0;
-                const canPickFree = currentCharacter.edges.length < freeEdges;
-                const totalHP = calculateHindrancePoints(currentCharacter.hindrances);
-                const spentHP = (currentCharacter.spentHindrancePoints?.attributes || 0) * 2 + 
-                                 (currentCharacter.spentHindrancePoints?.skills || 0) * 1 + 
-                                 (currentCharacter.spentHindrancePoints?.edges || 0) * 2;
-                const availableHP_Edges = totalHP - spentHP;
-
-                const finalizeAddition = (isFree: boolean) => {
-                  const nextEdges = [...currentCharacter.edges, scholarEdge];
-                  const nextSpentHP = isFree 
-                    ? currentCharacter.spentHindrancePoints 
-                    : { ...currentCharacter.spentHindrancePoints, edges: (currentCharacter.spentHindrancePoints.edges || 0) + 1 };
-                  
-                  const nextChar = { 
-                    ...currentCharacter, 
-                    edges: nextEdges,
-                    spentHindrancePoints: nextSpentHP
-                  };
-                  
-                  updateCharacter({
-                    edges: nextEdges,
-                    spentHindrancePoints: nextSpentHP,
-                    bennies: calculateStartingBennies(nextChar)
-                  });
-                  
-                  setShowScholarModal(false);
-                  setPreviewEdgeName('');
-                };
-
-                if (canPickFree) {
-                  finalizeAddition(true);
-                } else if (availableHP_Edges >= 2) {
-                  setPendingHindranceSpend({
-                    type: 'edge',
-                    cost: 2,
-                    onConfirm: () => finalizeAddition(false)
-                  });
-                  setShowScholarModal(false);
-                }
+                scholarModalOnSelect?.(skillName);
+                setScholarModalOnSelect(null);
               }}
             />
           </div>
@@ -1686,8 +1558,8 @@ function renderStep(
     previewEdgeName: string;
     setPreviewEdgeName: (name: string) => void;
     nextStep: () => void;
-    setShowArcaneModal: (show: boolean) => void;
-    setShowScholarModal: (show: boolean) => void;
+    setArcaneModalOnSelect: (cb: ((ab: any) => void) | null) => void;
+    setScholarModalOnSelect: (cb: ((skill: string) => void) | null) => void;
   }
 ) {
   const { 
@@ -1699,8 +1571,8 @@ function renderStep(
     previewEdgeName,
     setPreviewEdgeName,
     nextStep,
-    setShowArcaneModal,
-    setShowScholarModal
+    setArcaneModalOnSelect,
+    setScholarModalOnSelect
   } = extras;
 
   switch (step) {
@@ -1836,21 +1708,21 @@ function renderStep(
       return (
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2">
-            {[...char.hindrances].sort(sortByName).map((h, i) => (
-              <div key={h.instanceId || `h-wiz-${i}`} className="px-4 py-2 bg-red-50 border border-red-100 text-red-700 rounded-full flex items-center gap-2 text-sm font-bold shadow-sm">
-                <span>{h.name} ({h.type})</span>
-                <button onClick={() => {
-                  const nextHindrances = char.hindrances.filter((_, idx) => idx !== i);
-                  const nextChar = { ...char, hindrances: nextHindrances };
-                  update({ 
-                    hindrances: nextHindrances,
-                    bennies: calculateStartingBennies(nextChar)
-                  });
-                }}>
-                  <Trash2 size={14} className="text-red-400 hover:text-red-600" />
-                </button>
-              </div>
-            ))}
+              {[...char.hindrances].sort(sortByName).map((h) => (
+                <div key={h.instanceId} className="px-4 py-2 bg-red-50 border border-red-100 text-red-700 rounded-full flex items-center gap-2 text-sm font-bold shadow-sm">
+                  <span>{h.name} ({h.type})</span>
+                  <button onClick={() => {
+                    const nextHindrances = char.hindrances.filter(hind => hind.instanceId !== h.instanceId);
+                    const nextChar = { ...char, hindrances: nextHindrances };
+                    update({ 
+                      hindrances: nextHindrances,
+                      bennies: calculateStartingBennies(nextChar)
+                    });
+                  }}>
+                    <Trash2 size={14} className="text-red-400 hover:text-red-600" />
+                  </button>
+                </div>
+              ))}
           </div>
 
           <div className="p-6 bg-stone-50 rounded-2xl border border-stone-200 space-y-6">
@@ -2267,12 +2139,110 @@ function renderStep(
                           if (alreadyHasEdge || !req.met) return;
                           
                           if (selectedEdge.name === 'Trasfondo Arcano') {
-                            setShowArcaneModal(true);
+                            setArcaneModalOnSelect((ab) => {
+                              const abEdge = { 
+                                id: ab.id,
+                                instanceId: `edge-${Math.random().toString(36).substr(2, 9)}`,
+                                name: `Trasfondo Arcano (${ab.name})`, 
+                                requirements: 'Novato', 
+                                effects: ab.description 
+                              };
+                              
+                              const freeEdges = char.species === 'Humano' ? 1 : 0;
+                              const canPickFree = char.edges.length < freeEdges;
+                              const totalHP = calculateHindrancePoints(char.hindrances);
+                              const spentHP = (char.spentHindrancePoints?.attributes || 0) * 2 + 
+                                               (char.spentHindrancePoints?.skills || 0) * 1 + 
+                                               (char.spentHindrancePoints?.edges || 0) * 2;
+                              const availableHP_Edges = totalHP - spentHP;
+
+                              const finalizeAddition = (isFree: boolean) => {
+                                const nextEdges = [...char.edges, abEdge];
+                                const nextSpentHP = isFree 
+                                  ? char.spentHindrancePoints 
+                                  : { ...char.spentHindrancePoints, edges: (char.spentHindrancePoints.edges || 0) + 1 };
+                                
+                                const nextChar = { 
+                                  ...char, 
+                                  edges: nextEdges,
+                                  spentHindrancePoints: nextSpentHP,
+                                  powerPoints: { max: ab.powerPoints, current: ab.powerPoints },
+                                  powers: []
+                                };
+                                
+                                update({
+                                  edges: nextEdges,
+                                  spentHindrancePoints: nextSpentHP,
+                                  powerPoints: { max: ab.powerPoints, current: ab.powerPoints },
+                                  powers: [],
+                                  bennies: calculateStartingBennies(nextChar)
+                                });
+                                
+                                setPreviewEdgeName('');
+                              };
+
+                              if (canPickFree) {
+                                finalizeAddition(true);
+                              } else if (availableHP_Edges >= 2) {
+                                setPendingHindranceSpend({
+                                  type: 'edge',
+                                  cost: 2,
+                                  onConfirm: () => finalizeAddition(false)
+                                });
+                              }
+                            });
                             return;
                           }
                           
                           if (selectedEdge.name === 'Erudito') {
-                            setShowScholarModal(true);
+                            setScholarModalOnSelect((skillName) => {
+                              const scholarEdge = { 
+                                id: 'edge-erudito',
+                                instanceId: `edge-${Math.random().toString(36).substr(2, 9)}`,
+                                name: `Erudito (${skillName})`, 
+                                requirements: 'Novato, Habilidad de conocimiento d8+', 
+                                effects: `Recibe un bono de +2 a todas las tiradas de ${skillName}.` 
+                              };
+                              
+                              const freeEdges = char.species === 'Humano' ? 1 : 0;
+                              const canPickFree = char.edges.length < freeEdges;
+                              const totalHP = calculateHindrancePoints(char.hindrances);
+                              const spentHP = (char.spentHindrancePoints?.attributes || 0) * 2 + 
+                                               (char.spentHindrancePoints?.skills || 0) * 1 + 
+                                               (char.spentHindrancePoints?.edges || 0) * 2;
+                              const availableHP_Edges = totalHP - spentHP;
+
+                              const finalizeAddition = (isFree: boolean) => {
+                                const nextEdges = [...char.edges, scholarEdge];
+                                const nextSpentHP = isFree 
+                                  ? char.spentHindrancePoints 
+                                  : { ...char.spentHindrancePoints, edges: (char.spentHindrancePoints.edges || 0) + 1 };
+                                
+                                const nextChar = { 
+                                  ...char, 
+                                  edges: nextEdges,
+                                  spentHindrancePoints: nextSpentHP
+                                };
+                                
+                                update({
+                                  edges: nextEdges,
+                                  spentHindrancePoints: nextSpentHP,
+                                  bennies: calculateStartingBennies(nextChar)
+                                });
+                                
+                                setPreviewEdgeName('');
+                              };
+
+                              if (canPickFree) {
+                                finalizeAddition(true);
+                              } else if (availableHP_Edges >= 2) {
+                                setPendingHindranceSpend({
+                                  type: 'edge',
+                                  cost: 2,
+                                  onConfirm: () => finalizeAddition(false)
+                                });
+                              }
+                            });
                             return;
                           }
                           
@@ -2320,10 +2290,10 @@ function renderStep(
           <div className="space-y-4">
             <h3 className="font-black uppercase tracking-widest text-stone-400 text-xs">Tus Ventajas</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[...char.edges].sort(sortByName).map((edge, index) => {
+              {[...char.edges].sort(sortByName).map((edge) => {
                 const improved = isImprovedEdge(edge.name);
                 return (
-                  <div key={edge.instanceId || `${edge.name}-${index}`} className={`p-4 border rounded-xl flex items-center justify-between group transition-all ${
+                  <div key={edge.instanceId} className={`p-4 border rounded-xl flex items-center justify-between group transition-all ${
                     improved 
                       ? 'bg-amber-50 border-amber-200 hover:border-amber-400' 
                       : 'bg-emerald-50 border-emerald-100 hover:border-emerald-300'
@@ -2337,7 +2307,7 @@ function renderStep(
                     </div>
                     <button 
                       onClick={() => {
-                        const nextEdges = char.edges.filter(e => e.name !== edge.name);
+                        const nextEdges = char.edges.filter(e => e.instanceId !== edge.instanceId);
                         
                         // Recalculate paid edges based on total count and free slots
                         const paidEdgesCount = Math.max(0, nextEdges.length - freeEdges);
@@ -2817,7 +2787,17 @@ function ScholarModal({ isOpen, onClose, onSelect, char }: { isOpen: boolean, on
   );
 }
 
-function CharacterSheetView({ character, onUpdate }: { character: Character, onUpdate: (c: Character) => void }) {
+function CharacterSheetView({ 
+  character, 
+  onUpdate,
+  onOpenArcaneModal,
+  onOpenScholarModal
+}: { 
+  character: Character, 
+  onUpdate: (c: Character) => void,
+  onOpenArcaneModal: (cb: (ab: any) => void) => void,
+  onOpenScholarModal: (cb: (skill: string) => void) => void
+}) {
   const [selectedTrait, setSelectedTrait] = useState<{ name: string, description: string, type?: string, requirements?: string } | null>(null);
   const [isAddingAdvance, setIsAddingAdvance] = useState(false);
   const [isAddingWeapon, setIsAddingWeapon] = useState(false);
@@ -2831,8 +2811,6 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
   const [selectedAdvanceSkills, setSelectedAdvanceSkills] = useState<string[]>([]);
   const [selectedAdvanceAttribute, setSelectedAdvanceAttribute] = useState<string | null>(null);
   const [selectedAdvanceEdge, setSelectedAdvanceEdge] = useState<Edge | null>(null);
-  const [showArcaneModal, setShowArcaneModal] = useState(false);
-  const [showScholarModal, setShowScholarModal] = useState(false);
   const [newSkillName, setNewSkillName] = useState<string>('');
 
   const [rollResult, setRollResult] = useState<{
@@ -2853,7 +2831,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
 
   // Lock body scroll when any modal is open
   useEffect(() => {
-    const isModalOpen = !!selectedTrait || isAddingAdvance || isAddingWeapon || isAddingArmor || isAddingShield || isAddingPower || !!rollResult || showArcaneModal;
+    const isModalOpen = !!selectedTrait || isAddingAdvance || isAddingWeapon || isAddingArmor || isAddingShield || isAddingPower || !!rollResult;
     if (isModalOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
@@ -2865,7 +2843,7 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [selectedTrait, isAddingAdvance, isAddingWeapon, isAddingArmor, isAddingShield, isAddingPower, rollResult, showArcaneModal]);
+  }, [selectedTrait, isAddingAdvance, isAddingWeapon, isAddingArmor, isAddingShield, isAddingPower, rollResult]);
   
   const speciesData = useMemo(() => SPECIES.find(s => s.name === character.species), [character.species]);
 
@@ -3502,10 +3480,22 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                                   if (req.met) {
                                     setSelectedAdvanceEdge(edge);
                                     if (edge.name === 'Trasfondo Arcano') {
-                                      setShowArcaneModal(true);
+                                      onOpenArcaneModal((ab) => {
+                                        setSelectedAdvanceEdge({
+                                          ...edge,
+                                          name: `Trasfondo Arcano (${ab.name})`,
+                                          effects: ab.description
+                                        });
+                                      });
                                     }
                                     if (edge.name === 'Erudito') {
-                                      setShowScholarModal(true);
+                                      onOpenScholarModal((skillName) => {
+                                        setSelectedAdvanceEdge({
+                                          ...edge,
+                                          name: `Erudito (${skillName})`,
+                                          effects: `Recibe un bono de +2 a todas las tiradas de ${skillName}.`
+                                        });
+                                      });
                                     }
                                   }
                                 }}
@@ -3515,10 +3505,22 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
                                     if (req.met) {
                                       setSelectedAdvanceEdge(edge);
                                       if (edge.name === 'Trasfondo Arcano') {
-                                        setShowArcaneModal(true);
+                                        onOpenArcaneModal((ab) => {
+                                          setSelectedAdvanceEdge({
+                                            ...edge,
+                                            name: `Trasfondo Arcano (${ab.name})`,
+                                            effects: ab.description
+                                          });
+                                        });
                                       }
                                       if (edge.name === 'Erudito') {
-                                        setShowScholarModal(true);
+                                        onOpenScholarModal((skillName) => {
+                                          setSelectedAdvanceEdge({
+                                            ...edge,
+                                            name: `Erudito (${skillName})`,
+                                            effects: `Recibe un bono de +2 a todas las tiradas de ${skillName}.`
+                                          });
+                                        });
                                       }
                                     }
                                   }
@@ -3611,49 +3613,6 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
             </motion.div>
           </div>
         )}
-
-        <ArcaneBackgroundModal 
-          isOpen={showArcaneModal} 
-          onClose={() => {
-            setShowArcaneModal(false);
-            if (selectedAdvanceEdge?.name === 'Trasfondo Arcano') {
-              setSelectedAdvanceEdge(null);
-            }
-          }}
-          onSelect={(ab) => {
-            if (selectedAdvanceEdge) {
-              const updatedEdge = {
-                ...selectedAdvanceEdge,
-                name: `Trasfondo Arcano (${ab.name})`,
-                effects: ab.description
-              };
-              setSelectedAdvanceEdge(updatedEdge);
-            }
-            setShowArcaneModal(false);
-          }}
-        />
-
-        <ScholarModal 
-          isOpen={showScholarModal}
-          char={character}
-          onClose={() => {
-            setShowScholarModal(false);
-            if (selectedAdvanceEdge?.name === 'Erudito') {
-              setSelectedAdvanceEdge(null);
-            }
-          }}
-          onSelect={(skillName) => {
-            if (selectedAdvanceEdge) {
-              const updatedEdge = {
-                ...selectedAdvanceEdge,
-                name: `Erudito (${skillName})`,
-                effects: `Recibe un bono de +2 a todas las tiradas de ${skillName}.`
-              };
-              setSelectedAdvanceEdge(updatedEdge);
-            }
-            setShowScholarModal(false);
-          }}
-        />
 
         {isAddingPower && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4 overscroll-none">
@@ -4019,11 +3978,11 @@ function CharacterSheetView({ character, onUpdate }: { character: Character, onU
         <section className="space-y-6">
           <SectionTitle icon={<Award size={20} className="text-emerald-500" />} title="Ventajas" />
           <div className="flex flex-wrap gap-2">
-            {[...character.edges].sort(sortByName).map((e, i) => {
+            {[...character.edges].sort(sortByName).map((e) => {
               const improved = isImprovedEdge(e.name);
               return (
                 <button 
-                  key={e.instanceId || `e-${i}`} 
+                  key={e.instanceId} 
                   onClick={() => setSelectedTrait({ name: e.name, description: e.effects, type: 'Ventaja', requirements: e.requirements })}
                   className={`px-4 py-2 border rounded-lg text-sm font-bold shadow-sm transition-all active:scale-95 text-left flex items-center gap-2 ${
                     improved 
