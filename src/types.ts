@@ -29,6 +29,7 @@ export interface Edge {
   name: string;
   requirements: string;
   effects: string;
+  replaces?: string;
 }
 
 export interface SpeciesAbility {

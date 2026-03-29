@@ -743,7 +743,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-afortunado',
-    name: 'Afortunado', 
+    name: 'Suerte', 
     requirements: 'Novato', 
     effects: 'Tu héroe parece tener una suerte increíble. Recibe un beni adicional al comienzo de cada sesión de juego.' 
   },
@@ -761,7 +761,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-ambas-manos',
-    name: 'Ambas manos', 
+    name: 'A dos manos', 
     requirements: 'Novato, Agilidad d8+', 
     effects: 'Tu héroe es experto en luchar con un arma en cada mano. Si realiza un ataque con cada mano (cuerpo a cuerpo), no sufre la penalización por acción múltiple.' 
   },
@@ -785,7 +785,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-arma-distintiva',
-    name: 'Arma Distintiva', 
+    name: 'Arma predilecta', 
     requirements: 'Novato, Pelear o Disparar d8+', 
     effects: 'Tu héroe tiene un arma especial con la que ha entrenado extensamente. Recibe un bono de +1 a las tiradas de ataque y +1 a la Parada mientras empuñe ese arma específica.' 
   },
@@ -827,7 +827,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-berserk',
-    name: 'Berserk', 
+    name: 'Berserker', 
     requirements: 'Novato', 
     effects: 'Cuando tu héroe sufre una Herida, debe realizar una tirada de Espíritu o entrar en un estado de furia ciega. Recibe un bono de +2 a las tiradas de Pelea y Fuerza, y +2 a la Dureza (en furia), pero no puede usar habilidades que requieran concentración.' 
   },
@@ -864,18 +864,18 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-chatarrero',
     name: 'Chatarrero', 
-    requirements: 'Novato, Afortunado', 
+    requirements: 'Novato, Suerte', 
     effects: 'Tu héroe tiene un talento especial para encontrar objetos útiles. Una vez por sesión, puede encontrar un objeto útil que necesite en ese momento.' 
   },
   { 
     id: 'edge-concentracion',
     name: 'Concentración', 
-    requirements: 'Experimentado, Trasfondo Arcano', 
+    requirements: 'Experimentado, Trasfondo arcano', 
     effects: 'La duración de los poderes con mantenimiento se duplica antes de tener que pagar el coste de mantenimiento.' 
   },
   { 
     id: 'edge-conexiones',
-    name: 'Conexiones', 
+    name: 'Contactos', 
     requirements: 'Novato', 
     effects: 'Tu héroe tiene una red de contactos en una organización o grupo social. Puede pedir favores, información o equipo una vez por sesión.' 
   },
@@ -893,7 +893,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-curandero',
-    name: 'Curandero', 
+    name: 'Sanador', 
     requirements: 'Novato, Espíritu d8+', 
     effects: 'Tu héroe tiene un don para la medicina. Recibe un bono de +2 a todas las tiradas de Sanar.' 
   },
@@ -912,12 +912,12 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-drenaje-de-alma',
     name: 'Drenaje de alma', 
-    requirements: 'Experimentado, Trasfondo Arcano, Habilidad arcana d8+', 
+    requirements: 'Experimentado, Trasfondo arcano, Habilidad arcana d8+', 
     effects: 'Cuando el héroe se queda sin Puntos de Poder, puede realizar una tirada de Espíritu para obtener 5 PP a cambio de sufrir un nivel de fatiga.' 
   },
   { 
     id: 'edge-duro-de-pelar',
-    name: 'Duro de pelar', 
+    name: 'Más difícil de matar', 
     requirements: 'Veterano, Difícil de Matar', 
     effects: 'Si tu héroe resultase muerto, realiza una tirada de Espíritu. Si tiene éxito, queda Incapacitado en su lugar.' 
   },
@@ -947,14 +947,14 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-fama',
-    name: 'Fama', 
+    name: 'Famoso', 
     requirements: 'Novato', 
     effects: 'Tu héroe es conocido por sus hazañas. Recibe un bono de +1 a las tiradas de Persuadir con aquellos que lo reconozcan.' 
   },
   { 
     id: 'edge-fama-mejorada',
-    name: 'Fama mejorada', 
-    requirements: 'Experimentado, Fama', 
+    name: 'Muy famoso', 
+    requirements: 'Experimentado, Famoso', 
     effects: 'Tu héroe es una celebridad. El bono de Persuadir aumenta a +2.' 
   },
   { 
@@ -971,7 +971,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-fornido',
-    name: 'Fornido', 
+    name: 'Forzudo', 
     requirements: 'Novato, Fuerza d6+, Vigor d6+', 
     effects: 'Tu héroe es excepcionalmente robusto. Su Tamaño aumenta en +1 y su Dureza en +1. Además, su Fuerza se considera un tipo de dado superior a efectos de Carga.' 
   },
@@ -989,7 +989,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-golpe-de-poder',
-    name: 'Golpe de poder', 
+    name: 'Golpe poderoso', 
     requirements: 'Novato, Pelear d10+', 
     effects: 'Tu héroe puede sacrificar precisión por potencia. Puede restar 2 a su tirada de Pelea para añadir +4 al daño si impacta.' 
   },
@@ -1001,7 +1001,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-impetu',
-    name: 'Ímpetu', 
+    name: 'Brío', 
     requirements: 'Novato, Espíritu d8+', 
     effects: 'Tu héroe tiene una energía y entusiasmo contagiosos. Recibe un bono de +2 a sus tiradas cuando gasta un beni para repetir una tirada.' 
   },
@@ -1013,14 +1013,14 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-inspiracion',
-    name: 'Inspiración', 
+    name: 'Inspirar', 
     requirements: 'Novato, Mando', 
     effects: 'Los aliados en el Radio de Mando de tu héroe reciben un bono de +1 a sus tiradas de Espíritu para recuperarse del estado Sacudido.' 
   },
   { 
     id: 'edge-inspiracion-heroica',
     name: 'Inspiración heroica', 
-    requirements: 'Heroico, Inspiración', 
+    requirements: 'Heroico, Inspirar', 
     effects: 'Los aliados bajo el mando de tu héroe pueden repetir cualquier tirada de Espíritu fallida, no solo para recuperarse de estar Aturdidos.' 
   },
   { 
@@ -1091,7 +1091,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-mantener-la-linea',
-    name: '¡Mantener la línea!', 
+    name: '¡Mantened la línea!', 
     requirements: 'Experimentado, Mando', 
     effects: 'Los aliados en el Radio de Mando de tu héroe añaden +1 a su Dureza.' 
   },
@@ -1134,7 +1134,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-mentalista',
     name: 'Mentalista', 
-    requirements: 'Experimentado, Astucia d8+, Trasfondo Arcano (Psiónica)', 
+    requirements: 'Experimentado, Astucia d8+, Trasfondo arcano (Psiónica)', 
     effects: 'Tu héroe recibe un bono de +2 a todas sus tiradas enfrentadas cuando usa poderes psiónicos.' 
   },
   { 
@@ -1145,9 +1145,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-muy-afortunado',
-    name: 'Muy Afortunado', 
-    requirements: 'Novato, Afortunado', 
-    effects: 'Tu héroe tiene una suerte excepcional. Recibe un beni adicional al comienzo de cada sesión (esto se apila con Afortunado, para un total de dos benis adicionales).' 
+    name: 'Gran suerte', 
+    requirements: 'Novato, Suerte', 
+    effects: 'Tu héroe tiene una suerte excepcional. Recibe un beni adicional al comienzo de cada sesión (esto se apila con Suerte, para un total de dos benis adicionales).' 
   },
   { 
     id: 'edge-muy-atractivo',
@@ -1181,7 +1181,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-pistolero',
-    name: 'Pistolero', 
+    name: 'Dos pistolas', 
     requirements: 'Novato, Agilidad d8+', 
     effects: 'Tu héroe es experto en usar dos armas de fuego simultáneamente. Si realiza un ataque con cada mano (a distancia), no sufre la penalización por acción múltiple.' 
   },
@@ -1193,15 +1193,15 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-primer-golpe',
-    name: 'Primer golpe', 
+    name: 'Primer ataque', 
     requirements: 'Novato, Agilidad d8+', 
     effects: 'Una vez por asalto, tu héroe puede realizar un ataque de Pelea gratuito contra cualquier enemigo que se mueva a una posición adyacente a él.' 
   },
   { 
     id: 'edge-primer-golpe-mejorado',
-    name: 'Primer golpe mejorado', 
-    requirements: 'Heroico, Primer golpe', 
-    effects: 'Como Primer golpe, pero el héroe puede realizar un ataque gratuito contra cada enemigo que se mueva a una posición adyacente.' 
+    name: 'Primer ataque mejorado', 
+    requirements: 'Heroico, Primer ataque', 
+    effects: 'Como Primer ataque, pero el héroe puede realizar un ataque gratuito contra cada enemigo que se mueva a una posición adyacente.' 
   },
   { 
     id: 'edge-profesional',
@@ -1224,7 +1224,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-recarga-rapida',
     name: 'Recarga rápida', 
-    requirements: 'Experimentado, Espíritu d6+, Trasfondo Arcano', 
+    requirements: 'Experimentado, Espíritu d6+, Trasfondo arcano', 
     effects: 'Tu héroe recupera 10 Puntos de Poder por cada hora de descanso o actividad ligera.' 
   },
   { 
@@ -1235,7 +1235,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-reflejos-de-combate',
-    name: 'Reflejos de Combate', 
+    name: 'Reflejos de combate', 
     requirements: 'Novato', 
     effects: 'Tu héroe reacciona rápidamente en combate. Recibe un bono de +2 a las tiradas de Espíritu para recuperarse del estado Sacudido.' 
   },
@@ -1265,15 +1265,15 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-retirada',
-    name: 'Retirada', 
+    name: 'Extracción', 
     requirements: 'Novato, Agilidad d8+', 
     effects: 'Tu héroe es experto en salir de situaciones peligrosas. Los enemigos no reciben un ataque gratuito cuando el héroe se retira del combate cuerpo a cuerpo.' 
   },
   { 
     id: 'edge-retirada-mejorada',
-    name: 'Retirada mejorada', 
-    requirements: 'Novato, Retirada', 
-    effects: 'Como Retirada, pero el héroe puede retirarse incluso si está rodeado por múltiples enemigos.' 
+    name: 'Extracción mejorada', 
+    requirements: 'Novato, Extracción', 
+    effects: 'Como Extracción, pero el héroe puede retirarse incluso si está rodeado por múltiples enemigos.' 
   },
   { 
     id: 'edge-rico',
@@ -1289,7 +1289,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-sanador-rapido',
-    name: 'Sanador Rápido', 
+    name: 'Sanación rápida', 
     requirements: 'Novato, Vigor d8+', 
     effects: 'Tu héroe se recupera de las heridas con una rapidez asombrosa. Recibe un bono de +2 a sus tiradas de Vigor para la curación natural.' 
   },
@@ -1307,7 +1307,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-sentir-el-peligro',
-    name: 'Sentir el Peligro', 
+    name: 'Sentido del peligro', 
     requirements: 'Novato', 
     effects: 'Tu héroe tiene un sexto sentido para las emboscadas. Realiza una tirada de Notar con un bono de +2 para detectar ataques sorpresa o trampas.' 
   },
@@ -1343,26 +1343,26 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-tirador-de-elite',
-    name: 'Tirador de élite', 
+    name: 'Disparo mortal', 
     requirements: 'Experimentado, Atletismo d8+ o Disparar d8+', 
     effects: 'Tu héroe es un tirador excepcional. Si obtiene un Joker en su carta de iniciativa, dobla el daño de sus ataques de Disparar o Atletismo (lanzar).' 
   },
   { 
     id: 'edge-trasfondo-arcano',
-    name: 'Trasfondo Arcano', 
+    name: 'Trasfondo arcano', 
     requirements: 'Novato', 
-    effects: 'Este es el primer paso para que tu personaje tenga acceso a poderes sobrenaturales. Al elegir esta ventaja, debes seleccionar un tipo específico de Trasfondo Arcano (Magia, Milagros, Psiónica, Ciencia Extraña o Dotado). Cada uno tiene su propia habilidad, puntos de poder iniciales y número de poderes conocidos.' 
+    effects: 'Este es el primer paso para que tu personaje tenga acceso a poderes sobrenaturales. Al elegir esta ventaja, debes seleccionar un tipo específico de Trasfondo arcano (Magia, Milagros, Psiónica, Ciencia Extraña o Dotado). Cada uno tiene su propia habilidad, puntos de poder iniciales y número de poderes conocidos.' 
   },
   { 
     id: 'edge-puntos-de-poder-adicionales',
     name: 'Puntos de poder adicionales', 
-    requirements: 'Novato, Trasfondo Arcano', 
+    requirements: 'Novato, Trasfondo arcano', 
     effects: 'Tu héroe aumenta sus puntos de poder máximos en 5. Se puede elegir más de una vez, pero solo una por rango.' 
   },
   { 
     id: 'edge-nuevo-poder',
     name: 'Nuevo poder', 
-    requirements: 'Novato, Trasfondo Arcano', 
+    requirements: 'Novato, Trasfondo arcano', 
     effects: 'Tu héroe aprende un nuevo poder de su rango o inferior. Se puede elegir más de una vez.' 
   },
   { 
@@ -1373,7 +1373,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-voluntad-de-hierro',
-    name: 'Voluntad de Hierro', 
+    name: 'Voluntad firme', 
     requirements: 'Novato, Espíritu d8+', 
     effects: 'Tu héroe tiene una determinación inquebrantable. Recibe un bono de +2 a las tiradas de Espíritu para resistir la Intimidación y la Provocación.' 
   },
