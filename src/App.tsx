@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Character, Dice, Species, Skill, Hindrance, Edge, Advance } from './types';
-import { SPECIES, ATTRIBUTES, SKILLS, HINDRANCES, EDGES, ARCANE_BACKGROUNDS, POWERS } from './data';
+import { SPECIES, ATTRIBUTES, SKILLS, HINDRANCES, EDGES, ARCANE_BACKGROUNDS, POWERS, WEAPONS, ARMOR, SHIELDS } from './data';
 
 const STEPS = [
   'Concepto',
@@ -983,6 +983,12 @@ export default function App() {
   const [characterToDelete, setCharacterToDelete] = useState<Character | null>(null);
   const [arcaneModalOnSelect, setArcaneModalOnSelect] = useState<((ab: any) => void) | null>(null);
   const [scholarModalOnSelect, setScholarModalOnSelect] = useState<((skill: string) => void) | null>(null);
+  const [isAddingWeapon, setIsAddingWeapon] = useState(false);
+  const [isAddingArmor, setIsAddingArmor] = useState(false);
+  const [isAddingShield, setIsAddingShield] = useState(false);
+  const [newWeapon, setNewWeapon] = useState({ name: '', damage: '', range: '', ap: 0, notes: '' });
+  const [newArmor, setNewArmor] = useState({ name: '', bonus: 0, notes: '' });
+  const [newShield, setNewShield] = useState({ name: '', parryBonus: 0, coverBonus: 0, notes: '' });
 
   // Load characters from localStorage
   useEffect(() => {
@@ -1156,6 +1162,52 @@ export default function App() {
     setCurrentCharacter(next);
   };
 
+  const handleAddWeapon = () => {
+    if (!currentCharacter || !newWeapon.name || !newWeapon.damage) return;
+    const weaponWithId = { ...newWeapon, instanceId: `weapon-${Math.random().toString(36).substr(2, 9)}` };
+    const next = { ...currentCharacter, weapons: [...(currentCharacter.weapons || []), weaponWithId] };
+    updateCharacter(next);
+    setNewWeapon({ name: '', damage: '', range: '', ap: 0, notes: '' });
+    setIsAddingWeapon(false);
+  };
+
+  const handleAddArmor = () => {
+    if (!currentCharacter || !newArmor.name) return;
+    const armorWithId = { ...newArmor, instanceId: `armor-${Math.random().toString(36).substr(2, 9)}` };
+    const next = { ...currentCharacter, armor: [...(currentCharacter.armor || []), armorWithId] };
+    updateCharacter(next);
+    setNewArmor({ name: '', bonus: 0, notes: '' });
+    setIsAddingArmor(false);
+  };
+
+  const handleAddShield = () => {
+    if (!currentCharacter || !newShield.name) return;
+    const shieldWithId = { ...newShield, instanceId: `shield-${Math.random().toString(36).substr(2, 9)}` };
+    const next = { ...currentCharacter, shield: shieldWithId };
+    updateCharacter(next);
+    setNewShield({ name: '', parryBonus: 0, coverBonus: 0, notes: '' });
+    setIsAddingShield(false);
+  };
+
+  const removeWeapon = (idx: number) => {
+    if (!currentCharacter) return;
+    const newWeapons = [...(currentCharacter.weapons || [])];
+    newWeapons.splice(idx, 1);
+    updateCharacter({ weapons: newWeapons });
+  };
+
+  const removeArmor = (idx: number) => {
+    if (!currentCharacter) return;
+    const newArmor = [...(currentCharacter.armor || [])];
+    newArmor.splice(idx, 1);
+    updateCharacter({ armor: newArmor });
+  };
+
+  const removeShield = () => {
+    if (!currentCharacter) return;
+    updateCharacter({ shield: undefined });
+  };
+
   const nextStep = () => {
     let next = currentStep + 1;
     if (next === 6 && currentCharacter && !getArcaneBackground(currentCharacter)) {
@@ -1215,6 +1267,35 @@ export default function App() {
             onOpenScholarModal={setScholarModalOnSelect}
           />
         </div>
+
+        <ArcaneBackgroundModal 
+          isOpen={!!arcaneModalOnSelect} 
+          onClose={() => {
+            setArcaneModalOnSelect(null);
+            if (previewEdgeName === 'Trasfondo Arcano') {
+              setPreviewEdgeName('');
+            }
+          }}
+          onSelect={(ab) => {
+            arcaneModalOnSelect?.(ab);
+            setArcaneModalOnSelect(null);
+          }}
+        />
+
+        <ScholarModal 
+          isOpen={!!scholarModalOnSelect}
+          char={viewingCharacter}
+          onClose={() => {
+            setScholarModalOnSelect(null);
+            if (previewEdgeName === 'Erudito') {
+              setPreviewEdgeName('');
+            }
+          }}
+          onSelect={(skillName) => {
+            scholarModalOnSelect?.(skillName);
+            setScholarModalOnSelect(null);
+          }}
+        />
       </div>
     );
   }
@@ -1277,7 +1358,13 @@ export default function App() {
                     setPreviewEdgeName,
                     nextStep,
                     setArcaneModalOnSelect,
-                    setScholarModalOnSelect
+                    setScholarModalOnSelect,
+                    setIsAddingWeapon,
+                    removeWeapon,
+                    setIsAddingArmor,
+                    removeArmor,
+                    setIsAddingShield,
+                    removeShield
                   })}
                 </motion.div>
               </AnimatePresence>
@@ -1368,35 +1455,6 @@ export default function App() {
                 </div>
               )}
             </AnimatePresence>
-
-            <ArcaneBackgroundModal 
-              isOpen={!!arcaneModalOnSelect} 
-              onClose={() => {
-                setArcaneModalOnSelect(null);
-                if (previewEdgeName === 'Trasfondo Arcano') {
-                  setPreviewEdgeName('');
-                }
-              }}
-              onSelect={(ab) => {
-                arcaneModalOnSelect?.(ab);
-                setArcaneModalOnSelect(null);
-              }}
-            />
-
-            <ScholarModal 
-              isOpen={!!scholarModalOnSelect}
-              char={currentCharacter || INITIAL_CHARACTER}
-              onClose={() => {
-                setScholarModalOnSelect(null);
-                if (previewEdgeName === 'Erudito') {
-                  setPreviewEdgeName('');
-                }
-              }}
-              onSelect={(skillName) => {
-                scholarModalOnSelect?.(skillName);
-                setScholarModalOnSelect(null);
-              }}
-            />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1503,6 +1561,35 @@ export default function App() {
       )}
       </main>
 
+      <ArcaneBackgroundModal 
+        isOpen={!!arcaneModalOnSelect} 
+        onClose={() => {
+          setArcaneModalOnSelect(null);
+          if (previewEdgeName === 'Trasfondo Arcano') {
+            setPreviewEdgeName('');
+          }
+        }}
+        onSelect={(ab) => {
+          arcaneModalOnSelect?.(ab);
+          setArcaneModalOnSelect(null);
+        }}
+      />
+
+      <ScholarModal 
+        isOpen={!!scholarModalOnSelect}
+        char={currentCharacter || viewingCharacter || INITIAL_CHARACTER}
+        onClose={() => {
+          setScholarModalOnSelect(null);
+          if (previewEdgeName === 'Erudito') {
+            setPreviewEdgeName('');
+          }
+        }}
+        onSelect={(skillName) => {
+          scholarModalOnSelect?.(skillName);
+          setScholarModalOnSelect(null);
+        }}
+      />
+
       {characterToDelete && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overscroll-none">
           <motion.div 
@@ -1537,6 +1624,174 @@ export default function App() {
           </motion.div>
         </div>
       )}
+
+      <AnimatePresence>
+        {isAddingWeapon && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+              <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">Nueva Arma</h3>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Seleccionar del equipo común</label>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {WEAPONS.map(w => (
+                      <button 
+                        key={w.id}
+                        onClick={() => setNewWeapon({ name: w.name, damage: w.damage, range: w.range || '', ap: (w as any).ap || 0, notes: w.notes || '' })}
+                        className={`p-2 text-left text-xs rounded-lg border transition-all ${newWeapon.name === w.name ? 'bg-stone-900 border-stone-900 text-white' : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'}`}
+                      >
+                        <div className="font-bold">{w.name}</div>
+                        <div className="text-[9px] opacity-70">{w.damage} {w.range ? `| ${w.range}` : ''}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-stone-100"></span></div>
+                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest text-stone-300 bg-white px-2">O entrada manual</div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
+                    <input type="text" value={newWeapon.name} onChange={e => setNewWeapon({...newWeapon, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Espada Larga" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Daño</label>
+                      <input type="text" value={newWeapon.damage} onChange={e => setNewWeapon({...newWeapon, damage: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Fue+d8" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">AP</label>
+                      <input type="number" value={newWeapon.ap} onChange={e => setNewWeapon({...newWeapon, ap: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Alcance</label>
+                    <input type="text" value={newWeapon.range} onChange={e => setNewWeapon({...newWeapon, range: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: 12/24/48" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
+                    <textarea value={newWeapon.notes} onChange={e => setNewWeapon({...newWeapon, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-8">
+                <button onClick={() => setIsAddingWeapon(false)} className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs">Cancelar</button>
+                <button onClick={handleAddWeapon} className="flex-1 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-colors uppercase tracking-widest text-xs">Guardar</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {isAddingArmor && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+              <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">Nueva Armadura</h3>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Seleccionar armadura común</label>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {ARMOR.map(a => (
+                      <button 
+                        key={a.id}
+                        onClick={() => setNewArmor({ name: a.name, bonus: a.bonus, notes: a.notes || '' })}
+                        className={`p-2 text-left text-xs rounded-lg border transition-all ${newArmor.name === a.name ? 'bg-stone-900 border-stone-900 text-white' : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'}`}
+                      >
+                        <div className="font-bold">{a.name}</div>
+                        <div className="text-[9px] opacity-70">Bono: +{a.bonus}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-stone-100"></span></div>
+                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest text-stone-300 bg-white px-2">O entrada manual</div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
+                    <input type="text" value={newArmor.name} onChange={e => setNewArmor({...newArmor, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Cota de Malla" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono de Armadura</label>
+                    <input type="number" value={newArmor.bonus} onChange={e => setNewArmor({...newArmor, bonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
+                    <textarea value={newArmor.notes} onChange={e => setNewArmor({...newArmor, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-8">
+                <button onClick={() => setIsAddingArmor(false)} className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs">Cancelar</button>
+                <button onClick={handleAddArmor} className="flex-1 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-colors uppercase tracking-widest text-xs">Guardar</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {isAddingShield && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+              <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">Nuevo Escudo</h3>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Seleccionar escudo común</label>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {SHIELDS.map(s => (
+                      <button 
+                        key={s.id}
+                        onClick={() => setNewShield({ name: s.name, parryBonus: s.parryBonus, coverBonus: s.coverBonus, notes: s.notes || '' })}
+                        className={`p-2 text-left text-xs rounded-lg border transition-all ${newShield.name === s.name ? 'bg-stone-900 border-stone-900 text-white' : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'}`}
+                      >
+                        <div className="font-bold">{s.name}</div>
+                        <div className="text-[9px] opacity-70">Parada: +{s.parryBonus} | Cobertura: +{s.coverBonus}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-stone-100"></span></div>
+                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest text-stone-300 bg-white px-2">O entrada manual</div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
+                    <input type="text" value={newShield.name} onChange={e => setNewShield({...newShield, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Escudo Mediano" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono Parada</label>
+                      <input type="number" value={newShield.parryBonus} onChange={e => setNewShield({...newShield, parryBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono Cobertura</label>
+                      <input type="number" value={newShield.coverBonus} onChange={e => setNewShield({...newShield, coverBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
+                    <textarea value={newShield.notes} onChange={e => setNewShield({...newShield, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-8">
+                <button onClick={() => setIsAddingShield(false)} className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs">Cancelar</button>
+                <button onClick={handleAddShield} className="flex-1 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-colors uppercase tracking-widest text-xs">Guardar</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -1560,6 +1815,12 @@ function renderStep(
     nextStep: () => void;
     setArcaneModalOnSelect: (cb: ((ab: any) => void) | null) => void;
     setScholarModalOnSelect: (cb: ((skill: string) => void) | null) => void;
+    setIsAddingWeapon: (val: boolean) => void;
+    removeWeapon: (idx: number) => void;
+    setIsAddingArmor: (val: boolean) => void;
+    removeArmor: (idx: number) => void;
+    setIsAddingShield: (val: boolean) => void;
+    removeShield: () => void;
   }
 ) {
   const { 
@@ -1572,7 +1833,13 @@ function renderStep(
     setPreviewEdgeName,
     nextStep,
     setArcaneModalOnSelect,
-    setScholarModalOnSelect
+    setScholarModalOnSelect,
+    setIsAddingWeapon,
+    removeWeapon,
+    setIsAddingArmor,
+    removeArmor,
+    setIsAddingShield,
+    removeShield
   } = extras;
 
   switch (step) {
@@ -2139,7 +2406,7 @@ function renderStep(
                           if (alreadyHasEdge || !req.met) return;
                           
                           if (selectedEdge.name === 'Trasfondo Arcano') {
-                            setArcaneModalOnSelect((ab) => {
+                            setArcaneModalOnSelect(() => (ab: any) => {
                               const abEdge = { 
                                 id: ab.id,
                                 instanceId: `edge-${Math.random().toString(36).substr(2, 9)}`,
@@ -2195,7 +2462,7 @@ function renderStep(
                           }
                           
                           if (selectedEdge.name === 'Erudito') {
-                            setScholarModalOnSelect((skillName) => {
+                            setScholarModalOnSelect(() => (skillName: string) => {
                               const scholarEdge = { 
                                 id: 'edge-erudito',
                                 instanceId: `edge-${Math.random().toString(36).substr(2, 9)}`,
@@ -2441,49 +2708,113 @@ function renderStep(
     }
     case 7: // Equipo
       return (
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <input 
-                id="gear-input"
-                type="text" 
-                placeholder="Añadir objeto..."
-                className="flex-1 px-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors"
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    const input = e.currentTarget;
-                    if (input.value) {
-                      update({ gear: [...char.gear, input.value] });
-                      input.value = '';
-                    }
-                  }
-                }}
-              />
-              <button 
-                onClick={() => {
-                  const input = document.getElementById('gear-input') as HTMLInputElement;
-                  if (input.value) {
-                    update({ gear: [...char.gear, input.value] });
-                    input.value = '';
-                  }
-                }}
-                className="px-6 py-3 bg-stone-900 text-white rounded-xl font-bold"
-              >
-                Añadir
-              </button>
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Armas</h4>
+                  <button onClick={() => setIsAddingWeapon(true)} className="p-2 bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition-colors"><Plus size={16} /></button>
+                </div>
+                <div className="space-y-2">
+                  {char.weapons?.map((w, idx) => (
+                    <div key={w.instanceId || `w-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center group">
+                      <div>
+                        <div className="font-bold text-stone-900 text-sm">{w.name}</div>
+                        <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{w.damage} {w.range ? `| ${w.range}` : ''}</div>
+                      </div>
+                      <button onClick={() => removeWeapon(idx)} className="text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><Trash2 size={16} /></button>
+                    </div>
+                  ))}
+                  {(!char.weapons || char.weapons.length === 0) && <p className="text-xs text-stone-400 italic">No has añadido armas.</p>}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Armadura</h4>
+                  <button onClick={() => setIsAddingArmor(true)} className="p-2 bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition-colors"><Plus size={16} /></button>
+                </div>
+                <div className="space-y-2">
+                  {char.armor?.map((a, idx) => (
+                    <div key={a.instanceId || `a-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center group">
+                      <div>
+                        <div className="font-bold text-stone-900 text-sm">{a.name}</div>
+                        <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Bono: +{a.bonus}</div>
+                      </div>
+                      <button onClick={() => removeArmor(idx)} className="text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><Trash2 size={16} /></button>
+                    </div>
+                  ))}
+                  {(!char.armor || char.armor.length === 0) && <p className="text-xs text-stone-400 italic">No has añadido armadura.</p>}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Escudo</h4>
+                  {!char.shield ? (
+                    <button onClick={() => setIsAddingShield(true)} className="p-2 bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition-colors"><Plus size={16} /></button>
+                  ) : (
+                    <button onClick={removeShield} className="p-2 bg-stone-100 text-red-500 rounded-lg hover:bg-red-50 transition-colors"><Trash2 size={16} /></button>
+                  )}
+                </div>
+                {char.shield ? (
+                  <div className="p-3 bg-white border border-stone-200 rounded-xl">
+                    <div className="font-bold text-stone-900 text-sm">{char.shield.name}</div>
+                    <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Parada: +{char.shield.parryBonus} | Cobertura: +{char.shield.coverBonus}</div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-stone-400 italic">No has añadido escudo.</p>
+                )}
+              </div>
             </div>
-            <div className="space-y-2">
-              {char.gear.map((item, i) => (
-                <div key={`${item}-${i}`} className="flex justify-between items-center p-3 bg-stone-50 rounded-lg border border-stone-100 group">
-                  <span className="text-sm font-medium">{item}</span>
+
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Equipo General</h4>
+                <div className="flex gap-2">
+                  <input 
+                    id="gear-input"
+                    type="text" 
+                    placeholder="Añadir objeto..."
+                    className="flex-1 px-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        const input = e.currentTarget;
+                        if (input.value) {
+                          update({ gear: [...char.gear, input.value] });
+                          input.value = '';
+                        }
+                      }
+                    }}
+                  />
                   <button 
-                    onClick={() => update({ gear: char.gear.filter((_, idx) => idx !== i) })}
-                    className="text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                    onClick={() => {
+                      const input = document.getElementById('gear-input') as HTMLInputElement;
+                      if (input.value) {
+                        update({ gear: [...char.gear, input.value] });
+                        input.value = '';
+                      }
+                    }}
+                    className="px-6 py-3 bg-stone-900 text-white rounded-xl font-bold"
                   >
-                    <Trash2 size={16} />
+                    Añadir
                   </button>
                 </div>
-              ))}
+                <div className="grid grid-cols-1 gap-2">
+                  {char.gear.map((item, i) => (
+                    <div key={`${item}-${i}`} className="flex justify-between items-center p-3 bg-stone-50 rounded-xl border border-stone-100 group">
+                      <span className="text-sm font-medium">{item}</span>
+                      <button 
+                        onClick={() => update({ gear: char.gear.filter((_, idx) => idx !== i) })}
+                        className="text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2812,6 +3143,7 @@ function CharacterSheetView({
   const [selectedAdvanceAttribute, setSelectedAdvanceAttribute] = useState<string | null>(null);
   const [selectedAdvanceEdge, setSelectedAdvanceEdge] = useState<Edge | null>(null);
   const [newSkillName, setNewSkillName] = useState<string>('');
+  const [showAdvancesHistory, setShowAdvancesHistory] = useState(false);
 
   const [rollResult, setRollResult] = useState<{
     trait: string;
@@ -2994,6 +3326,7 @@ function CharacterSheetView({
     };
 
     newChar.advancesList = [...newChar.advancesList, newAdvance];
+    newChar.xp = (newChar.xp || 0) + 5;
     
     // Recalculate resources that might change with advances (like Bennies from 'Afortunado')
     const oldBenniesMax = calculateStartingBennies(character);
@@ -3480,7 +3813,7 @@ function CharacterSheetView({
                                   if (req.met) {
                                     setSelectedAdvanceEdge(edge);
                                     if (edge.name === 'Trasfondo Arcano') {
-                                      onOpenArcaneModal((ab) => {
+                                      onOpenArcaneModal(() => (ab: any) => {
                                         setSelectedAdvanceEdge({
                                           ...edge,
                                           name: `Trasfondo Arcano (${ab.name})`,
@@ -3489,7 +3822,7 @@ function CharacterSheetView({
                                       });
                                     }
                                     if (edge.name === 'Erudito') {
-                                      onOpenScholarModal((skillName) => {
+                                      onOpenScholarModal(() => (skillName: string) => {
                                         setSelectedAdvanceEdge({
                                           ...edge,
                                           name: `Erudito (${skillName})`,
@@ -3505,7 +3838,7 @@ function CharacterSheetView({
                                     if (req.met) {
                                       setSelectedAdvanceEdge(edge);
                                       if (edge.name === 'Trasfondo Arcano') {
-                                        onOpenArcaneModal((ab) => {
+                                        onOpenArcaneModal(() => (ab: any) => {
                                           setSelectedAdvanceEdge({
                                             ...edge,
                                             name: `Trasfondo Arcano (${ab.name})`,
@@ -3514,7 +3847,7 @@ function CharacterSheetView({
                                         });
                                       }
                                       if (edge.name === 'Erudito') {
-                                        onOpenScholarModal((skillName) => {
+                                        onOpenScholarModal(() => (skillName: string) => {
                                           setSelectedAdvanceEdge({
                                             ...edge,
                                             name: `Erudito (${skillName})`,
@@ -3528,7 +3861,9 @@ function CharacterSheetView({
                                 className={`p-4 rounded-xl border transition-all text-left ${
                                   !req.met 
                                     ? 'bg-stone-50/50 border-stone-100 opacity-50 cursor-not-allowed'
-                                    : (selectedAdvanceEdge?.name === edge.name || (edge.name === 'Trasfondo Arcano' && selectedAdvanceEdge?.name.startsWith('Trasfondo Arcano (')))
+                                    : (selectedAdvanceEdge?.name === edge.name || 
+                                       (edge.name === 'Trasfondo Arcano' && selectedAdvanceEdge?.name?.startsWith('Trasfondo Arcano (')) ||
+                                       (edge.name === 'Erudito' && selectedAdvanceEdge?.name?.startsWith('Erudito (')))
                                       ? 'bg-stone-900 border-stone-900 text-white shadow-lg cursor-pointer' 
                                       : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100 cursor-pointer'
                                 }`}
@@ -3538,7 +3873,11 @@ function CharacterSheetView({
                                   {!req.met && <AlertCircle size={14} className="text-red-400" />}
                                 </div>
                                 <div className="text-[10px] opacity-60 mt-1">Requisitos: {edge.requirements}</div>
-                                <div className={`text-xs mt-2 italic ${selectedAdvanceEdge?.name === edge.name ? 'text-stone-300' : 'text-stone-500'}`}>
+                                <div className={`text-xs mt-2 italic ${
+                                   (selectedAdvanceEdge?.name === edge.name || 
+                                    (edge.name === 'Trasfondo Arcano' && selectedAdvanceEdge?.name?.startsWith('Trasfondo Arcano (')) ||
+                                    (edge.name === 'Erudito' && selectedAdvanceEdge?.name?.startsWith('Erudito (')))
+                                     ? 'text-stone-300' : 'text-stone-500'}`}>
                                   {edge.effects}
                                 </div>
                                 {!req.met && (
@@ -4203,116 +4542,166 @@ function CharacterSheetView({
       {character.advancesList && character.advancesList.length > 0 && (
         <section className="space-y-6 pt-10 border-t border-stone-200">
           <div className="flex items-center justify-between">
-            <SectionTitle icon={<TrendingUp size={20} className="text-stone-500" />} title="Historial de Avances" />
             <button 
-              onClick={() => {
-                const newChar = { ...character };
-                const lastAdvance = newChar.advancesList?.[newChar.advancesList.length - 1];
-                if (!lastAdvance) return;
-
-                // Reverse changes based on type
-                if (lastAdvance.type === 'Attribute') {
-                  const attr = lastAdvance.details.attribute as keyof typeof newChar.attributes;
-                  newChar.attributes[attr] = downgradeDie(newChar.attributes[attr]);
-                } else if (lastAdvance.type === 'Skills') {
-                  const skills = lastAdvance.details.skills as string[];
-                  skills.forEach(s => {
-                    newChar.skills[s] = downgradeDie(newChar.skills[s]);
-                  });
-                } else if (lastAdvance.type === 'Edge') {
-                  const edge = lastAdvance.details.edge as Edge;
-                  // Remove only one instance of the edge to handle multiple takes of same edge (like Nuevo poder)
-                  const edgeIdx = newChar.edges.findIndex(e => e.name === edge.name);
-                  if (edgeIdx !== -1) {
-                    newChar.edges = [...newChar.edges.slice(0, edgeIdx), ...newChar.edges.slice(edgeIdx + 1)];
-                  }
-
-                  // If undoing 'Nuevo poder', remove the last power if needed
-                  if (edge.name === 'Nuevo poder') {
-                    const maxPowers = getMaxPowers(newChar);
-                    if (newChar.powers && newChar.powers.length > maxPowers) {
-                      newChar.powers = newChar.powers.slice(0, -1);
-                    }
-                  }
-
-                  // If undoing 'Puntos de poder adicionales', update current PP if needed
-                  if (edge.name === 'Puntos de poder adicionales') {
-                    const maxPP = getMaxPowerPoints(newChar);
-                    if (newChar.powerPoints && newChar.powerPoints.current > maxPP) {
-                      newChar.powerPoints = { ...newChar.powerPoints, current: maxPP };
-                    }
-                  }
-
-                  // If undoing 'Trasfondo Arcano', clear powers and power points
-                  if (edge.name.startsWith('Trasfondo Arcano (')) {
-                    delete newChar.powers;
-                    delete newChar.powerPoints;
-                  }
-                } else if (lastAdvance.type === 'NewSkill') {
-                  const skillName = lastAdvance.details.skillName as string;
-                  delete newChar.skills[skillName];
-                }
-
-                newChar.advancesList = newChar.advancesList?.slice(0, -1);
-                newChar.advances = (newChar.advances || 0) - 1;
-                
-                // Recalculate resources that might change when undoing advances (like Bennies from 'Afortunado')
-                const oldBenniesMax = calculateStartingBennies(character);
-                const newBenniesMax = calculateStartingBennies(newChar);
-                const benniesDelta = newBenniesMax - oldBenniesMax;
-                if (benniesDelta !== 0) {
-                  newChar.bennies = (newChar.bennies !== undefined ? newChar.bennies : oldBenniesMax) + benniesDelta;
-                }
-
-                newChar.derived = calculateDerived(newChar);
-                onUpdate(newChar);
-              }}
-              className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
+              onClick={() => setShowAdvancesHistory(!showAdvancesHistory)}
+              className="group flex items-center gap-4 p-4 bg-stone-50 rounded-2xl border border-stone-100 hover:bg-stone-100 transition-all active:scale-95"
             >
-              Deshacer último avance
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {character.advancesList.map((adv, i) => (
-              <div key={adv.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col gap-1 group hover:bg-stone-100 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-black text-stone-900 uppercase tracking-tight">{adv.description}</div>
-                  <div className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Avance {i + 1}</div>
-                </div>
-                <div className="text-[9px] text-stone-400 font-bold uppercase tracking-widest">{getRank(i + 1)}</div>
+              <div className="text-left">
+                <div className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-1">Historial</div>
+                <div className="text-xl font-black text-stone-900 leading-none uppercase tracking-tight">Historial de Avances</div>
               </div>
-            ))}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${showAdvancesHistory ? 'bg-stone-900 text-white rotate-180' : 'bg-stone-200 text-stone-500'}`}>
+                <ChevronDown size={20} />
+              </div>
+            </button>
+
+            {showAdvancesHistory && (
+              <button 
+                onClick={() => {
+                  const newChar = { ...character };
+                  const lastAdvance = newChar.advancesList?.[newChar.advancesList.length - 1];
+                  if (!lastAdvance) return;
+
+                  // Reverse changes based on type
+                  if (lastAdvance.type === 'Attribute') {
+                    const attr = lastAdvance.details.attribute as keyof typeof newChar.attributes;
+                    newChar.attributes[attr] = downgradeDie(newChar.attributes[attr]);
+                  } else if (lastAdvance.type === 'Skills') {
+                    const skills = lastAdvance.details.skills as string[];
+                    skills.forEach(s => {
+                      newChar.skills[s] = downgradeDie(newChar.skills[s]);
+                    });
+                  } else if (lastAdvance.type === 'Edge') {
+                    const edge = lastAdvance.details.edge as Edge;
+                    // Remove only one instance of the edge to handle multiple takes of same edge (like Nuevo poder)
+                    const edgeIdx = newChar.edges.findIndex(e => e.name === edge.name);
+                    if (edgeIdx !== -1) {
+                      newChar.edges = [...newChar.edges.slice(0, edgeIdx), ...newChar.edges.slice(edgeIdx + 1)];
+                    }
+
+                    // If undoing 'Nuevo poder', remove the last power if needed
+                    if (edge.name === 'Nuevo poder') {
+                      const maxPowers = getMaxPowers(newChar);
+                      if (newChar.powers && newChar.powers.length > maxPowers) {
+                        newChar.powers = newChar.powers.slice(0, -1);
+                      }
+                    }
+
+                    // If undoing 'Puntos de poder adicionales', update current PP if needed
+                    if (edge.name === 'Puntos de poder adicionales') {
+                      const maxPP = getMaxPowerPoints(newChar);
+                      if (newChar.powerPoints && newChar.powerPoints.current > maxPP) {
+                        newChar.powerPoints = { ...newChar.powerPoints, current: maxPP };
+                      }
+                    }
+
+                    // If undoing 'Trasfondo Arcano', clear powers and power points
+                    if (edge.name.startsWith('Trasfondo Arcano (')) {
+                      delete newChar.powers;
+                      delete newChar.powerPoints;
+                    }
+                  } else if (lastAdvance.type === 'NewSkill') {
+                    const skillName = lastAdvance.details.skillName as string;
+                    delete newChar.skills[skillName];
+                  }
+
+                  newChar.advancesList = newChar.advancesList?.slice(0, -1);
+                  newChar.advances = (newChar.advances || 0) - 1;
+                  
+                  // Recalculate resources that might change when undoing advances (like Bennies from 'Afortunado')
+                  const oldBenniesMax = calculateStartingBennies(character);
+                  const newBenniesMax = calculateStartingBennies(newChar);
+                  const benniesDelta = newBenniesMax - oldBenniesMax;
+                  if (benniesDelta !== 0) {
+                    newChar.bennies = (newChar.bennies !== undefined ? newChar.bennies : oldBenniesMax) + benniesDelta;
+                  }
+
+                  newChar.derived = calculateDerived(newChar);
+                  onUpdate(newChar);
+                }}
+                className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
+              >
+                Deshacer último avance
+              </button>
+            )}
           </div>
+
+          <AnimatePresence>
+            {showAdvancesHistory && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
+                  {character.advancesList.map((adv, i) => (
+                    <div key={adv.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col gap-1 group hover:bg-stone-100 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs font-black text-stone-900 uppercase tracking-tight">{adv.description}</div>
+                        <div className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Avance {i + 1}</div>
+                      </div>
+                      <div className="text-[9px] text-stone-400 font-bold uppercase tracking-widest">{getRank(i + 1)}</div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </section>
       )}
 
       <AnimatePresence>
         {isAddingWeapon && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
               <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">Nueva Arma</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
-                  <input type="text" value={newWeapon.name} onChange={e => setNewWeapon({...newWeapon, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Espada Larga" />
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Seleccionar del equipo común</label>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {WEAPONS.map(w => (
+                      <button 
+                        key={w.id}
+                        onClick={() => setNewWeapon({ name: w.name, damage: w.damage, range: w.range || '', ap: (w as any).ap || 0, notes: w.notes || '' })}
+                        className={`p-2 text-left text-xs rounded-lg border transition-all ${newWeapon.name === w.name ? 'bg-stone-900 border-stone-900 text-white' : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'}`}
+                      >
+                        <div className="font-bold">{w.name}</div>
+                        <div className="text-[9px] opacity-70">{w.damage} {w.range ? `| ${w.range}` : ''}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-stone-100"></span></div>
+                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest text-stone-300 bg-white px-2">O entrada manual</div>
+                </div>
+
+                <div className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Daño</label>
-                    <input type="text" value={newWeapon.damage} onChange={e => setNewWeapon({...newWeapon, damage: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Fue+d8" />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
+                    <input type="text" value={newWeapon.name} onChange={e => setNewWeapon({...newWeapon, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Espada Larga" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Daño</label>
+                      <input type="text" value={newWeapon.damage} onChange={e => setNewWeapon({...newWeapon, damage: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Fue+d8" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">AP</label>
+                      <input type="number" value={newWeapon.ap} onChange={e => setNewWeapon({...newWeapon, ap: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                    </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">AP</label>
-                    <input type="number" value={newWeapon.ap} onChange={e => setNewWeapon({...newWeapon, ap: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Alcance</label>
+                    <input type="text" value={newWeapon.range} onChange={e => setNewWeapon({...newWeapon, range: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: 12/24/48" />
                   </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Alcance</label>
-                  <input type="text" value={newWeapon.range} onChange={e => setNewWeapon({...newWeapon, range: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: 12/24/48" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
-                  <textarea value={newWeapon.notes} onChange={e => setNewWeapon({...newWeapon, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
+                    <textarea value={newWeapon.notes} onChange={e => setNewWeapon({...newWeapon, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
+                  </div>
                 </div>
               </div>
               <div className="flex gap-3 mt-8">
@@ -4325,20 +4714,44 @@ function CharacterSheetView({
 
         {isAddingArmor && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
               <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">Nueva Armadura</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
-                  <input type="text" value={newArmor.name} onChange={e => setNewArmor({...newArmor, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Cota de Malla" />
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Seleccionar armadura común</label>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {ARMOR.map(a => (
+                      <button 
+                        key={a.id}
+                        onClick={() => setNewArmor({ name: a.name, bonus: a.bonus, notes: a.notes || '' })}
+                        className={`p-2 text-left text-xs rounded-lg border transition-all ${newArmor.name === a.name ? 'bg-stone-900 border-stone-900 text-white' : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'}`}
+                      >
+                        <div className="font-bold">{a.name}</div>
+                        <div className="text-[9px] opacity-70">Bono: +{a.bonus}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono de Armadura</label>
-                  <input type="number" value={newArmor.bonus} onChange={e => setNewArmor({...newArmor, bonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-stone-100"></span></div>
+                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest text-stone-300 bg-white px-2">O entrada manual</div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
-                  <textarea value={newArmor.notes} onChange={e => setNewArmor({...newArmor, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
+                    <input type="text" value={newArmor.name} onChange={e => setNewArmor({...newArmor, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Cota de Malla" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono de Armadura</label>
+                    <input type="number" value={newArmor.bonus} onChange={e => setNewArmor({...newArmor, bonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
+                    <textarea value={newArmor.notes} onChange={e => setNewArmor({...newArmor, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
+                  </div>
                 </div>
               </div>
               <div className="flex gap-3 mt-8">
@@ -4351,26 +4764,50 @@ function CharacterSheetView({
 
         {isAddingShield && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
               <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">Nuevo Escudo</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
-                  <input type="text" value={newShield.name} onChange={e => setNewShield({...newShield, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Escudo Mediano" />
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Seleccionar escudo común</label>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {SHIELDS.map(s => (
+                      <button 
+                        key={s.id}
+                        onClick={() => setNewShield({ name: s.name, parryBonus: s.parryBonus, coverBonus: s.coverBonus, notes: s.notes || '' })}
+                        className={`p-2 text-left text-xs rounded-lg border transition-all ${newShield.name === s.name ? 'bg-stone-900 border-stone-900 text-white' : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'}`}
+                      >
+                        <div className="font-bold">{s.name}</div>
+                        <div className="text-[9px] opacity-70">Parada: +{s.parryBonus} | Cobertura: +{s.coverBonus}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-stone-100"></span></div>
+                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest text-stone-300 bg-white px-2">O entrada manual</div>
+                </div>
+
+                <div className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono Parada</label>
-                    <input type="number" value={newShield.parryBonus} onChange={e => setNewShield({...newShield, parryBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Nombre</label>
+                    <input type="text" value={newShield.name} onChange={e => setNewShield({...newShield, name: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" placeholder="Ej: Escudo Mediano" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono Parada</label>
+                      <input type="number" value={newShield.parryBonus} onChange={e => setNewShield({...newShield, parryBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono Cobertura</label>
+                      <input type="number" value={newShield.coverBonus} onChange={e => setNewShield({...newShield, coverBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                    </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Bono Cobertura</label>
-                    <input type="number" value={newShield.coverBonus} onChange={e => setNewShield({...newShield, coverBonus: parseInt(e.target.value) || 0})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors" />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
+                    <textarea value={newShield.notes} onChange={e => setNewShield({...newShield, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
                   </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Notas</label>
-                  <textarea value={newShield.notes} onChange={e => setNewShield({...newShield, notes: e.target.value})} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-20 resize-none" placeholder="Propiedades especiales..." />
                 </div>
               </div>
               <div className="flex gap-3 mt-8">
