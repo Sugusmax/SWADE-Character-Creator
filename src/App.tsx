@@ -620,7 +620,10 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     generalValue += 2;
     modifiers.push({ name: 'Alerta', value: 2 });
   }
-  if (hasEdge(char, 'Atractivo') && (skillName === 'Persuadir' || skillName === 'Interpretar')) {
+  if (hasEdge(char, 'Muy Atractivo') && (skillName === 'Persuadir' || skillName === 'Interpretar')) {
+    generalValue += 2;
+    modifiers.push({ name: 'Muy Atractivo', value: 2 });
+  } else if (hasEdge(char, 'Atractivo') && (skillName === 'Persuadir' || skillName === 'Interpretar')) {
     generalValue += 1;
     modifiers.push({ name: 'Atractivo', value: 1 });
   }
@@ -2029,6 +2032,7 @@ function renderStep(
                   setPreviewHindranceName(name);
                   const data = HINDRANCES.filter(h => h.name === name);
                   if (data.length > 0) {
+                    // Default to the first available type for the selected hindrance
                     setPreviewHindranceType(data[0].type as 'Menor' | 'Mayor');
                   }
                 }}
@@ -2127,7 +2131,7 @@ function renderStep(
               </div>
             </div>
             <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 flex items-center gap-3 text-stone-600">
-              <Dice5 size={20} />
+              <Dice5 size={20} className="text-stone-400" />
               <div>
                 <p className="text-sm font-bold">Puntos de Desventajas: {availableHP_Attr} / {totalHP_Attr}</p>
                 <p className="text-xs">Usa estos puntos para Atributos (2 pts), Ventajas (2 pts) o Habilidades (1 pt).</p>
@@ -2147,50 +2151,45 @@ function renderStep(
                     <div className="w-20 h-20 bg-white border-4 border-stone-900 rounded-xl flex items-center justify-center text-2xl font-mono font-black shadow-inner">
                       {formatDice(current)}
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => {
-                        if (current > min) {
-                          const nextAttributes = { ...char.attributes, [attr]: (current === 13 ? 12 : current - 2) as Dice };
-                          const totalSpent = calculateAttributePointsSpent({ ...char, attributes: nextAttributes });
-                          const paidWithHP = Math.max(0, totalSpent - 5);
+                    
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                      <button 
+                        onClick={() => {
+                          if (current <= min) return;
+                          const nextVal = current === 4 ? 4 : current - 2;
+                          update({ attributes: { ...char.attributes, [attr]: nextVal } });
+                        }}
+                        className="w-6 h-6 bg-stone-100 border border-stone-200 rounded-full flex items-center justify-center hover:bg-stone-200 transition-colors"
+                      >
+                        <Minus size={12} />
+                      </button>
+                      <button 
+                        onClick={() => {
+                          if (current >= max) return;
+                          const nextVal = current + 2;
+                          const cost = 1;
+                          const currentSpent = calculateAttributePointsSpent(char);
                           
-                          update({ 
-                            attributes: nextAttributes, 
-                            spentHindrancePoints: { ...char.spentHindrancePoints, attributes: paidWithHP } 
-                          });
-                        }
-                      }}
-                      disabled={current <= min}
-                      className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center hover:bg-stone-300 transition-colors disabled:opacity-30"
-                    >
-                      -
-                    </button>
-                    <button 
-                      onClick={() => {
-                        if (current < max) {
-                          if (pointsSpent_Attr < totalAllowed_Attr) {
-                            update({ attributes: { ...char.attributes, [attr]: (current === 12 ? 13 : current + 2) as Dice } });
+                          if (currentSpent < 5) {
+                            update({ attributes: { ...char.attributes, [attr]: nextVal } });
                           } else if (availableHP_Attr >= 2) {
                             setPendingHindranceSpend({
                               type: 'attribute',
                               cost: 2,
                               onConfirm: () => {
                                 update({ 
-                                  attributes: { ...char.attributes, [attr]: (current === 12 ? 13 : current + 2) as Dice },
+                                  attributes: { ...char.attributes, [attr]: nextVal },
                                   spentHindrancePoints: { ...char.spentHindrancePoints, attributes: (char.spentHindrancePoints.attributes || 0) + 1 }
                                 });
                               }
                             });
                           }
-                        }
-                      }}
-                      disabled={current >= max || (pointsSpent_Attr >= totalAllowed_Attr && availableHP_Attr < 2)}
-                      className="w-8 h-8 rounded-full bg-stone-900 text-white flex items-center justify-center hover:bg-stone-800 transition-colors shadow-md disabled:opacity-30"
-                    >
-                      +
-                    </button>
+                        }}
+                        className="w-6 h-6 bg-stone-900 text-white rounded-full flex items-center justify-center hover:bg-stone-800 transition-colors"
+                      >
+                        <Plus size={12} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -2594,7 +2593,6 @@ function renderStep(
                     <div>
                       <div className={`font-bold flex items-center gap-2 ${improved ? 'text-amber-900' : 'text-emerald-900'}`}>
                         {edge.name}
-                        {improved && <span className="text-[8px] bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Mejorada</span>}
                       </div>
                       <div className={`text-[10px] font-bold uppercase ${improved ? 'text-amber-600' : 'text-emerald-600'}`}>{edge.requirements}</div>
                     </div>
@@ -2936,7 +2934,6 @@ function renderStep(
                       <div key={e.instanceId || `e-prev-${i}`} className={`p-3 rounded-xl border ${improved ? 'bg-amber-50 border-amber-200' : 'bg-stone-50 border-stone-100'}`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className={`text-sm font-bold ${improved ? 'text-amber-700' : 'text-stone-700'}`}>{e.name}</span>
-                          {improved && <span className="text-[8px] bg-amber-200 text-amber-800 px-1 py-0.5 rounded-full uppercase tracking-tighter">Mejorada</span>}
                         </div>
                         <p className={`text-[10px] italic line-clamp-2 ${improved ? 'text-amber-600' : 'text-stone-500'}`}>{e.effects}</p>
                       </div>
@@ -4363,7 +4360,6 @@ function CharacterSheetView({
                   }`}
                 >
                   {e.name}
-                  {improved && <span className="text-[8px] bg-amber-200 text-amber-800 px-1 py-0.5 rounded-full uppercase tracking-tighter">Mejorada</span>}
                 </button>
               );
             })}
