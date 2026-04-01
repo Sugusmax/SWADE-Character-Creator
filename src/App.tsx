@@ -531,6 +531,50 @@ const isImprovedEdge = (edge: Edge | string): boolean => {
   return improvedKeywords.some(kw => name.toLowerCase().includes(kw));
 };
 
+const getEdgeFullDescription = (edge: Edge) => {
+  if (!edge) return '';
+  let description = edge.effects;
+  
+  const improvedKeywords = ['mejorado', 'mejorada', 'mejorados', 'mejoradas', 'muy', 'gran', 'jefe', 'veterano', 'heroica', 'más'];
+  const isImproved = improvedKeywords.some(kw => edge.name && edge.name.toLowerCase().includes(kw));
+
+  if (!isImproved && !edge.replaces) return description;
+
+  const specialCases = [
+    { base: 'Suerte', improved: 'Gran suerte' },
+    { base: 'Atractivo', improved: 'Muy Atractivo' },
+    { base: 'Rico', improved: 'Muy Rico' },
+    { base: 'Famoso', improved: 'Muy famoso' },
+    { base: 'Inspirar', improved: 'Inspiración heroica' },
+    { base: 'Investigador', improved: 'Investigador jefe' },
+    { base: 'Táctico', improved: 'Táctico veterano' },
+    { base: 'Difícil de Matar', improved: 'Más difícil de matar' },
+  ];
+
+  let baseEdgeName = edge.replaces;
+  
+  if (!baseEdgeName && isImproved) {
+    const sc = specialCases.find(c => c.improved.toLowerCase() === edge.name.toLowerCase());
+    if (sc) {
+      baseEdgeName = sc.base;
+    } else if (edge.requirements) {
+      const foundInReq = EDGES.find(be => edge.requirements.toLowerCase().includes(be.name.toLowerCase()));
+      if (foundInReq && foundInReq.name !== edge.name) {
+        baseEdgeName = foundInReq.name;
+      }
+    }
+  }
+
+  if (baseEdgeName) {
+    const baseEdge = EDGES.find(be => be.name.toLowerCase() === baseEdgeName!.toLowerCase());
+    if (baseEdge) {
+      return `${baseEdge.effects}\n\nMejora: ${edge.effects}`;
+    }
+  }
+
+  return description;
+};
+
 const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): { edges: Edge[], replacedEdge?: Edge } => {
   if (!newEdge) return { edges: currentEdges || [] };
   if (!currentEdges) return { edges: [newEdge] };
@@ -2430,7 +2474,7 @@ function renderStep(
                   <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter">Requisitos: {selectedEdge.requirements}</p>
                 </div>
                 <p className="text-sm text-stone-600 leading-relaxed italic">
-                  {selectedEdge.effects}
+                  {getEdgeFullDescription(selectedEdge as Edge)}
                 </p>
                 
                 {(() => {
@@ -2730,7 +2774,7 @@ function renderStep(
                         const nextPowers = char.powers?.filter((_, i) => i !== idx);
                         update({ powers: nextPowers });
                       }}
-                      className="p-2 hover:bg-amber-100 text-amber-600 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                      className="p-2 hover:bg-amber-100 text-amber-600 rounded-lg transition-all"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -2759,12 +2803,12 @@ function renderStep(
                 </div>
                 <div className="space-y-2">
                   {char.weapons?.map((w, idx) => (
-                    <div key={w.instanceId || `w-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center group">
+                    <div key={w.instanceId || `w-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center">
                       <div>
                         <div className="font-bold text-stone-900 text-sm">{w.name}</div>
                         <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{w.damage} {w.range ? `| ${w.range}` : ''}</div>
                       </div>
-                      <button onClick={() => removeWeapon(idx)} className="text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><Trash2 size={16} /></button>
+                      <button onClick={() => removeWeapon(idx)} className="text-stone-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
                     </div>
                   ))}
                   {(!char.weapons || char.weapons.length === 0) && <p className="text-xs text-stone-400 italic">No has añadido armas.</p>}
@@ -2778,12 +2822,12 @@ function renderStep(
                 </div>
                 <div className="space-y-2">
                   {char.armor?.map((a, idx) => (
-                    <div key={a.instanceId || `a-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center group">
+                    <div key={a.instanceId || `a-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center">
                       <div>
                         <div className="font-bold text-stone-900 text-sm">{a.name}</div>
                         <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Bono: +{a.bonus}</div>
                       </div>
-                      <button onClick={() => removeArmor(idx)} className="text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><Trash2 size={16} /></button>
+                      <button onClick={() => removeArmor(idx)} className="text-stone-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
                     </div>
                   ))}
                   {(!char.armor || char.armor.length === 0) && <p className="text-xs text-stone-400 italic">No has añadido armadura.</p>}
@@ -2848,7 +2892,7 @@ function renderStep(
                       <span className="text-sm font-medium">{item}</span>
                       <button 
                         onClick={() => update({ gear: char.gear.filter((_, idx) => idx !== i) })}
-                        className="text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                        className="text-stone-300 hover:text-red-500 transition-colors"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -2952,7 +2996,7 @@ function renderStep(
                         <div className="flex items-center gap-2 mb-1">
                           <span className={`text-sm font-bold ${improved ? 'text-amber-700' : 'text-stone-700'}`}>{e.name}</span>
                         </div>
-                        <p className={`text-[10px] italic line-clamp-2 ${improved ? 'text-amber-600' : 'text-stone-500'}`}>{e.effects}</p>
+                        <p className={`text-[10px] italic line-clamp-2 ${improved ? 'text-amber-600' : 'text-stone-500'}`}>{getEdgeFullDescription(e)}</p>
                       </div>
                     );
                   }) : (
@@ -3925,7 +3969,7 @@ function CharacterSheetView({
                                     (edge.name === 'Trasfondo arcano' && selectedAdvanceEdge?.name?.startsWith('Trasfondo arcano (')) ||
                                     (edge.name === 'Erudito' && selectedAdvanceEdge?.name?.startsWith('Erudito (')))
                                      ? 'text-stone-300' : 'text-stone-500'}`}>
-                                  {edge.effects}
+                                  {getEdgeFullDescription(edge)}
                                 </div>
                                 {!req.met && (
                                   <div className="text-[9px] font-black text-red-500 uppercase tracking-widest mt-2">
@@ -4284,7 +4328,7 @@ function CharacterSheetView({
                     <div className="font-bold text-stone-900">{name}</div>
                     <button 
                       onClick={() => setSelectedTrait({ name, description: SKILLS.find(s => s.name === name)?.description || '', type: 'Habilidad' })}
-                      className="text-[9px] text-stone-400 hover:text-stone-900 flex items-center gap-1 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="text-[9px] text-stone-400 hover:text-stone-900 flex items-center gap-1 mt-0.5 transition-opacity"
                     >
                       <Info size={10} /> Info
                     </button>
@@ -4319,7 +4363,7 @@ function CharacterSheetView({
                     <div className="font-bold text-stone-700">{s.name}</div>
                     <button 
                       onClick={() => setSelectedTrait({ name: s.name, description: s.description, type: 'Habilidad Básica' })}
-                      className="text-[9px] text-stone-400 hover:text-stone-900 flex items-center gap-1 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="text-[9px] text-stone-400 hover:text-stone-900 flex items-center gap-1 mt-0.5 transition-opacity"
                     >
                       <Info size={10} /> Info
                     </button>
@@ -4373,7 +4417,7 @@ function CharacterSheetView({
               return (
                 <button 
                   key={e.instanceId} 
-                  onClick={() => setSelectedTrait({ name: e.name, description: e.effects, type: 'Ventaja', requirements: e.requirements })}
+                  onClick={() => setSelectedTrait({ name: e.name, description: getEdgeFullDescription(e), type: 'Ventaja', requirements: e.requirements })}
                   className={`px-4 py-2 border rounded-lg text-sm font-bold shadow-sm transition-all active:scale-95 text-left flex items-center gap-2 ${
                     improved 
                       ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100' 
@@ -4496,21 +4540,25 @@ function CharacterSheetView({
               </div>
               <div className="grid grid-cols-1 gap-2">
                 {character.weapons?.map((w, idx) => (
-                  <div key={w.instanceId || `w-${idx}`} className="p-4 bg-white border border-stone-200 rounded-xl shadow-sm group relative">
-                    <button onClick={() => removeWeapon(idx)} className="absolute top-2 right-2 p-1 text-stone-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-black text-stone-900 uppercase tracking-tight">{w.name}</div>
-                      <button onClick={() => {
-                        const bonus = getDamageBonus(character, w.name);
-                        performRoll(`Daño: ${w.name}`, w.damage, false, bonus.generalValue, true, bonus.modifiers);
-                      }} className="px-3 py-1 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-stone-800 transition-colors">Dañar</button>
+                  <div key={w.instanceId || `w-${idx}`} className="p-4 bg-white border border-stone-200 rounded-xl shadow-sm relative flex items-center gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-black text-stone-900 uppercase tracking-tight mb-2 pr-6">{w.name}</div>
+                      <div className="grid grid-cols-3 gap-2 text-[10px] font-bold uppercase tracking-widest text-stone-500">
+                        <div>Daño: <span className="text-stone-900">{w.damage}</span></div>
+                        {w.range && <div>Alcance: <span className="text-stone-900">{w.range}</span></div>}
+                        {w.ap !== 0 && <div>AP: <span className="text-stone-900">{w.ap}</span></div>}
+                      </div>
+                      {w.notes && <p className="text-[10px] text-stone-400 italic mt-2 line-clamp-1">{w.notes}</p>}
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-[10px] font-bold uppercase tracking-widest text-stone-500">
-                      <div>Daño: <span className="text-stone-900">{w.damage}</span></div>
-                      {w.range && <div>Alcance: <span className="text-stone-900">{w.range}</span></div>}
-                      {w.ap !== 0 && <div>AP: <span className="text-stone-900">{w.ap}</span></div>}
-                    </div>
-                    {w.notes && <p className="text-[10px] text-stone-400 italic mt-2">{w.notes}</p>}
+                    <button onClick={() => {
+                      const bonus = getDamageBonus(character, w.name);
+                      performRoll(`Daño: ${w.name}`, w.damage, false, bonus.generalValue, true, bonus.modifiers);
+                    }} className="flex-shrink-0 px-3 py-2 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-stone-800 transition-colors">
+                      Dañar
+                    </button>
+                    <button onClick={() => removeWeapon(idx)} className="absolute top-2 right-2 p-1 text-stone-300 hover:text-red-500 transition-all">
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 ))}
                 {(!character.weapons || character.weapons.length === 0) && <p className="text-xs text-stone-400 italic">Sin armas registradas.</p>}
@@ -4525,8 +4573,8 @@ function CharacterSheetView({
                 </div>
                 <div className="grid grid-cols-1 gap-2">
                   {character.armor?.map((a, idx) => (
-                    <div key={a.instanceId || `a-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl shadow-sm group relative">
-                      <button onClick={() => removeArmor(idx)} className="absolute top-2 right-2 p-1 text-stone-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
+                    <div key={a.instanceId || `a-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl shadow-sm relative">
+                      <button onClick={() => removeArmor(idx)} className="absolute top-2 right-2 p-1 text-stone-300 hover:text-red-500 transition-all"><Trash2 size={14} /></button>
                       <div className="font-bold text-stone-900 text-sm">{a.name}</div>
                       <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Bono: +{a.bonus}</div>
                     </div>
@@ -4576,9 +4624,9 @@ function CharacterSheetView({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {character.gear.map((item, idx) => (
-                <div key={`gear-${idx}-${item}`} className="p-3 bg-white border border-stone-200 rounded-xl text-stone-700 font-medium flex justify-between items-center group">
+                <div key={`gear-${idx}-${item}`} className="p-3 bg-white border border-stone-200 rounded-xl text-stone-700 font-medium flex justify-between items-center">
                   <span className="text-sm">{item}</span>
-                  <button onClick={() => removeGear(idx)} className="text-stone-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
+                  <button onClick={() => removeGear(idx)} className="text-stone-300 hover:text-red-500 transition-all"><Trash2 size={14} /></button>
                 </div>
               ))}
               {character.gear.length === 0 && (

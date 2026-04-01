@@ -274,7 +274,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-apocado',
     name: 'Apocado', 
     type: 'Mayor', 
-    description: 'Confundes las palabras o, en ocasiones, las equivocas. -1 a Intimidar, Persuadir y Provocar.' 
+    description: 'Confundes las palabras o, en ocasiones, las equivocas. -1 a Intimidar, Interpretar, Persuadir y Provocar (solo comunicación verbal).' 
   },
   { 
     id: 'hindrance-arrogante',
