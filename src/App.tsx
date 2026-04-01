@@ -621,7 +621,9 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   const modifiers: AppliedModifier[] = [];
   const situational: SituationalBonus[] = [];
   
-  // Permanent Skill Edges
+  // --- PERMANENT MODIFIERS (General) ---
+  
+  // Edges
   if (hasEdge(char, 'Alerta') && skillName === 'Notar') {
     generalValue += 2;
     modifiers.push({ name: 'Alerta', value: 2 });
@@ -661,19 +663,10 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     modifiers.push({ name: 'Ladrón', value: 1 });
   }
   
-  // Situational Edges
-  if (hasEdge(char, 'Aristócrata') && skillName === 'Persuadir') {
-    situational.push({ value: 2, note: 'Alta sociedad/autoridades' });
-  }
-  if (hasEdge(char, 'Asesino')) {
-    situational.push({ value: 2, note: 'Daño (Sorpresa/Espalda)' });
-  }
-  
   char.edges.forEach(edge => {
     if (edge.name.startsWith('Erudito (')) {
       const chosenSkill = edge.name.match(/\((.*)\)/)?.[1];
       if (chosenSkill === skillName) {
-        // Check if we already added this specific modifier to avoid duplicates
         if (!modifiers.some(m => m.name === edge.name)) {
           generalValue += 2;
           modifiers.push({ name: edge.name, value: 2 });
@@ -682,88 +675,14 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     }
   });
 
-  if (hasEdge(char, 'Indomable')) {
-    situational.push({ value: 2, note: 'Resistir poderes/ataques sociales' });
-  }
-  if (hasEdge(char, 'Montaraz')) {
-    if (skillName === 'Supervivencia' || skillName === 'Sigilo') {
-      situational.push({ value: 2, note: 'Entornos naturales' });
-    }
-  }
-  if (hasEdge(char, 'Ladrón')) {
-    if (skillName === 'Sigilo') situational.push({ value: 1, note: 'Entornos urbanos' });
-    if (skillName === 'Atletismo') situational.push({ value: 1, note: 'Trepar' });
-  }
-  if (hasEdge(char, 'Investigador') && skillName === 'Notar') {
-    situational.push({ value: 2, note: 'Buscar pistas' });
-  }
-  if (hasEdge(char, 'Sentido del peligro') && skillName === 'Notar') {
-    situational.push({ value: 2, note: 'Detectar peligros/sorpresa' });
-  }
-  if (hasEdge(char, 'Tirador') && skillName === 'Disparar') {
-    situational.push({ value: 2, note: 'Si no se mueve' });
-  }
-  if (hasEdge(char, '¡Rock & Roll!') && skillName === 'Disparar') {
-    situational.push({ value: 0, note: 'Ignora retroceso si no se mueve' });
-  }
-  if (hasEdge(char, '¡Mantener la línea!')) {
-    situational.push({ value: 1, note: 'Dureza (Aliados adyacentes)' });
-  }
-  if (hasEdge(char, 'Resistencia arcana mejorada')) {
-    situational.push({ value: 4, note: 'Resistir poderes' });
-  } else if (hasEdge(char, 'Resistencia arcana')) {
-    situational.push({ value: 2, note: 'Resistir poderes' });
-  }
-  if (hasEdge(char, 'Valiente') && skillName === 'Miedo') {
-    situational.push({ value: 2, note: 'Tiradas de Miedo' });
-  }
-  
-  if (hasEdge(char, 'Acróbata') && skillName === 'Atletismo') {
-    situational.push({ value: 2, note: 'Acrobacias' });
-  }
-  if (hasEdge(char, 'Ladrón')) {
-    if (skillName === 'Sigilo') situational.push({ value: 2, note: 'Entornos urbanos' });
-    if (skillName === 'Atletismo') situational.push({ value: 2, note: 'Trepar' });
-    if (skillName === 'Latrocinio') situational.push({ value: 2, note: 'Forzar/Desactivar' });
-  }
-  if (hasEdge(char, 'Investigador') && skillName === 'Investigar') {
-    situational.push({ value: 2, note: 'Investigación general' });
-  }
-  if (hasEdge(char, 'Investigador jefe') && skillName === 'Investigar') {
-    situational.push({ value: 2, note: 'Investigación avanzada' });
-  }
-  if (hasEdge(char, 'Muy famoso') && skillName === 'Persuadir') {
-    situational.push({ value: 2, note: 'Si es reconocido' });
-  } else if (hasEdge(char, 'Famoso') && skillName === 'Persuadir') {
-    situational.push({ value: 1, note: 'Si es reconocido' });
-  }
-  if (hasEdge(char, 'Acaparador') && skillName === 'Notar') {
-    situational.push({ value: 2, note: 'Encontrar equipo/suministros' });
-  }
-  if (hasEdge(char, 'Sentido del peligro') && skillName === 'Notar') {
-    situational.push({ value: 2, note: 'Emboscadas/Trampas' });
-  }
-  if (hasEdge(char, 'Mentalista') && skillName.startsWith('Psiónica')) {
-    situational.push({ value: 2, note: 'Tiradas enfrentadas' });
-  }
-  if (hasEdge(char, 'Tirador') && skillName === 'Disparar') {
-    situational.push({ value: 2, note: 'Si no se mueve' });
-  }
-  if (hasEdge(char, 'Arma predilecta') && (skillName === 'Pelear' || skillName === 'Disparar')) {
-    situational.push({ value: 1, note: 'Con arma específica' });
-  }
-  if (hasEdge(char, 'Berserker') && skillName === 'Pelear') {
-    situational.push({ value: 2, note: 'En furia' });
-  }
-  
-  // Permanent Skill Hindrances
+  // Hindrances
   if (hasHindrance(char, 'Apacible') && skillName === 'Intimidar') {
     generalValue -= 2;
     modifiers.push({ name: 'Apacible', value: -2 });
   }
   if (hasHindrance(char, 'Canalla') && skillName === 'Persuadir') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Canalla', value: -2 });
+    generalValue -= 1;
+    modifiers.push({ name: 'Canalla', value: -1 });
   }
   if (hasHindrance(char, 'Cojo', 'Mayor') && skillName === 'Atletismo') {
     generalValue -= 2;
@@ -778,8 +697,7 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasHindrance(char, 'Feo', 'Mayor') && skillName === 'Persuadir') {
     generalValue -= 2;
     modifiers.push({ name: 'Feo (Mayor)', value: -2 });
-  }
-  if (hasHindrance(char, 'Feo', 'Menor') && skillName === 'Persuadir') {
+  } else if (hasHindrance(char, 'Feo', 'Menor') && skillName === 'Persuadir') {
     generalValue -= 1;
     modifiers.push({ name: 'Feo (Menor)', value: -1 });
   }
@@ -790,8 +708,7 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasHindrance(char, 'Delirio', 'Mayor') && skillName === 'Persuadir') {
     generalValue -= 2;
     modifiers.push({ name: 'Delirio (Mayor)', value: -2 });
-  }
-  if (hasHindrance(char, 'Delirio', 'Menor') && skillName === 'Persuadir') {
+  } else if (hasHindrance(char, 'Delirio', 'Menor') && skillName === 'Persuadir') {
     generalValue -= 1;
     modifiers.push({ name: 'Delirio (Menor)', value: -1 });
   }
@@ -816,7 +733,85 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     modifiers.push({ name: 'Suspicaz', value: -1 });
   }
 
-  // Situational Hindrances
+  // Species
+  if (char.species === 'Androide' && skillName === 'Persuadir') {
+    generalValue -= 2;
+    modifiers.push({ name: 'Androide', value: -2 });
+  }
+  if (char.species === 'Rakhasa' && skillName === 'Atletismo') {
+    generalValue -= 2;
+    modifiers.push({ name: 'Rakhasa', value: -2 });
+  }
+  if (char.species === 'Saurio' && skillName === 'Persuadir') {
+    generalValue -= 2;
+    modifiers.push({ name: 'Saurio', value: -2 });
+  }
+  if (char.species === 'Semielfo' && skillName === 'Persuadir') {
+    generalValue -= 2;
+    modifiers.push({ name: 'Semielfo', value: -2 });
+  }
+
+  // --- SITUATIONAL MODIFIERS ---
+  
+  // Edges
+  if (hasEdge(char, 'Aristócrata') && skillName === 'Persuadir') {
+    situational.push({ value: 2, note: 'Alta sociedad/autoridades' });
+  }
+  if (hasEdge(char, 'Indomable')) {
+    situational.push({ value: 2, note: 'Resistir poderes/ataques sociales' });
+  }
+  if (hasEdge(char, 'Montaraz')) {
+    if (skillName === 'Supervivencia' || skillName === 'Sigilo') {
+      situational.push({ value: 2, note: 'Entornos naturales' });
+    }
+  }
+  if (hasEdge(char, 'Ladrón')) {
+    if (skillName === 'Sigilo') situational.push({ value: 1, note: 'Entornos urbanos' });
+    if (skillName === 'Atletismo') situational.push({ value: 1, note: 'Trepar' });
+    if (skillName === 'Latrocinio') situational.push({ value: 1, note: 'Forzar/Desactivar' });
+  }
+  if (hasEdge(char, 'Investigador') && skillName === 'Notar') {
+    situational.push({ value: 2, note: 'Buscar pistas' });
+  }
+  if (hasEdge(char, 'Sentido del peligro') && skillName === 'Notar') {
+    situational.push({ value: 2, note: 'Detectar peligros/sorpresa' });
+  }
+  if (hasEdge(char, 'Tirador') && skillName === 'Disparar') {
+    situational.push({ value: 2, note: 'Si no se mueve' });
+  }
+  if (hasEdge(char, '¡Rock & Roll!') && skillName === 'Disparar') {
+    situational.push({ value: 0, note: 'Ignora retroceso si no se mueve' });
+  }
+  if (hasEdge(char, 'Resistencia arcana mejorada')) {
+    situational.push({ value: 4, note: 'Resistir poderes' });
+  } else if (hasEdge(char, 'Resistencia arcana')) {
+    situational.push({ value: 2, note: 'Resistir poderes' });
+  }
+  if (hasEdge(char, 'Valiente') && skillName === 'Miedo') {
+    situational.push({ value: 2, note: 'Tiradas de Miedo' });
+  }
+  if (hasEdge(char, 'Acróbata') && skillName === 'Atletismo') {
+    situational.push({ value: 2, note: 'Acrobacias' });
+  }
+  if (hasEdge(char, 'Muy famoso') && skillName === 'Persuadir') {
+    situational.push({ value: 2, note: 'Si es reconocido' });
+  } else if (hasEdge(char, 'Famoso') && skillName === 'Persuadir') {
+    situational.push({ value: 1, note: 'Si es reconocido' });
+  }
+  if (hasEdge(char, 'Acaparador') && skillName === 'Notar') {
+    situational.push({ value: 2, note: 'Encontrar equipo/suministros' });
+  }
+  if (hasEdge(char, 'Mentalista') && skillName.startsWith('Psiónica')) {
+    situational.push({ value: 2, note: 'Tiradas enfrentadas' });
+  }
+  if (hasEdge(char, 'Arma predilecta') && (skillName === 'Pelear' || skillName === 'Disparar')) {
+    situational.push({ value: 1, note: 'Con arma específica' });
+  }
+  if (hasEdge(char, 'Berserker') && skillName === 'Pelear') {
+    situational.push({ value: 2, note: 'En furia' });
+  }
+
+  // Hindrances
   if (hasHindrance(char, 'Ciego')) {
     if (['Notar', 'Disparar', 'Pelear', 'Atletismo', 'Sigilo', 'Conducir', 'Pilotar', 'Navegar'].includes(skillName)) {
       situational.push({ value: -6, note: 'Tareas visuales' });
@@ -839,28 +834,19 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
       situational.push({ value: -2, note: 'A distancia' });
     }
   }
+  if (hasHindrance(char, 'Mal Nadador') && skillName === 'Atletismo') {
+    situational.push({ value: -2, note: 'Nadando' });
+  }
+  if (hasHindrance(char, 'Apocado') && ['Intimidar', 'Interpretar', 'Persuadir', 'Provocar'].includes(skillName)) {
+    situational.push({ value: -1, note: 'Comunicación verbal' });
+  }
 
-  // Species abilities (Permanent)
-  if (char.species === 'Androide' && skillName === 'Persuadir') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Androide', value: -2 });
+  // Species
+  if (char.species === 'Aviano' && skillName === 'Atletismo') {
+    situational.push({ value: -2, note: 'Nadando' });
   }
   if (char.species === 'Rakhasa' && skillName === 'Atletismo') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Rakhasa', value: -2 });
-  }
-  if (char.species === 'Saurio' && skillName === 'Persuadir') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Saurio', value: -2 });
-  }
-  if (char.species === 'Semielfo' && skillName === 'Persuadir') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Semielfo', value: -2 });
-  }
-
-  // Species abilities (Situational)
-  if (char.species === 'Aviano' && skillName === 'Atletismo') {
-    situational.push({ value: -2, note: 'Bajo el agua' });
+    situational.push({ value: -2, note: 'Nadando' });
   }
 
   return { generalValue, modifiers, situational };
@@ -872,15 +858,12 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   const modifiers: AppliedModifier[] = [];
   const situational: SituationalBonus[] = [];
   
-  if (hasHindrance(char, 'Anémico') && attrName === 'Vigor') {
-    generalValue -= 1;
-    modifiers.push({ name: 'Anémico', value: -1 });
-  }
-  if (hasHindrance(char, 'Apocado') && attrName === 'Espíritu') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Apocado', value: -2 });
-  }
+  // --- PERMANENT MODIFIERS (General) ---
   
+  // --- SITUATIONAL MODIFIERS ---
+  if (hasHindrance(char, 'Anémico') && attrName === 'Vigor') {
+    situational.push({ value: -2, note: 'Resistir fatiga' });
+  }
   if (hasEdge(char, 'Voluntad firme') && attrName === 'Espíritu') {
     situational.push({ value: 2, note: 'Resistir Intimidación/Provocación' });
   }
@@ -4709,15 +4692,18 @@ function CharacterSheetView({
                 className="overflow-hidden"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
-                  {character.advancesList.map((adv, i) => (
-                    <div key={adv.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col gap-1 group hover:bg-stone-100 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs font-black text-stone-900 uppercase tracking-tight">{adv.description}</div>
-                        <div className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Avance {i + 1}</div>
+                  {[...character.advancesList].reverse().map((adv, i) => {
+                    const advanceNumber = character.advancesList.length - i;
+                    return (
+                      <div key={adv.id} className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col gap-1 group hover:bg-stone-100 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs font-black text-stone-900 uppercase tracking-tight">{adv.description}</div>
+                          <div className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Avance {advanceNumber}</div>
+                        </div>
+                        <div className="text-[9px] text-stone-400 font-bold uppercase tracking-widest">{getRank(advanceNumber)}</div>
                       </div>
-                      <div className="text-[9px] text-stone-400 font-bold uppercase tracking-widest">{getRank(i + 1)}</div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </motion.div>
             )}

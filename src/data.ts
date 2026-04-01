@@ -786,7 +786,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-arma-distintiva',
     name: 'Arma predilecta', 
-    requirements: 'Novato, Pelear o Disparar d8+', 
+    requirements: 'Novato, Pelear d8+ o Disparar d8+', 
     effects: '+1 a ataque y +1 a Parada con un arma específica.' 
   },
   { 
@@ -1338,7 +1338,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-tirador',
     name: 'Tirador', 
-    requirements: 'Experimentado, Atletismo o Disparar d8+', 
+    requirements: 'Experimentado, Atletismo d8+ o Disparar d8+', 
     effects: 'Si no se mueve, ignora hasta 2 puntos de penalización.' 
   },
   { 
