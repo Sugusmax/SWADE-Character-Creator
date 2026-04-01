@@ -250,481 +250,481 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-analfabeto',
     name: 'Analfabeto', 
     type: 'Menor', 
-    description: 'Tu héroe no sabe leer ni escribir. Puede que sea capaz de firmar con su nombre o reconocer un par de palabras comunes, pero es incapaz de leer un periódico, un contrato o las instrucciones de un frasco de veneno. En entornos modernos, esto puede ser una desventaja social importante. El personaje no puede realizar tiradas de Investigación o cualquier otra que requiera leer o escribir.' 
+    description: 'No puedes leer ni escribir. -2 a tiradas de AST (Conocimientos Generales) cuando la información esté escrita.' 
   },
   { 
     id: 'hindrance-anciano',
     name: 'Anciano', 
     type: 'Mayor', 
-    description: 'Tu héroe es mayor. Ha vivido mucho y tiene mucha experiencia, pero su cuerpo ya no es lo que era. Reduce su Paso en 1 y sufre una penalización de -1 a todas sus tiradas de Fuerza y Vigor (esto no reduce el tipo de dado, sino el resultado de la tirada). A cambio, su sabiduría le otorga 5 puntos de habilidad adicionales que debe gastar en habilidades de Astucia. Estos puntos no pueden usarse para comprar nuevas habilidades, solo para mejorar las existentes.' 
+    description: 'Tu héroe es mayor. -1 al Paso y carrera, -1 a tiradas de AGI, FUE y VIG; ganas cinco puntos extra de habilidad.' 
   },
   { 
     id: 'hindrance-anemico',
     name: 'Anémico', 
     type: 'Menor', 
-    description: 'Tu héroe es enfermizo y tiene poca resistencia física. Resta 1 a todas sus tiradas de Vigor, incluyendo las tiradas para resistir el cansancio, el veneno o las enfermedades, así como las tiradas para recuperarse de heridas o fatiga.' 
+    description: 'Tu héroe es enfermizo y tiene poca resistencia física. -2 a Vigor cuando resistes la fatiga.' 
   },
   { 
     id: 'hindrance-apacible',
     name: 'Apacible', 
     type: 'Menor', 
-    description: 'Tu héroe es de naturaleza pacífica y evita el conflicto siempre que puede. No es un cobarde, simplemente prefiere resolver los problemas hablando. Resta 2 a sus tiradas de Intimidar. Además, si se ve obligado a luchar, suele intentar usar ataques no letales o simplemente defenderse hasta que la situación se calme.' 
+    description: '-2 a Intimidar.' 
   },
   { 
     id: 'hindrance-apocado',
     name: 'Apocado', 
     type: 'Mayor', 
-    description: 'Tu héroe es tímido y se amilana fácilmente ante la presencia de otros o en situaciones de estrés social. Resta 2 a sus tiradas de Espíritu cuando intente resistir una prueba de voluntad o una tirada de Intimidar. En situaciones sociales, suele quedarse en un segundo plano y dejar que otros hablen por él.' 
+    description: 'Confundes las palabras o, en ocasiones, las equivocas. -1 a Intimidar, Persuadir y Provocar.' 
   },
   { 
     id: 'hindrance-arrogante',
     name: 'Arrogante', 
     type: 'Mayor', 
-    description: 'Tu héroe cree que es mejor que los demás y no duda en hacérselo saber. Siempre busca el desafío más difícil para demostrar su superioridad, lo que a menudo le mete en problemas innecesarios. Debe humillar a sus oponentes siempre que sea posible y nunca acepta ayuda a menos que sea absolutamente vital.' 
+    description: 'Siempre buscas el desafío más difícil para demostrar tu superioridad. Humillas a tus oponentes.' 
   },
   { 
     id: 'hindrance-avaricioso-menor',
     name: 'Avaricioso', 
     type: 'Menor', 
-    description: 'Tu héroe es tacaño con el dinero y siempre intenta regatear o conseguir la mejor parte del botín. Se siente incómodo si tiene que compartir sus recursos sin obtener algo a cambio. Siempre está buscando formas de ahorrar o ganar un poco más de dinero, incluso a costa de pequeñas comodidades.' 
+    description: 'Eres un tacaño.' 
   },
   { 
     id: 'hindrance-avaricioso-mayor',
     name: 'Avaricioso', 
     type: 'Mayor', 
-    description: 'Tu héroe es extremadamente codicioso. El dinero y las posesiones materiales son su única prioridad. Hará casi cualquier cosa por una moneda de oro, incluso traicionar a sus compañeros si la oferta es lo suficientemente tentadora. Su vida gira en torno a la acumulación de riqueza y nunca tiene suficiente.' 
+    description: 'Eres un codicioso, harás cualquier cosa por dinero.' 
   },
   { 
     id: 'hindrance-avergonzado-menor',
     name: 'Avergonzado', 
     type: 'Menor', 
-    description: 'Tu héroe tiene algo de lo que se avergüenza, como un pasado criminal menor o un fracaso público. Intenta ocultarlo, pero el miedo a que se descubra le hace estar siempre en guardia. Si su secreto es descubierto, sufre una penalización de -2 a sus tiradas de Persuadir con aquellos que lo conocen.' 
+    description: 'Tienes algo de lo que te avergüenzas, como un pasado criminal menor o un fracaso público.' 
   },
   { 
     id: 'hindrance-avergonzado-mayor',
     name: 'Avergonzado', 
     type: 'Mayor', 
-    description: 'Tu héroe vive atormentado por una gran vergüenza que ha arruinado su reputación. Si su secreto sale a la luz, perderá el respeto de todos los que le rodean y será tratado como un paria. Hará cualquier cosa para evitar que esto ocurra, lo que puede ser usado como chantaje por sus enemigos.' 
+    description: 'Vives atormentado por una gran vergüenza que ha arruinado su reputación.' 
   },
   { 
     id: 'hindrance-bocazas',
     name: 'Bocazas', 
     type: 'Menor', 
-    description: 'Tu héroe no sabe guardar secretos. Si sabe algo interesante, tarde o temprano terminará contándoselo a alguien, a menudo en el peor momento posible. No es que sea malintencionado, simplemente le encanta hablar y ser el centro de atención con noticias jugosas.' 
+    description: 'No sabes guardar secretos.' 
   },
   { 
     id: 'hindrance-buscado-menor',
     name: 'Buscado', 
     type: 'Menor', 
-    description: 'Las autoridades buscan a tu héroe por un delito menor o una confusión. No es un criminal peligroso, pero tiene que evitar a la guardia de la ciudad y puede ser arrestado si es reconocido. Esto complica los viajes y la estancia en lugares civilizados.' 
+    description: 'Las autoridades te buscan por un delito menor o una confusión.' 
   },
   { 
     id: 'hindrance-buscado-mayor',
     name: 'Buscado', 
     type: 'Mayor', 
-    description: 'Tu héroe es un fugitivo de la justicia por un delito grave que no cometió (o sí). Hay una recompensa por su cabeza y los cazadores de recompensas le siguen el rastro. Es un criminal convicto o un traidor a los ojos de la ley y será ejecutado o encarcelado de por vida si es capturado.' 
+    description: 'Eres un fugitivo de la justicia por un delito grave.' 
   },
   { 
     id: 'hindrance-canalla',
     name: 'Canalla', 
     type: 'Menor', 
-    description: 'Tu héroe es un sinvergüenza y un pícaro. No es necesariamente malo, pero sus métodos son poco éticos y a menudo irritan a las personas más honorables. Sufre una penalización de -2 a sus tiradas de Persuadir con individuos de alta moralidad o autoridades.' 
+    description: '-1 a Persuadir. Eres un perdonavidas.' 
   },
   { 
     id: 'hindrance-cauto',
     name: 'Cauto', 
     type: 'Menor', 
-    description: 'Tu héroe es excesivamente cuidadoso y nunca toma riesgos innecesarios. Esto a menudo le hace perder oportunidades o tardar demasiado en actuar en situaciones críticas. Siempre planea cada paso meticulosamente, lo que puede desesperar a sus compañeros más impulsivos.' 
+    description: 'Planeas cada paso meticulosamente. Pierdes oportunidades.' 
   },
   { 
     id: 'hindrance-ciego',
     name: 'Ciego', 
     type: 'Mayor', 
-    description: 'Un individuo que ha perdido completamente la visión. Sufre una penalización de -6 a todas las tareas que dependan de la vista. Por el lado bueno, un personaje ciego recibe una ventaja adicional totalmente gratuita para compensar una desventaja tan seria.' 
+    description: '-6 a tareas de visión. Ganas una ventaja extra.' 
   },
   { 
     id: 'hindrance-cobarde',
     name: 'Cobarde', 
     type: 'Mayor', 
-    description: 'Tu héroe huye del peligro a la primera oportunidad. No tiene estómago para la lucha. Resta 2 a todas sus tiradas de Miedo. En combate, suele buscar cobertura o intentar escapar a menos que esté acorralado.' 
+    description: '-2 a las tiradas de miedo y resistirse a Intimidar.' 
   },
   { 
     id: 'hindrance-codigo-de-honor',
     name: 'Código de Honor', 
     type: 'Mayor', 
-    description: 'Tu héroe vive según un estricto código moral que rige todas sus acciones. Nunca miente, nunca ataca a un enemigo desarmado y siempre cumple su palabra, incluso si eso le pone en peligro mortal. Si rompe su código, sufre una gran crisis de conciencia y puede perder sus beneficios de espíritu.' 
+    description: 'Vives según un estricto código moral.' 
   },
   { 
     id: 'hindrance-cojo-menor',
     name: 'Cojo', 
     type: 'Menor', 
-    description: 'Tu héroe camina con dificultad debido a una vieja herida o un defecto de nacimiento. Reduce su Paso en 1 y su dado de carrera se reduce en un tipo (por ejemplo, de d6 a d4).' 
+    description: '-1 al Paso y d4 para correr. Penalización a Atletismo y resistirlo. Es posible que tengas que usar muletas, miembros protésicos o sillas de ruedas.' 
   },
   { 
     id: 'hindrance-cojo-mayor',
     name: 'Cojo', 
     type: 'Mayor', 
-    description: 'Tu héroe tiene una pierna inútil o le falta. Reduce su Paso en 2 y su dado de carrera es siempre un d4. Sufre una penalización de -2 a todas las tiradas de Atletismo que requieran movilidad de las piernas.' 
+    description: '-2 al Paso y d4-1 para correr. Penalización a Atletismo y resistirlo. Es posible que tengas que usar muletas, miembros protésicos o sillas de ruedas.' 
   },
   { 
     id: 'hindrance-corto-de-vista-menor',
     name: 'Corto de Vista', 
     type: 'Menor', 
-    description: 'Tu héroe necesita gafas para ver de lejos. Resta 1 a las tiradas de Notar que dependan de la vista a larga distancia. Si pierde las gafas, la penalización aumenta a -2 y afecta a todas las tiradas de ataque a distancia.' 
+    description: 'Debes usar gafas o sufres -1 en todas las tiradas de rasgo que dependan de la visión. 50 % de perder las gafas al sufrir un trauma.' 
   },
   { 
     id: 'hindrance-corto-de-vista-mayor',
     name: 'Corto de Vista', 
     type: 'Mayor', 
-    description: 'Tu héroe es casi ciego sin sus gafas. Resta 2 a las tiradas de Notar que dependan de la vista. Si pierde las gafas, es incapaz de distinguir nada que esté a más de un par de metros y sufre una penalización de -4 a todas las tiradas de ataque.' 
+    description: 'Debes usar gafas o sufres -2 en todas las tiradas de rasgo que dependan de la visión. 50 % de perder las gafas al sufrir un trauma.' 
   },
   { 
     id: 'hindrance-curioso',
     name: 'Curioso', 
     type: 'Mayor', 
-    description: 'Tu héroe no puede evitar investigar cosas nuevas, abrir puertas cerradas o leer libros prohibidos. Su curiosidad a menudo supera su sentido común. Si ve algo misterioso, debe realizar una tirada de Astucia para no ir a investigarlo de inmediato.' 
+    description: 'Tu héroe no puede evitar investigar cosas nuevas. Si ve algo misterioso, debe realizar una tirada de Astucia para no ir a investigarlo.' 
   },
   { 
     id: 'hindrance-delirio-menor',
     name: 'Delirio', 
     type: 'Menor', 
-    description: 'Tu héroe cree en algo que no es cierto, como que los gatos son espías del gobierno o que la luna está hecha de queso. Es inofensivo, pero la gente le mira raro y sufre una penalización de -1 a Persuadir con aquellos que conocen su delirio.' 
+    description: 'Tu héroe cree en algo que no es cierto. Sufre una penalización de -1 a Persuadir con aquellos que conocen su delirio.' 
   },
   { 
     id: 'hindrance-delirio-mayor',
     name: 'Delirio', 
     type: 'Mayor', 
-    description: 'Tu héroe sufre una locura importante que afecta a su comportamiento diario. Puede creer que es un rey en el exilio o que tiene una misión divina que nadie más comprende. Esto le causa problemas constantes y una penalización de -2 a Persuadir.' 
+    description: 'Tu héroe sufre una locura importante que afecta a su comportamiento diario. Penalización de -2 a Persuadir.' 
   },
   { 
     id: 'hindrance-deseo-mortal',
     name: 'Deseo Mortal', 
     type: 'Menor', 
-    description: 'Tu héroe busca una muerte gloriosa en combate para redimirse de un pecado pasado o simplemente porque cree que es su destino. No es suicida, pero nunca rechaza un desafío y siempre se ofrece voluntario para las misiones más peligrosas.' 
+    description: 'Tu héroe busca una muerte gloriosa en combate.' 
   },
   { 
     id: 'hindrance-despiadado-menor',
     name: 'Despiadado', 
     type: 'Menor', 
-    description: 'Tu héroe no muestra compasión con sus enemigos una vez que la batalla ha terminado. No toma prisioneros a menos que sea estrictamente necesario y no duda en rematar a los heridos si cree que pueden ser una amenaza futura.' 
+    description: 'Tu héroe no muestra compasión con sus enemigos una vez que la batalla ha terminado.' 
   },
   { 
     id: 'hindrance-despiadado-mayor',
     name: 'Despiadado', 
     type: 'Mayor', 
-    description: 'Tu héroe es cruel y brutal. Disfruta con el sufrimiento ajeno y no duda en torturar o matar a inocentes para conseguir sus objetivos. Es una persona temida y odiada, y su falta de empatía es evidente para todos.' 
+    description: 'Tu héroe es cruel y brutal. Disfruta con el sufrimiento ajeno.' 
   },
   { 
     id: 'hindrance-despistado',
     name: 'Despistado', 
     type: 'Mayor', 
-    description: 'Tu héroe no presta atención a su entorno. Siempre está absorto en sus pensamientos, ya sean científicos, filosóficos o simplemente sueños despiertos. Resta 2 a todas las tiradas de Notar y Conocimientos Generales.' 
+    description: '-1 a Conocimientos Generales y Notar.' 
   },
   { 
     id: 'hindrance-dubitativo',
     name: 'Dubitativo', 
     type: 'Menor', 
-    description: 'Tu héroe duda en los momentos críticos. Siempre es el último en reaccionar cuando surge un problema inesperado. En el primer asalto de cualquier combate, roba dos cartas de iniciativa y quédate con la peor.' 
+    description: 'En el primer asalto de cualquier combate, roba dos cartas de iniciativa y quédate con la peor.' 
   },
   { 
     id: 'hindrance-enemigo-menor',
     name: 'Enemigo', 
     type: 'Menor', 
-    description: 'Alguien con cierta influencia quiere ver a tu héroe arruinado o humillado. Aparecerá de vez en cuando para complicarle la vida, saboteando sus planes o difamando su nombre.' 
+    description: 'Alguien con cierta influencia quiere ver a tu héroe arruinado o humillado.' 
   },
   { 
     id: 'hindrance-enemigo-mayor',
     name: 'Enemigo', 
     type: 'Mayor', 
-    description: 'Alguien poderoso quiere ver a tu héroe muerto. Enviará asesinos, usará todos sus recursos legales o militares para acabar con él. Es una amenaza constante que pende sobre su cabeza.' 
+    description: 'Alguien poderoso quiere ver a tu héroe muerto.' 
   },
   { 
     id: 'hindrance-envidioso-menor',
     name: 'Envidioso', 
     type: 'Menor', 
-    description: 'Tu héroe envidia lo que otros tienen, ya sea dinero, fama o talento. Siempre intenta superar a los demás de forma mezquina y se siente resentido por el éxito ajeno.' 
+    description: 'Tu héroe envidia lo que otros tienen, ya sea dinero, fama o talento.' 
   },
   { 
     id: 'hindrance-envidioso-mayor',
     name: 'Envidioso', 
     type: 'Mayor', 
-    description: 'La envidia consume a tu héroe. Es capaz de sabotear a sus propios aliados si cree que están recibiendo más atención que él. Su resentimiento es obvio y daña sus relaciones personales.' 
+    description: 'La envidia consume a tu héroe. Es capaz de sabotear a sus propios aliados.' 
   },
   { 
     id: 'hindrance-esceptico',
     name: 'Escéptico', 
     type: 'Menor', 
-    description: 'Tu héroe no cree en lo sobrenatural, la magia o los dioses. Siempre busca una explicación lógica, incluso cuando tiene una bola de fuego delante de la cara. Sufre una penalización de -2 a las tiradas de Miedo causadas por fenómenos mágicos o sobrenaturales (porque no cree en ellos hasta que es tarde).' 
+    description: 'No crees en lo sobrenatural, a menudo exponiéndote a peligros innecesarios por ello.' 
   },
   { 
     id: 'hindrance-exceso-de-confianza',
     name: 'Exceso de Confianza', 
     type: 'Mayor', 
-    description: 'Tu héroe cree que es invencible y que puede superar cualquier obstáculo. Nunca se retira de una pelea y siempre toma el camino más peligroso. Cree que su destino es la grandeza y que nada puede detenerle.' 
+    description: 'Tu héroe cree que es invencible y que puede superar cualquier obstáculo. Nunca se retira de una pelea.' 
   },
   { 
     id: 'hindrance-feo-menor',
     name: 'Feo', 
     type: 'Menor', 
-    description: 'Tu héroe es desagradable a la vista debido a cicatrices, rasgos deformes o falta de higiene. Resta 1 a todas sus tiradas de Persuadir. La gente suele evitar el contacto visual con él.' 
+    description: '-1 a Persuadir.' 
   },
   { 
     id: 'hindrance-feo-mayor',
     name: 'Feo', 
     type: 'Mayor', 
-    description: 'Tu héroe es horripilante. Su aspecto causa rechazo inmediato en la mayoría de las personas. Resta 2 a todas sus tiradas de Persuadir. En algunas culturas, puede ser tratado como un monstruo.' 
+    description: '-2 a Persuadir.' 
   },
   { 
     id: 'hindrance-fobia-menor',
     name: 'Fobia', 
     type: 'Menor', 
-    description: 'Tu héroe tiene un miedo irracional a algo común, como las arañas, las alturas o los espacios cerrados. Resta 1 a todas sus tiradas cuando esté en presencia de su fobia.' 
+    description: 'Resta 1 a todas tus tiradas cuando estés en presencia de tu fobia.' 
   },
   { 
     id: 'hindrance-fobia-mayor',
     name: 'Fobia', 
     type: 'Mayor', 
-    description: 'Tu héroe tiene un pánico paralizante a algo. Debe realizar una tirada de Miedo con una penalización de -2 cuando se enfrente a su fobia. Si falla, queda aterrorizado y debe huir o quedar paralizado.' 
+    description: 'Resta 2 a todas tus tiradas cuando estés en presencia de tu fobia.' 
   },
   { 
     id: 'hindrance-habito-menor',
     name: 'Hábito', 
     type: 'Menor', 
-    description: 'Tu héroe tiene una costumbre molesta, como hurgarse la nariz, hablar solo o usar muletillas constantes. Resta 1 a sus tiradas de Persuadir en situaciones sociales debido a la irritación que causa en los demás.' 
+    description: '-1 a Persuadir.' 
   },
   { 
     id: 'hindrance-habito-mayor',
     name: 'Hábito', 
     type: 'Mayor', 
-    description: 'Tu héroe tiene una adicción grave que afecta a su salud y a su bolsillo. Si no satisface su hábito con regularidad (cada 24 horas), sufre niveles de fatiga que pueden llevarle a la muerte.' 
+    description: 'Adicción grave que puede causar niveles de fatiga.' 
   },
   { 
     id: 'hindrance-heroico',
     name: 'Heroico', 
     type: 'Mayor', 
-    description: 'Tu héroe siempre ayuda a los necesitados, incluso si eso le pone en peligro mortal. No puede ignorar una petición de auxilio legítima y siempre intenta hacer lo correcto, sin importar el coste personal.' 
+    description: 'Tu héroe siempre ayuda a los necesitados, incluso si eso le pone en peligro mortal.' 
   },
   { 
     id: 'hindrance-impulsivo',
     name: 'Impulsivo', 
     type: 'Mayor', 
-    description: 'Tu héroe actúa antes de pensar. Si ve una palanca, la tira. Si ve un enemigo, carga. Nunca espera a tener un plan y su impaciencia a menudo mete al grupo en problemas.' 
+    description: 'Tu héroe actúa antes de pensar.' 
   },
   { 
     id: 'hindrance-joven-menor',
     name: 'Joven', 
     type: 'Menor', 
-    description: 'Tu héroe es un adolescente que aún no ha alcanzado la madurez física. Reduce su Tamaño en 1 y su Dureza en 1. Además, solo dispone de 10 puntos de habilidad en lugar de 12. A cambio, recibe un beni adicional por sesión debido a su suerte de principiante.' 
+    description: 'Repartes menos puntos en atributos y habilidades; ganas benis extras al comienzo de la sesión.' 
   },
   { 
     id: 'hindrance-joven-mayor',
     name: 'Joven', 
     type: 'Mayor', 
-    description: 'Tu héroe es un niño. Reduce su Tamaño en 2 y su Dureza en 2. Sus dados de Fuerza y Vigor se reducen en un tipo (mínimo d4). Además, solo dispone de 10 puntos de habilidad en lugar de 12. A cambio, recibe dos benis adicionales por sesión.' 
+    description: 'Repartes menos puntos en atributos y habilidades; ganas benis extras al comienzo de la sesión.' 
   },
   { 
     id: 'hindrance-juramento-menor',
     name: 'Juramento', 
     type: 'Menor', 
-    description: 'Tu héroe ha hecho una promesa menor a una persona o institución. Debe cumplirla siempre que no entre en conflicto directo con su supervivencia o sus objetivos principales.' 
+    description: 'Tu héroe ha hecho una promesa menor a una persona o institución.' 
   },
   { 
     id: 'hindrance-juramento-mayor',
     name: 'Juramento', 
     type: 'Mayor', 
-    description: 'Tu héroe ha dedicado su vida a una causa sagrada o una misión vital. Nada le desviará de su camino y sacrificará cualquier cosa por cumplir su juramento.' 
+    description: 'Tu héroe ha dedicado su vida a una causa sagrada o una misión vital.' 
   },
   { 
     id: 'hindrance-leal',
     name: 'Leal', 
     type: 'Menor', 
-    description: 'Tu héroe nunca abandona a sus amigos. Si un compañero está en peligro, hará todo lo posible por ayudarle, incluso si es arriesgado. Es un pilar de confianza para el grupo.' 
+    description: 'Tu héroe nunca abandona a sus amigos.' 
   },
   { 
     id: 'hindrance-mal-nadador',
     name: 'Mal Nadador', 
     type: 'Menor', 
-    description: 'Tu héroe se hunde como una piedra en el agua. Resta 2 a todas sus tiradas de Atletismo relacionadas con nadar y su Paso en el agua se reduce a la mitad.' 
+    description: '-2 a Atletismo (nadar), tu paso nadando es 1/3 del normal andando.' 
   },
   { 
     id: 'hindrance-mala-suerte',
     name: 'Mala Suerte', 
     type: 'Mayor', 
-    description: 'Tu héroe parece haber nacido bajo una estrella negra. Recibe un beni menos de lo normal al comienzo de cada sesión de juego (mínimo 0).' 
+    description: 'Recibes un beni menos de lo normal al comienzo de cada sesión.' 
   },
   { 
     id: 'hindrance-manazas',
     name: 'Manazas', 
     type: 'Menor', 
-    description: 'Tu héroe es torpe con los objetos mecánicos y la tecnología. Resta 2 a todas sus tiradas de Reparar y de usar aparatos complejos. Si saca un 1 en el dado de habilidad al usar un objeto mecánico, este se rompe.' 
+    description: '-2 a usar instrumentos mecánicos o electrónicos.' 
   },
   { 
     id: 'hindrance-manco',
     name: 'Manco', 
     type: 'Mayor', 
-    description: 'A tu héroe le falta un brazo. No puede usar armas de dos manos y sufre una penalización de -2 en cualquier tarea que requiera el uso de ambas manos.' 
+    description: '-4 a las tareas (como Atletismo o Pelear) que requieran dos manos.' 
   },
   { 
     id: 'hindrance-mania',
     name: 'Manía', 
     type: 'Menor', 
-    description: 'Tu héroe tiene una obsesión menor, como lavarse las manos constantemente o alinear sus cubiertos. Si no puede realizar su manía, sufre una penalización de -1 a sus tiradas de Espíritu debido al estrés.' 
+    description: 'Obsesión menor. -1 a Espíritu si no puedes realizarla.' 
   },
   { 
     id: 'hindrance-marginado-menor',
     name: 'Marginado', 
     type: 'Menor', 
-    description: 'Tu héroe pertenece a un grupo social despreciado por la mayoría. Sufre una penalización de -2 a sus tiradas de Persuadir con personas ajenas a su grupo debido a los prejuicios.' 
+    description: 'No casas en el entorno local y -2 a Persuadir.' 
   },
   { 
     id: 'hindrance-marginado-mayor',
     name: 'Marginado', 
     type: 'Mayor', 
-    description: 'Tu héroe es un paria total. Es perseguido o despreciado activamente por la sociedad dominante. Su mera presencia puede causar hostilidad o miedo.' 
+    description: 'No casas en el entorno local y -2 a Persuadir. Como mayor, además, no tienes derechos legales (u otra consecuencia grave igual de importante).' 
   },
   { 
     id: 'hindrance-mudo',
     name: 'Mudo', 
     type: 'Mayor', 
-    description: 'Tu héroe no puede hablar. Debe comunicarse mediante gestos, escritura o telepatía si dispone de ella. Esto hace que las interacciones sociales sean extremadamente difíciles.' 
+    description: 'Tu héroe no puede hablar.' 
   },
   { 
     id: 'hindrance-obeso',
     name: 'Obeso', 
     type: 'Menor', 
-    description: 'Tu héroe tiene un sobrepeso considerable. Aumenta su Tamaño en 1 (y por tanto su Dureza), pero reduce su Paso en 1 y su dado de carrera es siempre un d4. Además, su dado de Fuerza nunca puede ser superior a d8.' 
+    description: '+1 a Tamaño, Paso -1 y d4 corriendo. Tu FUE es un dado menos para FUEMín.' 
   },
   { 
     id: 'hindrance-obligaciones-menor',
     name: 'Obligaciones', 
     type: 'Menor', 
-    description: 'Tu héroe tiene responsabilidades que le quitan tiempo, como un trabajo a tiempo parcial o una familia que cuidar. Esto puede impedirle participar en algunas aventuras o requerir que regrese a casa con frecuencia.' 
+    description: 'Tu héroe tiene responsabilidades que le quitan tiempo.' 
   },
   { 
     id: 'hindrance-obligaciones-mayor',
     name: 'Obligaciones', 
     type: 'Mayor', 
-    description: 'Tu héroe está atado por grandes responsabilidades que dominan su vida, como ser el gobernante de una región o el único protector de un pueblo. Sus deberes siempre son lo primero.' 
+    description: 'Tu héroe está atado por grandes responsabilidades que dominan su vida.' 
   },
   { 
     id: 'hindrance-obsesion-menor',
     name: 'Obsesión', 
     type: 'Menor', 
-    description: 'Tu héroe está obsesionado con algo, como encontrar un tesoro legendario o demostrar una teoría científica. Siempre intenta dirigir la conversación hacia su tema y gasta sus recursos en ello.' 
+    description: 'Tu héroe está obsesionado con algo.' 
   },
   { 
     id: 'hindrance-obsesion-mayor',
     name: 'Obsesión', 
     type: 'Mayor', 
-    description: 'Una obsesión domina la vida de tu héroe. Es capaz de sacrificarlo todo, incluyendo su vida y la de sus amigos, por conseguir su objetivo obsesivo.' 
+    description: 'Una obsesión domina la vida de tu héroe.' 
   },
   { 
     id: 'hindrance-pacifista-menor',
     name: 'Pacifista', 
     type: 'Menor', 
-    description: 'Tu héroe evita la violencia necesaria y solo lucha en defensa propia o para proteger a otros. Nunca mata a un enemigo que se rinde o que está incapacitado.' 
+    description: 'Tu héroe evita la violencia innecesaria.' 
   },
   { 
     id: 'hindrance-pacifista-mayor',
     name: 'Pacifista', 
     type: 'Mayor', 
-    description: 'Tu héroe se niega a usar la violencia bajo cualquier circunstancia. Intentará detener las peleas mediante la palabra y nunca causará daño directo a otro ser vivo, incluso si su vida corre peligro.' 
+    description: 'Tu héroe se niega a usar la violencia.' 
   },
   { 
     id: 'hindrance-patoso',
     name: 'Patoso', 
     type: 'Mayor', 
-    description: 'Tu héroe siempre se tropieza, tira las cosas o hace ruido cuando intenta ser sigiloso. Resta 2 a sus tiradas de Sigilo y Atletismo. Es un peligro para cualquier misión de infiltración.' 
+    description: '-2 a Sigilo y Atletismo.' 
   },
   { 
     id: 'hindrance-pequeño',
     name: 'Pequeño', 
     type: 'Menor', 
-    description: 'Tu héroe es muy bajito para su especie. Reduce su Tamaño en 1 y, por tanto, su Dureza en 1.' 
+    description: 'Tamaño -1, Dureza -1.' 
   },
   { 
     id: 'hindrance-pobreza',
     name: 'Pobreza', 
     type: 'Menor', 
-    description: 'Tu héroe empieza con la mitad del dinero inicial y parece que nunca es capaz de ahorrar nada. Siempre está endeudado o vive al día.' 
+    description: 'Dinero inicial a la mitad.' 
   },
   { 
     id: 'hindrance-sanguinario',
     name: 'Sanguinario', 
     type: 'Mayor', 
-    description: 'Tu héroe es cruel con sus enemigos y disfruta con su sufrimiento. Nunca toma prisioneros y a menudo se ensaña con los caídos. Sufre una penalización de -4 a Persuadir con personas honorables.' 
+    description: 'Nunca tomas prisioneros. -4 a Persuadir con personas honorables.' 
   },
   { 
     id: 'hindrance-secreto-menor',
     name: 'Secreto', 
     type: 'Menor', 
-    description: 'Tu héroe oculta algo que podría causarle problemas sociales o legales si se descubriera. Vive con el miedo constante de ser expuesto.' 
+    description: 'Ocultas algo que podría causarte problemas sociales o legales.' 
   },
   { 
     id: 'hindrance-secreto-mayor',
     name: 'Secreto', 
     type: 'Mayor', 
-    description: 'Tu héroe oculta algo que podría arruinar su vida o llevarle a la ejecución si saliera a la luz. Sus enemigos pueden usar este secreto para controlarlo.' 
+    description: 'Ocultas algo que podría arruinar tu vida.' 
   },
   { 
     id: 'hindrance-sensible-menor',
     name: 'Sensible', 
     type: 'Menor', 
-    description: 'Tu héroe se ofende fácilmente por cualquier comentario o crítica. Resta 1 a sus tiradas de Persuadir cuando se sienta insultado. Suele guardar rencor por pequeñas afrentas.' 
+    description: '-2 a defenderte de Provocar.' 
   },
   { 
     id: 'hindrance-sensible-mayor',
     name: 'Sensible', 
     type: 'Mayor', 
-    description: 'Tu héroe es extremadamente emocional y voluble. Sus sentimientos dictan sus acciones por encima de la lógica. Sufre una penalización de -2 a Persuadir debido a sus estallidos emocionales.' 
+    description: '-4 a defenderte de Provocar.' 
   },
   { 
     id: 'hindrance-sordo-menor',
     name: 'Sordo', 
     type: 'Menor', 
-    description: 'Tu héroe tiene problemas de audición. Resta 2 a todas las tiradas de Notar que dependan del oído. Tiene dificultades para seguir conversaciones en lugares ruidosos.' 
+    description: '-4 a las tiradas de Notar (escuchar).' 
   },
   { 
     id: 'hindrance-sordo-mayor',
     name: 'Sordo', 
     type: 'Mayor', 
-    description: 'Tu héroe es totalmente sordo. Es inmune a los ataques basados en el sonido, pero es incapaz de oír nada. Sufre una penalización de -4 a Notar en situaciones donde el sonido sea clave.' 
+    description: '-4 a las tiradas de Notar (escuchar), fallo automático si eres completamente sordo.' 
   },
   { 
     id: 'hindrance-suspicaz-menor',
     name: 'Suspicaz', 
     type: 'Menor', 
-    description: 'Tu héroe no se fía de nadie y siempre espera lo peor de los demás. Resta 1 a todas sus tiradas de Persuadir debido a su actitud defensiva y poco amigable.' 
+    description: 'Eres paranoico.' 
   },
   { 
     id: 'hindrance-suspicaz-mayor',
     name: 'Suspicaz', 
     type: 'Mayor', 
-    description: 'La paranoia domina a tu héroe. Cree que todo el mundo conspira contra él y que incluso sus amigos tienen motivos ocultos. Es extremadamente difícil ganar su confianza.' 
+    description: 'Eres paranoico. -2 a las tiradas de apoyo.' 
   },
   { 
     id: 'hindrance-tozudo',
     name: 'Tozudo', 
     type: 'Menor', 
-    description: 'Tu héroe siempre quiere tener la razón y rara vez admite un error. Es difícil convencerle de que cambie de opinión, incluso ante pruebas evidentes.' 
+    description: 'Tu héroe siempre quiere tener la razón.' 
   },
   { 
     id: 'hindrance-tuerto',
     name: 'Tuerto', 
     type: 'Mayor', 
-    description: 'A tu héroe le falta un ojo. Resta 2 a todas las tiradas que requieran percepción de profundidad, como disparar armas a distancia o conducir vehículos a alta velocidad.' 
+    description: '-2 a todas las acciones a más de 5 pasos (10 m) de distancia.' 
   },
   { 
     id: 'hindrance-vengativo-menor',
     name: 'Vengativo', 
     type: 'Menor', 
-    description: 'Tu héroe no olvida una afrenta y siempre busca la oportunidad de devolver el golpe, aunque sea de forma sutil. No descansará hasta que se haya hecho "justicia" según su criterio.' 
+    description: 'Tu héroe no olvida una afrenta.' 
   },
   { 
     id: 'hindrance-vengativo-mayor',
     name: 'Vengativo', 
     type: 'Mayor', 
-    description: 'Tu héroe vive para la venganza. No descansará hasta que aquellos que le perjudicaron hayan pagado con creces, a menudo con su vida. Esta obsesión puede nublar su juicio.' 
+    description: 'Vives para vengarte.' 
   },
 ];
 
@@ -733,391 +733,391 @@ export const EDGES: Edge[] = [
     id: 'edge-acaparador',
     name: 'Acaparador', 
     requirements: 'Novato, Astucia d6+', 
-    effects: 'Tu héroe tiene un talento natural para encontrar objetos útiles. Recibe un bono de +2 a todas las tiradas de Notar para encontrar equipo o suministros.' 
+    effects: '+2 a Notar para encontrar equipo o suministros.' 
   },
   { 
     id: 'edge-acrobata',
     name: 'Acróbata', 
     requirements: 'Novato, Agilidad d8+, Atletismo d8+', 
-    effects: 'Tu héroe es extremadamente ágil. Recibe un bono de +2 a las tiradas de Atletismo para realizar maniobras acrobáticas y +1 a su Parada si no lleva armadura pesada.' 
+    effects: '+2 a Atletismo (maniobras acrobáticas) y +1 a Parada (sin armadura pesada).' 
   },
   { 
     id: 'edge-afortunado',
     name: 'Suerte', 
     requirements: 'Novato', 
-    effects: 'Tu héroe parece tener una suerte increíble. Recibe un beni adicional al comienzo de cada sesión de juego.' 
+    effects: '+1 beni al comienzo de cada sesión.' 
   },
   { 
     id: 'edge-agitador',
     name: 'Agitador', 
     requirements: 'Experimentado, Espíritu d8+', 
-    effects: 'Tu héroe puede usar las habilidades Intimidar o Provocar contra todos los enemigos en un área de plantilla de ráfaga pequeña.' 
+    effects: 'Usa Intimidar o Provocar en área de plantilla de ráfaga pequeña.' 
   },
   { 
     id: 'edge-alerta',
     name: 'Alerta', 
     requirements: 'Novato', 
-    effects: 'Tu héroe siempre está atento a su entorno. Recibe un bono de +2 a todas sus tiradas de Notar.' 
+    effects: '+2 a Notar.' 
   },
   { 
     id: 'edge-ambas-manos',
     name: 'A dos manos', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Tu héroe es experto en luchar con un arma en cada mano. Si realiza un ataque con cada mano (cuerpo a cuerpo), no sufre la penalización por acción múltiple.' 
+    effects: 'Ignora penalización por acción múltiple al atacar con dos armas (cuerpo a cuerpo).' 
   },
   { 
     id: 'edge-ambidiestro',
     name: 'Ambidiestro', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Tu héroe puede usar ambas manos con la misma habilidad. Ignora la penalización de -2 por usar la mano torpe.' 
+    effects: 'Ignora la penalización de -2 por usar la mano torpe.' 
   },
   { 
     id: 'edge-amenazador',
     name: 'Amenazador', 
     requirements: 'Experimentado, Intimidar d8+', 
-    effects: 'Tu héroe es verdaderamente aterrador. Recibe un bono de +2 a todas sus tiradas de Intimidar.' 
+    effects: '+2 a Intimidar.' 
   },
   { 
     id: 'edge-aristocrata',
     name: 'Aristócrata', 
     requirements: 'Novato', 
-    effects: 'Tu héroe proviene de la nobleza o de una familia de gran prestigio. Recibe un bono de +2 a las tiradas de Persuadir cuando trata con la alta sociedad o autoridades.' 
+    effects: '+2 a Persuadir (alta sociedad o autoridades).' 
   },
   { 
     id: 'edge-arma-distintiva',
     name: 'Arma predilecta', 
     requirements: 'Novato, Pelear o Disparar d8+', 
-    effects: 'Tu héroe tiene un arma especial con la que ha entrenado extensamente. Recibe un bono de +1 a las tiradas de ataque y +1 a la Parada mientras empuñe ese arma específica.' 
+    effects: '+1 a ataque y +1 a Parada con un arma específica.' 
   },
   { 
     id: 'edge-as',
     name: 'As', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Tu héroe es un piloto o conductor excepcional. Recibe un bono de +2 a las tiradas de Conducir, Pilotar y Navegar. Además, puede gastar benis para realizar tiradas de Vigor por su vehículo para ignorar Heridas.' 
+    effects: '+2 a Conducir, Pilotar y Navegar. Gasta benis para ignorar Heridas del vehículo.' 
   },
   { 
     id: 'edge-asesino',
     name: 'Asesino', 
     requirements: 'Novato, Agilidad d8+, Pelear d6+, Sigilo d8+', 
-    effects: 'Tu héroe es un maestro de la muerte silenciosa. Añade +2 a sus tiradas de daño cuando ataca a un enemigo por sorpresa o por la espalda.' 
+    effects: '+2 al daño por sorpresa o por la espalda.' 
   },
   { 
     id: 'edge-atractivo',
     name: 'Atractivo', 
     requirements: 'Novato, Vigor d6+', 
-    effects: 'Tu héroe es físicamente muy agraciado. Recibe un bono de +1 a las tiradas de Persuadir e Interpretar.' 
+    effects: '+1 a Persuadir e Interpretar.' 
   },
   { 
     id: 'edge-barrido',
     name: 'Barrido', 
     requirements: 'Novato, Fuerza d8+, Pelear d8+', 
-    effects: 'Tu héroe puede atacar a todos los enemigos adyacentes con una sola acción. Realiza una única tirada de Pelea con una penalización de -2 y compárala con la Parada de cada oponente.' 
+    effects: 'Ataca a todos los enemigos adyacentes (-2 a la tirada).' 
   },
   { 
     id: 'edge-barrido-mejorado',
     name: 'Barrido mejorado', 
     requirements: 'Experimentado, Barrido', 
-    effects: 'Como Barrido, pero el héroe ignora la penalización de -2.' 
+    effects: 'Ignora el -2 de Barrido.' 
   },
   { 
     id: 'edge-beni-adicional',
     name: 'Beni adicional', 
     requirements: 'Legendario', 
-    effects: 'Tu héroe es una leyenda viviente y recibe un beni adicional al comienzo de cada sesión.' 
+    effects: '+1 beni al comienzo de cada sesión.' 
   },
   { 
     id: 'edge-berserk',
     name: 'Berserker', 
     requirements: 'Novato', 
-    effects: 'Cuando tu héroe sufre una Herida, debe realizar una tirada de Espíritu o entrar en un estado de furia ciega. Recibe un bono de +2 a las tiradas de Pelea y Fuerza, y +2 a la Dureza (en furia), pero no puede usar habilidades que requieran concentración.' 
+    effects: 'Entra en furia al sufrir una Herida (tirada de Espíritu). +2 a Pelea, Fuerza y Dureza.' 
   },
   { 
     id: 'edge-bloqueo',
     name: 'Bloqueo', 
     requirements: 'Experimentado, Pelear d8+', 
-    effects: 'Tu héroe es experto en defenderse en combate cuerpo a cuerpo. Su Parada aumenta en +1.' 
+    effects: '+1 a Parada.' 
   },
   { 
     id: 'edge-bloqueo-mejorado',
     name: 'Bloqueo mejorado', 
     requirements: 'Veterano, Bloqueo', 
-    effects: 'Tu héroe es un maestro de la defensa. Su Parada aumenta en un total de +2.' 
+    effects: '+2 a Parada.' 
   },
   { 
     id: 'edge-bruto',
     name: 'Bruto', 
     requirements: 'Novato, Fuerza d6+, Vigor d6+', 
-    effects: 'Tu héroe es un luchador nato que usa su fuerza bruta. Puede usar su Fuerza en lugar de Agilidad para calcular su movimiento y para resistir ciertas maniobras de combate.' 
+    effects: 'Usa Fuerza en lugar de Agilidad para movimiento y resistir maniobras.' 
   },
   { 
     id: 'edge-calculador',
     name: 'Calculador', 
     requirements: 'Novato, Astucia d8+', 
-    effects: 'Tu héroe es un estratega frío. Si obtiene un 5 o menos en su carta de acción, puede ignorar hasta 2 puntos de penalización por cobertura o iluminación en su primer ataque.' 
+    effects: 'Ignora hasta 2 puntos de penalizaciones en una acción (una vez por asalto).' 
   },
   { 
     id: 'edge-carismatico',
     name: 'Carismático', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: 'Tu héroe tiene una personalidad magnética. Recibe un beni adicional que solo puede usarse para repetir tiradas de Persuadir o Interpretar.' 
+    effects: '+2 a Persuadir.' 
   },
   { 
     id: 'edge-chatarrero',
     name: 'Chatarrero', 
     requirements: 'Novato, Suerte', 
-    effects: 'Tu héroe tiene un talento especial para encontrar objetos útiles. Una vez por sesión, puede encontrar un objeto útil que necesite en ese momento.' 
+    effects: 'Una vez por sesión, encuentra un objeto útil.' 
   },
   { 
     id: 'edge-concentracion',
     name: 'Concentración', 
     requirements: 'Experimentado, Trasfondo arcano', 
-    effects: 'La duración de los poderes con mantenimiento se duplica antes de tener que pagar el coste de mantenimiento.' 
+    effects: 'La duración de los poderes con mantenimiento se duplica.' 
   },
   { 
     id: 'edge-conexiones',
     name: 'Contactos', 
     requirements: 'Novato', 
-    effects: 'Tu héroe tiene una red de contactos en una organización o grupo social. Puede pedir favores, información o equipo una vez por sesión.' 
+    effects: 'Red de contactos en una organización.' 
   },
   { 
     id: 'edge-contraataque',
     name: 'Contraataque', 
     requirements: 'Experimentado, Pelear d8+', 
-    effects: 'Una vez por asalto, si un enemigo falla un ataque de Pelea contra tu héroe, este puede realizar un ataque de Pelea inmediato contra ese enemigo como acción gratuita.' 
+    effects: 'Una vez por asalto, si un enemigo falla un ataque cuerpo a cuerpo, recibes un ataque gratis.' 
   },
   { 
     id: 'edge-contraataque-mejorado',
     name: 'Contraataque mejorado', 
     requirements: 'Veterano, Contraataque', 
-    effects: 'Tu héroe puede realizar un contraataque contra todos los enemigos que fallen un ataque de Pelea contra él en el mismo asalto.' 
+    effects: 'Como Contraataque, pero sin penalización.' 
   },
   { 
     id: 'edge-curandero',
     name: 'Sanador', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: 'Tu héroe tiene un don para la medicina. Recibe un bono de +2 a todas las tiradas de Sanar.' 
+    effects: '+2 a Sanar.' 
   },
   { 
     id: 'edge-desenfundado-rapido',
     name: 'Desenfundado rápido', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Tu héroe puede desenvainar un arma (o sacarla de su funda) como acción gratuita. Además, si tiene que realizar una tirada de Agilidad para ver quién actúa primero en un duelo, recibe un bono de +2.' 
+    effects: 'Desenvaina un arma como acción gratuita.' 
   },
   { 
     id: 'edge-dificil-de-matar',
     name: 'Difícil de Matar', 
     requirements: 'Novato, Espíritu d6+', 
-    effects: 'Tu héroe es increíblemente resistente. Ignora las penalizaciones por Heridas al realizar tiradas de Incapacitación.' 
+    effects: 'Ignora penalizaciones por Heridas en tiradas de Incapacitación.' 
   },
   { 
     id: 'edge-drenaje-de-alma',
     name: 'Drenaje de alma', 
     requirements: 'Experimentado, Trasfondo arcano, Habilidad arcana d8+', 
-    effects: 'Cuando el héroe se queda sin Puntos de Poder, puede realizar una tirada de Espíritu para obtener 5 PP a cambio de sufrir un nivel de fatiga.' 
+    effects: 'Obtiene 5 PP a cambio de un nivel de fatiga.' 
   },
   { 
     id: 'edge-duro-de-pelar',
     name: 'Más difícil de matar', 
     requirements: 'Veterano, Difícil de Matar', 
-    effects: 'Si tu héroe resultase muerto, realiza una tirada de Espíritu. Si tiene éxito, queda Incapacitado en su lugar.' 
+    effects: 'Si resultase muerto, realiza tirada de Espíritu para quedar Incapacitado.' 
   },
   { 
     id: 'edge-erudito',
     name: 'Erudito', 
     requirements: 'Novato, Habilidad de conocimiento d8+', 
-    effects: 'Tu héroe es un experto en un campo de estudio específico. Elige una habilidad de conocimiento (Ciencias, Humanidades, Idioma, Investigar u Ocultismo) que tengas a d8 o más. Recibe un bono de +2 a todas las tiradas de esa habilidad. Puedes elegir esta ventaja varias veces, aplicándola a una habilidad distinta cada vez.' 
+    effects: '+2 a una habilidad de conocimiento específica.' 
   },
   { 
     id: 'edge-esquiva',
     name: 'Esquiva', 
     requirements: 'Experimentado, Agilidad d8+', 
-    effects: 'Tu héroe es experto en evitar ataques a distancia. Los ataques de disparo contra él sufren una penalización de -2.' 
+    effects: '-2 a ataques de disparo contra ti.' 
   },
   { 
     id: 'edge-esquiva-mejorada',
     name: 'Esquiva mejorada', 
     requirements: 'Veterano, Esquiva', 
-    effects: 'Tu héroe es casi imposible de alcanzar a distancia. Los ataques de disparo contra él sufren una penalización de -4.' 
+    effects: '-4 a ataques de disparo contra ti.' 
   },
   { 
     id: 'edge-experto',
     name: 'Experto', 
     requirements: 'Legendario, Profesional', 
-    effects: 'El dado de la habilidad elegida en Profesional aumenta a d12+2.' 
+    effects: 'Dado de habilidad aumenta a d12+2.' 
   },
   { 
     id: 'edge-fama',
     name: 'Famoso', 
     requirements: 'Novato', 
-    effects: 'Tu héroe es conocido por sus hazañas. Recibe un bono de +1 a las tiradas de Persuadir con aquellos que lo reconozcan.' 
+    effects: '+1 a Persuadir.' 
   },
   { 
     id: 'edge-fama-mejorada',
     name: 'Muy famoso', 
     requirements: 'Experimentado, Famoso', 
-    effects: 'Tu héroe es una celebridad. El bono de Persuadir aumenta a +2.' 
+    effects: '+2 a Persuadir.' 
   },
   { 
     id: 'edge-fervor',
     name: 'Fervor', 
     requirements: 'Experimentado, Mando', 
-    effects: 'Los aliados en el Radio de Mando de tu héroe añaden +1 a sus tiradas de daño en combate cuerpo a cuerpo.' 
+    effects: '+1 al daño cuerpo a cuerpo para aliados en Radio de Mando.' 
   },
   { 
     id: 'edge-finta',
     name: 'Finta', 
     requirements: 'Novato, Pelear d8+', 
-    effects: 'Tu héroe es un maestro del engaño en combate. Puede realizar una finta (usando Pelear contra la Parada del objetivo) para que este quede Distraído o Vulnerable.' 
+    effects: 'Realiza finta para que el objetivo quede Distraído o Vulnerable.' 
   },
   { 
     id: 'edge-fornido',
     name: 'Forzudo', 
     requirements: 'Novato, Fuerza d6+, Vigor d6+', 
-    effects: 'Tu héroe es excepcionalmente robusto. Su Tamaño aumenta en +1 y su Dureza en +1. Además, su Fuerza se considera un tipo de dado superior a efectos de Carga.' 
+    effects: 'Tamaño +1, Dureza +1.' 
   },
   { 
     id: 'edge-frenesi',
     name: 'Frenesí', 
     requirements: 'Experimentado, Pelear d8+', 
-    effects: 'Tu héroe puede realizar un ataque de Pelea adicional por asalto con una penalización de -2 a todas sus tiradas de Pelea ese turno.' 
+    effects: 'Ataque de Pelea adicional (-2 a la tirada).' 
   },
   { 
     id: 'edge-frenesi-mejorado',
     name: 'Frenesí mejorado', 
     requirements: 'Veterano, Frenesí', 
-    effects: 'Como Frenesí, pero el héroe ignora la penalización de -2.' 
+    effects: 'Ignora el -2 de Frenesí.' 
   },
   { 
     id: 'edge-golpe-de-poder',
     name: 'Golpe poderoso', 
     requirements: 'Novato, Pelear d10+', 
-    effects: 'Tu héroe puede sacrificar precisión por potencia. Puede restar 2 a su tirada de Pelea para añadir +4 al daño si impacta.' 
+    effects: '-2 a Pelea para +4 al daño.' 
   },
   { 
     id: 'edge-humillar',
     name: 'Humillar', 
     requirements: 'Experimentado, Provocar d8+', 
-    effects: 'Tu héroe puede usar la habilidad Provocar para hacer que un enemigo quede Vulnerable además de Distraído.' 
+    effects: 'Provocar hace que el enemigo quede Vulnerable además de Distraído.' 
   },
   { 
     id: 'edge-impetu',
     name: 'Brío', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: 'Tu héroe tiene una energía y entusiasmo contagiosos. Recibe un bono de +2 a sus tiradas cuando gasta un beni para repetir una tirada.' 
+    effects: '+2 a tiradas cuando gastas un beni para repetir una tirada.' 
   },
   { 
     id: 'edge-indomable',
     name: 'Indomable', 
     requirements: 'Experimentado, Espíritu d8+', 
-    effects: 'Tu héroe es increíblemente difícil de doblegar. Recibe un bonificador de +2 a sus tiradas para resistir poderes o ataques sociales.' 
+    effects: '+2 a resistir poderes o ataques sociales.' 
   },
   { 
     id: 'edge-inspiracion',
     name: 'Inspirar', 
     requirements: 'Novato, Mando', 
-    effects: 'Los aliados en el Radio de Mando de tu héroe reciben un bono de +1 a sus tiradas de Espíritu para recuperarse del estado Sacudido.' 
+    effects: '+1 a Espíritu para recuperarse de Sacudido (aliados en Radio de Mando).' 
   },
   { 
     id: 'edge-inspiracion-heroica',
     name: 'Inspiración heroica', 
     requirements: 'Heroico, Inspirar', 
-    effects: 'Los aliados bajo el mando de tu héroe pueden repetir cualquier tirada de Espíritu fallida, no solo para recuperarse de estar Aturdidos.' 
+    effects: 'Aliados pueden repetir cualquier tirada de Espíritu fallida.' 
   },
   { 
     id: 'edge-instinto-asesino',
     name: 'Instinto asesino', 
     requirements: 'Experimentado', 
-    effects: 'Tu héroe tiene un instinto letal. Puede repetir cualquier tirada de dados de daño que obtenga un 1 en el dado de habilidad (no en el dado salvaje).' 
+    effects: 'Puedes repetir cualquier tirada de dados de daño que obtenga un 1.' 
   },
   { 
     id: 'edge-investigador',
     name: 'Investigador', 
     requirements: 'Novato, Astucia d8+, Investigar d8+', 
-    effects: 'Tu héroe es un experto en encontrar información. Recibe un bono de +2 a todas las tiradas de Investigar y Notar (cuando busca pistas).' 
+    effects: '+2 a Investigar y Notar (pistas).' 
   },
   { 
     id: 'edge-investigador-jefe',
     name: 'Investigador jefe', 
     requirements: 'Experimentado, Investigador', 
-    effects: 'Tu héroe puede realizar una tirada de Investigación en la mitad del tiempo normal y con un bono adicional de +2.' 
+    effects: 'Investigación en la mitad del tiempo y +2 adicional.' 
   },
   { 
     id: 'edge-ladron',
     name: 'Ladrón', 
     requirements: 'Novato, Agilidad d8+, Sigilo d6+, Latrocinio d6+, Atletismo d6+', 
-    effects: 'Tu héroe es un experto en infiltración y robo. Recibe un bono de +1 a las tiradas de Sigilo en entornos urbanos, Latrocinio y Atletismo para trepar.' 
+    effects: '+1 a Sigilo (urbano), Latrocinio y Atletismo (trepar).' 
   },
   { 
     id: 'edge-lider-de-hombres',
     name: 'Líder de hombres', 
     requirements: 'Experimentado, Mando', 
-    effects: 'Los aliados bajo el mando del héroe añaden +1 a sus tiradas de Espíritu para recuperarse del estado Sacudido (esto se apila con Inspiración).' 
+    effects: '+1 a Espíritu para recuperarse de Sacudido (aliados).' 
   },
   { 
     id: 'edge-lider-nato',
     name: 'Líder nato', 
     requirements: 'Experimentado, Espíritu d8+, Mando', 
-    effects: 'Tu héroe puede entregar sus propios benis a cualquier aliado que se encuentre en su Radio de Mando.' 
+    effects: 'Puedes entregar tus benis a aliados en Radio de Mando.' 
   },
   { 
     id: 'edge-linguista',
     name: 'Lingüista', 
     requirements: 'Novato, Astucia d6+', 
-    effects: 'Tu héroe tiene un don para los idiomas. Conoce un número de idiomas adicionales igual a la mitad de su dado de Astucia.' 
+    effects: 'Conoces idiomas adicionales (mitad de Astucia).' 
   },
   { 
     id: 'edge-luchador-improvisado',
     name: 'Luchador improvisado', 
     requirements: 'Experimentado, Astucia d6+', 
-    effects: 'Tu héroe puede convertir cualquier cosa en un arma. Ignora la penalización de -2 por usar armas improvisadas.' 
+    effects: 'Ignora penalización por armas improvisadas.' 
   },
   { 
     id: 'edge-mando',
     name: 'Mando', 
     requirements: 'Novato, Espíritu d6+', 
-    effects: 'Tu héroe es un líder natural. Los aliados en su Radio de Mando pueden repetir sus tiradas de Espíritu para recuperarse del estado Sacudido.' 
+    effects: 'Aliados en Radio de Mando pueden repetir tiradas de Espíritu para recuperarse de Sacudido.' 
   },
   { 
     id: 'edge-mandibula-de-hierro',
     name: 'Mandíbula de hierro', 
     requirements: 'Novato, Vigor d8+', 
-    effects: 'Tu héroe es capaz de encajar golpes que dejarían fuera de combate a otros. Recibe un bono de +2 a las tiradas de Vigor para resistir el estado Aturdido.' 
+    effects: '+2 a Vigor para resistir Aturdido.' 
   },
   { 
     id: 'edge-manitas',
     name: 'Manitas', 
     requirements: 'Novato, Astucia d10+', 
-    effects: 'Tu héroe tiene una amplia gama de conocimientos básicos. No sufre la penalización de -2 por usar habilidades en las que no tiene entrenamiento (excepto habilidades arcanas).' 
+    effects: 'No sufres penalización por habilidades sin entrenamiento.' 
   },
   { 
     id: 'edge-mantener-la-linea',
     name: '¡Mantened la línea!', 
     requirements: 'Experimentado, Mando', 
-    effects: 'Los aliados en el Radio de Mando de tu héroe añaden +1 a su Dureza.' 
+    effects: '+1 a Dureza (aliados en Radio de Mando).' 
   },
   { 
     id: 'edge-maestro',
     name: 'Maestro', 
     requirements: 'Heroico, Habilidad d12+', 
-    effects: 'Elige una habilidad en la que tengas d12+. Tu héroe puede repetir una tirada fallida de esa habilidad una vez por sesión.' 
+    effects: 'Repite una tirada fallida de esa habilidad (una vez por sesión).' 
   },
   { 
     id: 'edge-maestro-de-armas',
     name: 'Maestro de armas', 
     requirements: 'Maestro, Pelear d12+', 
-    effects: 'Tu héroe es un maestro en el uso de armas de cuerpo a cuerpo. Su Parada aumenta en +1.' 
+    effects: '+1 a Parada.' 
   },
   { 
     id: 'edge-maestro-de-combate',
     name: 'Maestro de combate', 
     requirements: 'Maestro, Pelear d12+', 
-    effects: 'Tu héroe es un maestro en el combate cuerpo a cuerpo. Ignora hasta 2 puntos de penalizaciones por acciones múltiples si una de ellas es un ataque de Pelea.' 
+    effects: 'Ignora hasta 2 puntos de penalizaciones por acciones múltiples (si una es Pelea).' 
   },
   { 
     id: 'edge-maestro-legendario',
     name: 'Maestro Legendario', 
     requirements: 'Legendario, Experto', 
-    effects: 'El dado de la habilidad elegida en Experto aumenta a d12+3.' 
+    effects: 'Dado de habilidad aumenta a d12+3.' 
   },
   { 
     id: 'edge-matagigantes',
@@ -1153,229 +1153,229 @@ export const EDGES: Edge[] = [
     id: 'edge-muy-atractivo',
     name: 'Muy Atractivo', 
     requirements: 'Novato, Atractivo', 
-    effects: 'Tu héroe es una belleza de leyenda. Recibe un bono de +2 a las tiradas de Persuadir e Interpretar.' 
+    effects: '+2 a Persuadir e Interpretar.' 
   },
   { 
     id: 'edge-muy-rico',
     name: 'Muy Rico', 
     requirements: 'Novato, Rico', 
-    effects: 'Tu héroe es inmensamente rico. Empieza con cinco veces el dinero inicial y tiene unos ingresos muy elevados.' 
+    effects: 'Empieza con cinco veces el dinero inicial.' 
   },
   { 
     id: 'edge-nervios-de-acero',
     name: 'Nervios de acero', 
     requirements: 'Novato, Vigor d8+', 
-    effects: 'Tu héroe puede ignorar un nivel de penalización por Heridas.' 
+    effects: 'Ignora un nivel de penalización por Heridas.' 
   },
   { 
     id: 'edge-nervios-de-acero-mejorados',
     name: 'Nervios de acero mejorados', 
     requirements: 'Novato, Nervios de acero', 
-    effects: 'Tu héroe ignora hasta dos niveles de penalización por Heridas.' 
+    effects: 'Ignora hasta dos niveles de penalización por Heridas.' 
   },
   { 
     id: 'edge-pies-ligeros',
     name: 'Pies Ligeros', 
     requirements: 'Novato, Agilidad d6+', 
-    effects: 'Tu héroe es muy rápido. Su Paso aumenta en +2 y su dado de carrera aumenta en un tipo de dado.' 
+    effects: 'Paso +2, dado de carrera aumenta un tipo.' 
   },
   { 
     id: 'edge-pistolero',
     name: 'Dos pistolas', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Tu héroe es experto en usar dos armas de fuego simultáneamente. Si realiza un ataque con cada mano (a distancia), no sufre la penalización por acción múltiple.' 
+    effects: 'Ignora penalización por acción múltiple al usar dos armas de fuego.' 
   },
   { 
     id: 'edge-presencia-de-mando',
     name: 'Presencia de mando', 
     requirements: 'Experimentado, Mando', 
-    effects: 'El Radio de Mando de tu héroe aumenta a 10 casillas (20 metros).' 
+    effects: 'Radio de Mando aumenta a 10 casillas (20 m).' 
   },
   { 
     id: 'edge-primer-golpe',
     name: 'Primer ataque', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Una vez por asalto, tu héroe puede realizar un ataque de Pelea gratuito contra cualquier enemigo que se mueva a una posición adyacente a él.' 
+    effects: 'Ataque de Pelea gratuito contra enemigo que se mueva a posición adyacente.' 
   },
   { 
     id: 'edge-primer-golpe-mejorado',
     name: 'Primer ataque mejorado', 
     requirements: 'Heroico, Primer ataque', 
-    effects: 'Como Primer ataque, pero el héroe puede realizar un ataque gratuito contra cada enemigo que se mueva a una posición adyacente.' 
+    effects: 'Ataque gratuito contra cada enemigo que se mueva a posición adyacente.' 
   },
   { 
     id: 'edge-profesional',
     name: 'Profesional', 
     requirements: 'Legendario, Habilidad d12+', 
-    effects: 'Elige una habilidad en la que tengas d12+. El dado de esa habilidad aumenta a d12+1.' 
+    effects: 'Dado de habilidad aumenta a d12+1.' 
   },
   { 
     id: 'edge-pulso-firme',
     name: 'Pulso firme', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Tu héroe ignora la penalización por plataforma inestable y reduce a la mitad la penalización por movimiento al disparar.' 
+    effects: 'Ignora plataforma inestable y reduce a la mitad penalización por movimiento al disparar.' 
   },
   { 
     id: 'edge-rapido',
     name: 'Rápido', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Tu héroe tiene unos reflejos asombrosos. Si roba una carta de acción de valor 5 o inferior, puede descartarla y robar una nueva hasta obtener una superior a 5.' 
+    effects: 'Descarta carta de acción de 5 o menos y roba nueva.' 
   },
   { 
     id: 'edge-recarga-rapida',
     name: 'Recarga rápida', 
     requirements: 'Experimentado, Espíritu d6+, Trasfondo arcano', 
-    effects: 'Tu héroe recupera 10 Puntos de Poder por cada hora de descanso o actividad ligera.' 
+    effects: 'Recupera 10 PP por hora.' 
   },
   { 
     id: 'edge-recarga-rapida-mejorada',
     name: 'Recarga rápida mejorada', 
     requirements: 'Veterano, Recarga rápida', 
-    effects: 'Tu héroe recupera 20 Puntos de Poder por cada hora de descanso o actividad ligera.' 
+    effects: 'Recupera 20 PP por hora.' 
   },
   { 
     id: 'edge-reflejos-de-combate',
     name: 'Reflejos de combate', 
     requirements: 'Novato', 
-    effects: 'Tu héroe reacciona rápidamente en combate. Recibe un bono de +2 a las tiradas de Espíritu para recuperarse del estado Sacudido.' 
+    effects: '+2 a Espíritu para recuperarse de Sacudido.' 
   },
   { 
     id: 'edge-replica',
     name: 'Réplica', 
     requirements: 'Experimentado, Astucia d6+, Provocar d6+', 
-    effects: 'Si un enemigo falla una tirada de Provocar contra tu héroe, este queda Distraído automáticamente.' 
+    effects: 'Si enemigo falla Provocar, queda Distraído.' 
   },
   { 
     id: 'edge-resistencia-arcana',
     name: 'Resistencia arcana', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: 'La magia y otros efectos sobrenaturales tienen más dificultades para afectar a este héroe. Recibe un bono de +2 a las tiradas de Rasgo para resistir poderes y +2 a la Armadura contra daño provocado por poderes.' 
+    effects: '+2 a resistir poderes y +2 a Armadura contra poderes.' 
   },
   { 
     id: 'edge-resistencia-arcana-mejorada',
     name: 'Resistencia arcana mejorada', 
     requirements: 'Novato, Resistencia arcana', 
-    effects: 'Como Resistencia arcana, pero el bono aumenta a +4.' 
+    effects: 'Bono de Resistencia arcana aumenta a +4.' 
   },
   { 
     id: 'edge-resistente',
     name: 'Resistente', 
     requirements: 'Legendario, Vigor d10+', 
-    effects: 'Tu héroe es una leyenda de la resistencia. Su Dureza aumenta en +1 adicional.' 
+    effects: 'Dureza +1.' 
   },
   { 
     id: 'edge-retirada',
     name: 'Extracción', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Tu héroe es experto en salir de situaciones peligrosas. Los enemigos no reciben un ataque gratuito cuando el héroe se retira del combate cuerpo a cuerpo.' 
+    effects: 'Enemigos no reciben ataque gratuito cuando te retiras.' 
   },
   { 
     id: 'edge-retirada-mejorada',
     name: 'Extracción mejorada', 
     requirements: 'Novato, Extracción', 
-    effects: 'Como Extracción, pero el héroe puede retirarse incluso si está rodeado por múltiples enemigos.' 
+    effects: 'Puede retirarse incluso rodeado.' 
   },
   { 
     id: 'edge-rico',
     name: 'Rico', 
     requirements: 'Novato', 
-    effects: 'Tu héroe tiene acceso a una gran cantidad de recursos económicos. Empieza con el triple del dinero inicial y tiene un salario o ingresos regulares.' 
+    effects: 'Empieza con el triple del dinero inicial.' 
   },
   { 
     id: 'edge-rock-and-roll',
     name: '¡Rock and Roll!', 
     requirements: 'Experimentado, Disparar d8+', 
-    effects: 'Tu héroe sabe cómo manejar el retroceso de las armas automáticas. Ignora la penalización por fuego de supresión o ráfaga si no se mueve en su turno.' 
+    effects: 'Ignora penalización por retroceso si no se mueve.' 
   },
   { 
     id: 'edge-sanador-rapido',
     name: 'Sanación rápida', 
     requirements: 'Novato, Vigor d8+', 
-    effects: 'Tu héroe se recupera de las heridas con una rapidez asombrosa. Recibe un bono de +2 a sus tiradas de Vigor para la curación natural.' 
+    effects: '+2 a Vigor para curación natural.' 
   },
   { 
     id: 'edge-sangre-fria',
     name: 'Sangre fría', 
     requirements: 'Experimentado, Astucia d8+', 
-    effects: 'Tu héroe mantiene la calma bajo presión. Roba una carta de acción adicional en combate y quédate con la mejor.' 
+    effects: 'Roba carta de acción adicional y quédate con la mejor.' 
   },
   { 
     id: 'edge-sangre-fria-mejorada',
     name: 'Sangre fría mejorada', 
     requirements: 'Veterano, Sangre fría', 
-    effects: 'Como Sangre fría, pero el héroe roba dos cartas adicionales y se queda con la mejor.' 
+    effects: 'Roba dos cartas adicionales y quédate con la mejor.' 
   },
   { 
     id: 'edge-sentir-el-peligro',
     name: 'Sentido del peligro', 
     requirements: 'Novato', 
-    effects: 'Tu héroe tiene un sexto sentido para las emboscadas. Realiza una tirada de Notar con un bono de +2 para detectar ataques sorpresa o trampas.' 
+    effects: '+2 a Notar para detectar ataques sorpresa o trampas.' 
   },
   { 
     id: 'edge-sin-piedad',
     name: 'Sin piedad', 
     requirements: 'Experimentado', 
-    effects: 'Tu héroe no muestra clemencia. Puede gastar un beni para añadir +1d6 al daño de un ataque que ya haya impactado.' 
+    effects: 'Gasta un beni para añadir +1d6 al daño.' 
   },
   { 
     id: 'edge-soldado',
     name: 'Soldado', 
     requirements: 'Novato, Fuerza d6+, Vigor d6+', 
-    effects: 'Tu héroe ha recibido entrenamiento militar. Su Fuerza se considera un tipo de dado superior para determinar la Carga y los requisitos de Fuerza de las armas y armaduras.' 
+    effects: 'Fuerza se considera un tipo superior para Carga y requisitos.' 
   },
   { 
     id: 'edge-tactico',
     name: 'Táctico', 
     requirements: 'Experimentado, Astucia d8+, Tácticas d8+', 
-    effects: 'Al comienzo del combate, el héroe realiza una tirada de Tácticas. Con un éxito, roba una carta de acción adicional para el grupo (dos con un aumento).' 
+    effects: 'Éxito en Tácticas: +1 carta acción grupo (aumento: +2).' 
   },
   { 
     id: 'edge-tactico-veterano',
     name: 'Táctico veterano', 
     requirements: 'Veterano, Táctico', 
-    effects: 'Como Táctico, pero el héroe roba dos cartas de acción adicionales para el grupo (tres con un aumento).' 
+    effects: 'Éxito en Tácticas: +2 cartas acción grupo (aumento: +3).' 
   },
   { 
     id: 'edge-tirador',
     name: 'Tirador', 
     requirements: 'Experimentado, Atletismo o Disparar d8+', 
-    effects: 'Tu héroe es un tirador paciente. Si no se mueve en su turno, ignora hasta 2 puntos de penalización por cobertura, iluminación o disparar a larga distancia.' 
+    effects: 'Si no se mueve, ignora hasta 2 puntos de penalización.' 
   },
   { 
     id: 'edge-tirador-de-elite',
     name: 'Disparo mortal', 
     requirements: 'Experimentado, Atletismo d8+ o Disparar d8+', 
-    effects: 'Tu héroe es un tirador excepcional. Si obtiene un Joker en su carta de iniciativa, dobla el daño de sus ataques de Disparar o Atletismo (lanzar).' 
+    effects: 'Joker = dobla el daño.' 
   },
   { 
     id: 'edge-trasfondo-arcano',
     name: 'Trasfondo arcano', 
     requirements: 'Novato', 
-    effects: 'Este es el primer paso para que tu personaje tenga acceso a poderes sobrenaturales. Al elegir esta ventaja, debes seleccionar un tipo específico de Trasfondo arcano (Magia, Milagros, Psiónica, Ciencia Extraña o Dotado). Cada uno tiene su propia habilidad, puntos de poder iniciales y número de poderes conocidos.' 
+    effects: 'Acceso a poderes sobrenaturales.' 
   },
   { 
     id: 'edge-puntos-de-poder-adicionales',
     name: 'Puntos de poder adicionales', 
     requirements: 'Novato, Trasfondo arcano', 
-    effects: 'Tu héroe aumenta sus puntos de poder máximos en 5. Se puede elegir más de una vez, pero solo una por rango.' 
+    effects: '+5 PP.' 
   },
   { 
     id: 'edge-nuevo-poder',
     name: 'Nuevo poder', 
     requirements: 'Novato, Trasfondo arcano', 
-    effects: 'Tu héroe aprende un nuevo poder de su rango o inferior. Se puede elegir más de una vez.' 
+    effects: 'Aprende un nuevo poder.' 
   },
   { 
     id: 'edge-valiente',
     name: 'Valiente', 
     requirements: 'Novato, Espíritu d6+', 
-    effects: 'Tu héroe es excepcionalmente valiente. Recibe un bono de +2 a todas sus tiradas de Miedo.' 
+    effects: '+2 a tiradas de Miedo.' 
   },
   { 
     id: 'edge-voluntad-de-hierro',
     name: 'Voluntad firme', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: 'Tu héroe tiene una determinación inquebrantable. Recibe un bono de +2 a las tiradas de Espíritu para resistir la Intimidación y la Provocación.' 
+    effects: '+2 a resistir Intimidación y Provocación.' 
   },
 ];
 
