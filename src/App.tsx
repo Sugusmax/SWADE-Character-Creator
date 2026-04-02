@@ -737,18 +737,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     generalValue -= 1;
     modifiers.push({ name: 'Feo (Menor)', value: -1 });
   }
-  if (hasHindrance(char, 'Hábito', 'Menor') && skillName === 'Persuadir') {
-    generalValue -= 1;
-    modifiers.push({ name: 'Hábito (Menor)', value: -1 });
-  }
-  if (hasHindrance(char, 'Delirio', 'Mayor') && skillName === 'Persuadir') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Delirio (Mayor)', value: -2 });
-  }
-  if (hasHindrance(char, 'Marginado') && skillName === 'Persuadir') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Marginado', value: -2 });
-  }
   if (hasHindrance(char, 'Patoso') && (skillName === 'Sigilo' || skillName === 'Atletismo')) {
     generalValue -= 2;
     modifiers.push({ name: 'Patoso', value: -2 });
@@ -761,26 +749,9 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     generalValue -= 4;
     modifiers.push({ name: 'Monstruoso', value: -4 });
   }
-  if (hasHindrance(char, 'Sanguinario') && skillName === 'Persuadir') {
-    situational.push({ value: -2, note: 'Gente civilizada' });
-  }
-
-  // Species
-  if (char.species === 'Androide' && skillName === 'Persuadir') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Androide', value: -2 });
-  }
   if (char.species === 'Rakhasa' && skillName === 'Atletismo') {
     generalValue -= 2;
     modifiers.push({ name: 'Rakhasa', value: -2 });
-  }
-  if (char.species === 'Saurio' && skillName === 'Persuadir') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Saurio', value: -2 });
-  }
-  if (char.species === 'Semielfo' && skillName === 'Persuadir') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Semielfo', value: -2 });
   }
 
   // --- SITUATIONAL MODIFIERS ---
@@ -864,19 +835,14 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
       situational.push({ value: isMayor ? -99 : -4, note: isMayor ? 'Fallo automático (oído)' : 'Basado en sonido' });
     }
   }
-  if (hasHindrance(char, 'Tuerto')) {
-    if (['Disparar', 'Conducir', 'Pilotar', 'Navegar', 'Atletismo'].includes(skillName)) {
-      situational.push({ value: -2, note: 'Acciones a distancia (>5 pasos)' });
-    }
-  }
   if (hasHindrance(char, 'Mal Nadador') && skillName === 'Atletismo') {
     situational.push({ value: -2, note: 'Nadando' });
   }
   if (hasHindrance(char, 'Apocado') && ['Intimidar', 'Interpretar', 'Persuadir', 'Provocar'].includes(skillName)) {
     situational.push({ value: -1, note: 'Comunicación verbal' });
   }
-  if (hasHindrance(char, 'Delirio', 'Menor') && skillName === 'Persuadir') {
-    situational.push({ value: -1, note: 'Si se conoce el delirio' });
+  if (hasHindrance(char, 'Marginado') && skillName === 'Persuadir') {
+    situational.push({ value: -2, note: 'Fuera de su grupo' });
   }
   if (hasHindrance(char, 'Manazas')) {
     situational.push({ value: -2, note: 'Usar instrumentos mecánicos/electrónicos' });
@@ -899,6 +865,18 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   }
 
   // Species
+  if (char.species === 'Androide' && skillName === 'Persuadir') {
+    situational.push({ value: -2, note: 'Fuera de su grupo' });
+  }
+  if (char.species === 'Saurio' && skillName === 'Persuadir') {
+    situational.push({ value: -2, note: 'Fuera de su grupo' });
+  }
+  if (char.species === 'Semielfo' && skillName === 'Persuadir') {
+    situational.push({ value: -2, note: 'Fuera de su grupo' });
+  }
+  if (char.species === 'Rakhasa' && skillName === 'Persuadir') {
+    situational.push({ value: -2, note: 'Enemigo racial' });
+  }
   if (char.species === 'Aviano' && skillName === 'Atletismo') {
     situational.push({ value: -2, note: 'Nadando' });
   }
@@ -938,6 +916,9 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   if (char.hindrances.some(h => h.name === 'Fobia')) {
     const fobia = char.hindrances.find(h => h.name === 'Fobia');
     situational.push({ value: fobia?.type === 'Mayor' ? -2 : -1, note: 'En presencia de la fobia' });
+  }
+  if (hasHindrance(char, 'Tuerto')) {
+    situational.push({ value: -2, note: 'Acciones a distancia (>10m)' });
   }
   if (hasEdge(char, 'Voluntad firme') && attrName === 'Espíritu') {
     situational.push({ value: 2, note: 'Resistir Intimidación/Provocación' });

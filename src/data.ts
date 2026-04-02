@@ -28,7 +28,7 @@ export const SPECIES: Species[] = [
     abilities: [
       { id: 'ability-constructo', name: 'Constructo', description: 'Los androides añaden +2 a sus tiradas para recuperarse del aturdimiento, no respiran, ignoran un punto de penalización por heridas y son inmunes a enfermedades y venenos. Los constructos no sanan de forma natural. Para curarlos es necesario emplear la habilidad Reparar y cada intento consume una hora por herida sufrida; no están sujetos a “la hora de oro” (consulta la pág. 137).' },
       { id: 'ability-juramento-mayor-androide', name: 'Juramento (mayor)', description: 'Los constructos son fabricados con un propósito específico en mente. Los interpretados por los jugadores tienen directrices de comportamiento muy amplias, como servir a una corporación específica o una facción política. Funciona como la desventaja mayor Juramento respecto a ese conjunto específico de directrices. Si ello provoca en algún momento un conflicto de intereses, el jugador y el DJ deben determinar lo que la programación exige hacer al personaje.' },
-      { id: 'ability-marginado-mayor-androide', name: 'Marginado (mayor)', description: 'Los androides sustraen dos a todas sus tiradas de Persuadir cuando interactúan con otros seres que no sean también androides. Además, en la mayoría de ambientaciones no tienen derechos legales (en general, se les trata como una propiedad).' },
+      { id: 'ability-marginado-mayor-androide', name: 'Marginado (mayor)', description: 'Los androides sustraen dos a todas sus tiradas de Persuadir cuando interactúan con otros seres que no sean también androides (modificador circunstancial). Además, en la mayoría de ambientaciones no tienen derechos legales (en general, se les trata como una propiedad).' },
       { id: 'ability-pacifista-mayor-androide', name: 'Pacifista (mayor)', description: 'A no ser que el androide esté diseñado para el combate, casi todas las sociedades avanzadas exigen la instalación de “circuitos Asimov”, un concepto basado en la Primera Ley de la Robótica del famoso escritor de ciencia ficción Isaac Asimov. Un ser artificial no puede dañar a un ser sapiente ni permitir, por acción o inacción, que un ser sapiente sea dañado. Se representa con la desventaja mayor Pacifista.' }
     ] 
   },
@@ -99,7 +99,7 @@ export const SPECIES: Species[] = [
     description: 'Los hombres lagarto proceden de junglas humeantes o profundos desiertos, donde han creado su propia civilización, aislados de las demás especies inteligentes.',
     abilities: [
       { id: 'ability-armadura-saurio', name: 'Armadura +2', description: 'Los saurios tienen una piel escamosa que funciona de forma similar a una armadura de cuero.' },
-      { id: 'ability-marginado-menor-saurio', name: 'Marginado (menor)', description: 'Muchas otras especies desconfían de los saurios. Quizás se deba a sus extrañas costumbres y formas de actuar, su sibilante pronunciación o un miedo inconsciente hacia los ancestros reptil de estas criaturas. Sea como sea, los saurios sufren una penalización de -2 a Persuadir con todo el mundo excepto su propio pueblo.' },
+      { id: 'ability-marginado-menor-saurio', name: 'Marginado (menor)', description: 'Muchas otras especies desconfían de los saurios. Quizás se deba a sus extrañas costumbres y formas de actuar, su sibilante pronunciación o un miedo inconsciente hacia los ancestros reptil de estas criaturas. Sea como sea, los saurios sufren una penalización de -2 a Persuadir con todo el mundo excepto su propio pueblo (modificador circunstancial).' },
       { id: 'ability-mordisco-saurio', name: 'Mordisco', description: 'El mordisco de un saurio causa FUE+d4 de daño y se considera un arma natural (consulta la página 142).' },
       { id: 'ability-sentidos-agudos-saurio', name: 'Sentidos agudos', description: 'Los afinados sentidos de los saurios les proporcionan la ventaja Alerta.' },
       { id: 'ability-susceptibilidad-medioambiental', name: 'Susceptibilidad medioambiental', description: 'Aunque no son auténticos seres de sangre fría, los saurios se desenvuelven muy mal en condiciones gélidas. Sufren una penalización de -4 para resistir todos los efectos medioambientales del frío.' }
@@ -111,7 +111,7 @@ export const SPECIES: Species[] = [
     description: 'Muestran la gracilidad de los elfos, pero no su elegante fragilidad. Casi todos se adaptan bien al entorno, pero algunos sufren el rechazo de alguna de sus dos ramas familiares, pudiendo haber quedado marcados por ello.',
     abilities: [
       { id: 'ability-herencia', name: 'Herencia', description: 'Cada semielfo retiene bien la gracia de su pariente élfico o bien la adaptabilidad de su herencia humana. Durante la creación del personaje, el jugador elige entre comenzar con una ventaja gratuita a su elección o tener d6 en Agilidad, en lugar de d4 (esto también aumenta su límite racial hasta d12+1).' },
-      { id: 'ability-marginado-menor-semielfo', name: 'Marginado (menor)', description: 'Los semielfos nunca están del todo cómodos ni en la sociedad humana ni en la élfica, pues tienen un pie en cada mundo, sin decidirse jamás por completo por uno de ellos. Debido a ello, sufren una penalización de -2 a las tiradas de Persuasión con todos excepto los miembros de su propia especie.' },
+      { id: 'ability-marginado-menor-semielfo', name: 'Marginado (menor)', description: 'Los semielfos nunca están del todo cómodos ni en la sociedad humana ni en la élfica, pues tienen un pie en cada mundo, sin decidirse jamás por completo por uno de ellos. Debido a ello, sufren una penalización de -2 a las tiradas de Persuasión con todos excepto los miembros de su propia especie (modificador circunstancial).' },
       { id: 'ability-vision-penumbra-semielfo', name: 'Visión en la penumbra', description: 'Los semielfos ignoran las penalizaciones por iluminación de penumbra y oscuridad.' }
     ],
     heritageChoices: [
@@ -388,13 +388,13 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-delirio-menor',
     name: 'Delirio', 
     type: 'Menor', 
-    description: 'Tu héroe cree en algo falso. Sufre -1 a Persuadir con aquellos que conocen su creencia (modificador circunstancial).' 
+    description: 'Tu héroe cree en algo falso.' 
   },
   { 
     id: 'hindrance-delirio-mayor',
     name: 'Delirio', 
     type: 'Mayor', 
-    description: 'Tu héroe sufre una locura importante. Sufre una penalización de -2 a todas las tiradas de Persuadir (modificador general).' 
+    description: 'Tu héroe sufre una locura importante.' 
   },
   { 
     id: 'hindrance-deseo-mortal',
@@ -490,13 +490,13 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-habito-menor',
     name: 'Hábito', 
     type: 'Menor', 
-    description: 'Tu héroe tiene una costumbre molesta. Sufre una penalización de -1 a todas las tiradas de Persuadir (modificador general).' 
+    description: 'Tu héroe tiene una costumbre molesta o adicción leve que puede incomodar a otros.' 
   },
   { 
     id: 'hindrance-habito-mayor',
     name: 'Hábito', 
     type: 'Mayor', 
-    description: 'Tu héroe sufre una adicción grave. Si no la satisface, puede sufrir niveles de fatiga (modificador circunstancial).' 
+    description: 'Tu héroe sufre una adicción grave o hábito compulsivo que afecta su vida diaria.' 
   },
   { 
     id: 'hindrance-heroico',
@@ -574,13 +574,13 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-marginado-menor',
     name: 'Marginado', 
     type: 'Menor', 
-    description: 'Tu héroe no encaja en la sociedad. Sufre una penalización de -2 a todas las tiradas de Persuadir (modificador general).' 
+    description: 'Tu héroe no encaja en la sociedad. Sufre una penalización de -2 a Persuadir con aquellos ajenos a su grupo (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-marginado-mayor',
     name: 'Marginado', 
     type: 'Mayor', 
-    description: 'Tu héroe es un paria social. Sufre una penalización de -2 a todas las tiradas de Persuadir (modificador general) y no tiene derechos legales.' 
+    description: 'Tu héroe es un paria social. Sufre una penalización de -2 a Persuadir con aquellos ajenos a su grupo (modificador circunstancial) y no tiene derechos legales.' 
   },
   { 
     id: 'hindrance-mudo',
@@ -652,7 +652,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-sanguinario',
     name: 'Sanguinario', 
     type: 'Mayor', 
-    description: 'Tu héroe nunca toma prisioneros. Sufre -2 a todas las tiradas de Persuadir con gente civilizada (modificador general).' 
+    description: 'Tu héroe nunca toma prisioneros (desventaja narrativa).' 
   },
   { 
     id: 'hindrance-secreto-menor',
@@ -712,7 +712,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-tuerto',
     name: 'Tuerto', 
     type: 'Mayor', 
-    description: 'Tu héroe ha perdido un ojo. Sufre -2 a todas las acciones a más de 5 pasos (10 metros) de distancia (modificador circunstancial).' 
+    description: 'Tu héroe ha perdido un ojo. Sufre -2 a las tiradas de rasgo a más de diez metros, no a las habilidades (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-vengativo-menor',
