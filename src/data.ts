@@ -28,7 +28,7 @@ export const SPECIES: Species[] = [
     abilities: [
       { id: 'ability-constructo', name: 'Constructo', description: 'Los androides añaden +2 a sus tiradas para recuperarse del aturdimiento, no respiran, ignoran un punto de penalización por heridas y son inmunes a enfermedades y venenos. Los constructos no sanan de forma natural. Para curarlos es necesario emplear la habilidad Reparar y cada intento consume una hora por herida sufrida; no están sujetos a “la hora de oro” (consulta la pág. 137).' },
       { id: 'ability-juramento-mayor-androide', name: 'Juramento (mayor)', description: 'Los constructos son fabricados con un propósito específico en mente. Los interpretados por los jugadores tienen directrices de comportamiento muy amplias, como servir a una corporación específica o una facción política. Funciona como la desventaja mayor Juramento respecto a ese conjunto específico de directrices. Si ello provoca en algún momento un conflicto de intereses, el jugador y el DJ deben determinar lo que la programación exige hacer al personaje.' },
-      { id: 'ability-marginado-mayor-androide', name: 'Marginado (mayor)', description: 'Los androides sustraen dos a todas sus tiradas de Persuadir cuando interactúan con otros seres que no sean también androides (modificador circunstancial). Además, en la mayoría de ambientaciones no tienen derechos legales (en general, se les trata como una propiedad).' },
+      { id: 'ability-marginado-mayor-androide', name: 'Marginado (mayor)', description: 'Los androides sustraen dos a todas sus tiradas de Persuadir cuando interactúan con otros seres que no sean también androides. Además, en la mayoría de ambientaciones no tienen derechos legales (en general, se les trata como una propiedad).' },
       { id: 'ability-pacifista-mayor-androide', name: 'Pacifista (mayor)', description: 'A no ser que el androide esté diseñado para el combate, casi todas las sociedades avanzadas exigen la instalación de “circuitos Asimov”, un concepto basado en la Primera Ley de la Robótica del famoso escritor de ciencia ficción Isaac Asimov. Un ser artificial no puede dañar a un ser sapiente ni permitir, por acción o inacción, que un ser sapiente sea dañado. Se representa con la desventaja mayor Pacifista.' }
     ] 
   },
@@ -99,7 +99,7 @@ export const SPECIES: Species[] = [
     description: 'Los hombres lagarto proceden de junglas humeantes o profundos desiertos, donde han creado su propia civilización, aislados de las demás especies inteligentes.',
     abilities: [
       { id: 'ability-armadura-saurio', name: 'Armadura +2', description: 'Los saurios tienen una piel escamosa que funciona de forma similar a una armadura de cuero.' },
-      { id: 'ability-marginado-menor-saurio', name: 'Marginado (menor)', description: 'Muchas otras especies desconfían de los saurios. Quizás se deba a sus extrañas costumbres y formas de actuar, su sibilante pronunciación o un miedo inconsciente hacia los ancestros reptil de estas criaturas. Sea como sea, los saurios sufren una penalización de -2 a Persuadir con todo el mundo excepto su propio pueblo (modificador circunstancial).' },
+      { id: 'ability-marginado-menor-saurio', name: 'Marginado (menor)', description: 'Muchas otras especies desconfían de los saurios. Quizás se deba a sus extrañas costumbres y formas de actuar, su sibilante pronunciación o un miedo inconsciente hacia los ancestros reptil de estas criaturas. Sea como sea, los saurios sufren una penalización de -2 a Persuadir con todo el mundo excepto su propio pueblo.' },
       { id: 'ability-mordisco-saurio', name: 'Mordisco', description: 'El mordisco de un saurio causa FUE+d4 de daño y se considera un arma natural (consulta la página 142).' },
       { id: 'ability-sentidos-agudos-saurio', name: 'Sentidos agudos', description: 'Los afinados sentidos de los saurios les proporcionan la ventaja Alerta.' },
       { id: 'ability-susceptibilidad-medioambiental', name: 'Susceptibilidad medioambiental', description: 'Aunque no son auténticos seres de sangre fría, los saurios se desenvuelven muy mal en condiciones gélidas. Sufren una penalización de -4 para resistir todos los efectos medioambientales del frío.' }
@@ -111,7 +111,7 @@ export const SPECIES: Species[] = [
     description: 'Muestran la gracilidad de los elfos, pero no su elegante fragilidad. Casi todos se adaptan bien al entorno, pero algunos sufren el rechazo de alguna de sus dos ramas familiares, pudiendo haber quedado marcados por ello.',
     abilities: [
       { id: 'ability-herencia', name: 'Herencia', description: 'Cada semielfo retiene bien la gracia de su pariente élfico o bien la adaptabilidad de su herencia humana. Durante la creación del personaje, el jugador elige entre comenzar con una ventaja gratuita a su elección o tener d6 en Agilidad, en lugar de d4 (esto también aumenta su límite racial hasta d12+1).' },
-      { id: 'ability-marginado-menor-semielfo', name: 'Marginado (menor)', description: 'Los semielfos nunca están del todo cómodos ni en la sociedad humana ni en la élfica, pues tienen un pie en cada mundo, sin decidirse jamás por completo por uno de ellos. Debido a ello, sufren una penalización de -2 a las tiradas de Persuasión con todos excepto los miembros de su propia especie (modificador circunstancial).' },
+      { id: 'ability-marginado-menor-semielfo', name: 'Marginado (menor)', description: 'Los semielfos nunca están del todo cómodos ni en la sociedad humana ni en la élfica, pues tienen un pie en cada mundo, sin decidirse jamás por completo por uno de ellos. Debido a ello, sufren una penalización de -2 a las tiradas de Persuasión con todos excepto los miembros de su propia especie.' },
       { id: 'ability-vision-penumbra-semielfo', name: 'Visión en la penumbra', description: 'Los semielfos ignoran las penalizaciones por iluminación de penumbra y oscuridad.' }
     ],
     heritageChoices: [
@@ -256,25 +256,25 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-anciano',
     name: 'Anciano', 
     type: 'Mayor', 
-    description: 'Tu héroe es de edad avanzada. Sufres -1 al Paso y el dado de carrera es un d4. Además, restas 1 a todas las tiradas de Agilidad, Fuerza y Vigor (modificador general), pero ganas 5 puntos extra de habilidad (solo para Astucia).' 
+    description: 'Tu héroe es de edad avanzada. Sufres -1 al Paso y el dado de carrera es un d4. Además, restas 1 a todas las tiradas de Agilidad, Fuerza y Vigor, pero ganas 5 puntos extra de habilidad (solo para Astucia).' 
   },
   { 
     id: 'hindrance-anemico',
     name: 'Anémico', 
     type: 'Menor', 
-    description: 'Tu héroe es enfermizo. Sufres una penalización de -2 a las tiradas de Vigor para resistir la fatiga (modificador circunstancial).' 
+    description: 'Tu héroe es enfermizo. Sufres una penalización de -2 a las tiradas de Vigor para resistir la fatiga.' 
   },
   { 
     id: 'hindrance-apacible',
     name: 'Apacible', 
     type: 'Menor', 
-    description: 'Tu héroe evita el conflicto. Sufres una penalización de -2 a todas las tiradas de Intimidar (modificador general).' 
+    description: 'Tu héroe evita el conflicto. Sufres una penalización de -2 a todas las tiradas de Intimidar.' 
   },
   { 
     id: 'hindrance-apocado',
     name: 'Apocado', 
     type: 'Mayor', 
-    description: 'Tu héroe tiene dificultades para expresarse. Sufres -1 a Intimidar, Interpretar, Persuadir y Provocar cuando la comunicación sea verbal (modificador circunstancial).' 
+    description: 'Tu héroe tiene dificultades para expresarse. Sufres -1 a Intimidar, Interpretar, Persuadir y Provocar cuando la comunicación sea verbal.' 
   },
   { 
     id: 'hindrance-arrogante',
@@ -328,7 +328,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-canalla',
     name: 'Canalla', 
     type: 'Menor', 
-    description: 'Tu héroe tiene una actitud prepotente. Sufres una penalización de -1 a todas las tiradas de Persuadir (modificador general).' 
+    description: 'Tu héroe tiene una actitud prepotente. Sufres una penalización de -1 a todas las tiradas de Persuadir.' 
   },
   { 
     id: 'hindrance-cauto',
@@ -340,13 +340,13 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-ciego',
     name: 'Ciego', 
     type: 'Mayor', 
-    description: 'Tu héroe es ciego. Sufre -6 a todas las tareas que dependan de la visión (modificador circunstancial), pero gana una ventaja adicional.' 
+    description: 'Tu héroe es ciego. Sufre -6 a todas las tareas que dependan de la visión, pero gana una ventaja adicional.' 
   },
   { 
     id: 'hindrance-cobarde',
     name: 'Cobarde', 
     type: 'Mayor', 
-    description: 'Tu héroe se asusta con facilidad. Sufre una penalización de -2 a todas las tiradas de Miedo y para resistir la Intimidación (modificador circunstancial).' 
+    description: 'Tu héroe se asusta con facilidad. Sufre una penalización de -2 a todas las tiradas de Miedo y para resistir la Intimidación.' 
   },
   { 
     id: 'hindrance-codigo-de-honor',
@@ -358,25 +358,25 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-cojo-menor',
     name: 'Cojo', 
     type: 'Menor', 
-    description: 'Tu héroe tiene una pierna lesionada. Sufre -1 al Paso y su dado de carrera es un d4. Además, sufre -2 a Atletismo en tiradas que dependan de la movilidad (modificador circunstancial).' 
+    description: 'Tu héroe tiene una pierna lesionada. Sufre -1 al Paso y su dado de carrera es un d4. Además, sufre -2 a Atletismo en tiradas que dependan de la movilidad.' 
   },
   { 
     id: 'hindrance-cojo-mayor',
     name: 'Cojo', 
     type: 'Mayor', 
-    description: 'Tu héroe apenas puede caminar. Sufre -2 al Paso y su dado de carrera es un d4-1. Sufre -4 a Atletismo en tiradas que dependan de la movilidad (modificador circunstancial).' 
+    description: 'Tu héroe apenas puede caminar. Sufre -2 al Paso y su dado de carrera es un d4-1. Sufre -4 a Atletismo en tiradas que dependan de la movilidad.' 
   },
   { 
     id: 'hindrance-corto-de-vista-menor',
     name: 'Corto de Vista', 
     type: 'Menor', 
-    description: 'Tu héroe necesita gafas. Si no las lleva, sufre -1 en las tiradas de rasgo que dependan de la visión de lejos (modificador circunstancial).' 
+    description: 'Tu héroe necesita gafas. Si no las lleva, sufre -1 en las tiradas de rasgo que dependan de la visión de lejos.' 
   },
   { 
     id: 'hindrance-corto-de-vista-mayor',
     name: 'Corto de Vista', 
     type: 'Mayor', 
-    description: 'La visión de tu héroe es muy deficiente. Sin gafas, sufre una penalización de -2 en todas las tiradas de rasgo que dependan de la visión de lejos (modificador circunstancial).' 
+    description: 'La visión de tu héroe es muy deficiente. Sin gafas, sufre una penalización de -2 en todas las tiradas de rasgo que dependan de la visión de lejos.' 
   },
   { 
     id: 'hindrance-curioso',
@@ -418,7 +418,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-despistado',
     name: 'Despistado', 
     type: 'Mayor', 
-    description: 'Tu héroe no presta atención a su entorno. Sufre una penalización de -1 a todas las tiradas de Conocimientos Generales y Notar (modificador general).' 
+    description: 'Tu héroe no presta atención a su entorno. Sufre una penalización de -1 a todas las tiradas de Conocimientos Generales y Notar.' 
   },
   { 
     id: 'hindrance-dubitativo',
@@ -466,25 +466,25 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-feo-menor',
     name: 'Feo', 
     type: 'Menor', 
-    description: 'La apariencia de tu héroe es desagradable. Sufre una penalización de -1 a todas las tiradas de Persuadir (modificador general).' 
+    description: 'La apariencia de tu héroe es desagradable. Sufre una penalización de -1 a todas las tiradas de Persuadir.' 
   },
   { 
     id: 'hindrance-feo-mayor',
     name: 'Feo', 
     type: 'Mayor', 
-    description: 'Tu héroe es repulsivo. Sufre una penalización de -2 a todas las tiradas de Persuadir (modificador general).' 
+    description: 'Tu héroe es repulsivo. Sufre una penalización de -2 a todas las tiradas de Persuadir.' 
   },
   { 
     id: 'hindrance-fobia-menor',
     name: 'Fobia', 
     type: 'Menor', 
-    description: 'Tu héroe tiene un miedo irracional. Sufre -1 a todas sus tiradas de rasgo en presencia de su fobia (modificador circunstancial).' 
+    description: 'Tu héroe tiene un miedo irracional. Sufre -1 a todas sus tiradas de rasgo en presencia de su fobia.' 
   },
   { 
     id: 'hindrance-fobia-mayor',
     name: 'Fobia', 
     type: 'Mayor', 
-    description: 'Tu héroe siente terror ante su fobia. Sufre -2 a todas sus tiradas de rasgo en presencia de su fobia (modificador circunstancial).' 
+    description: 'Tu héroe siente terror ante su fobia. Sufre -2 a todas sus tiradas de rasgo en presencia de su fobia.' 
   },
   { 
     id: 'hindrance-habito-menor',
@@ -544,7 +544,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-mal-nadador',
     name: 'Mal Nadador', 
     type: 'Menor', 
-    description: 'Tu héroe se siente incómodo en el agua. Sufre -2 a Atletismo para nadar (modificador circunstancial).' 
+    description: 'Tu héroe se siente incómodo en el agua. Sufre -2 a Atletismo para nadar.' 
   },
   { 
     id: 'hindrance-mala-suerte',
@@ -556,13 +556,13 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-manazas',
     name: 'Manazas', 
     type: 'Menor', 
-    description: 'Tu héroe es torpe con objetos delicados. Sufre una penalización de -2 al usar instrumentos mecánicos o electrónicos (modificador circunstancial).' 
+    description: 'Tu héroe es torpe con objetos delicados. Sufre una penalización de -2 al usar instrumentos mecánicos o electrónicos.' 
   },
   { 
     id: 'hindrance-manco',
     name: 'Manco', 
     type: 'Mayor', 
-    description: 'Tu héroe ha perdido un brazo. Sufre una penalización de -4 a las tareas que requieran el uso de las dos manos (modificador circunstancial).' 
+    description: 'Tu héroe ha perdido un brazo. Sufre una penalización de -4 a las tareas que requieran el uso de las dos manos.' 
   },
   { 
     id: 'hindrance-mania',
@@ -574,13 +574,13 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-marginado-menor',
     name: 'Marginado', 
     type: 'Menor', 
-    description: 'Tu héroe no encaja en la sociedad. Sufre una penalización de -2 a Persuadir con aquellos ajenos a su grupo (modificador circunstancial).' 
+    description: 'Tu héroe no encaja en la sociedad. Sufre una penalización de -2 a Persuadir con aquellos ajenos a su grupo.' 
   },
   { 
     id: 'hindrance-marginado-mayor',
     name: 'Marginado', 
     type: 'Mayor', 
-    description: 'Tu héroe es un paria social. Sufre una penalización de -2 a Persuadir con aquellos ajenos a su grupo (modificador circunstancial) y no tiene derechos legales.' 
+    description: 'Tu héroe es un paria social. Sufre una penalización de -2 a Persuadir con aquellos ajenos a su grupo y no tiene derechos legales.' 
   },
   { 
     id: 'hindrance-mudo',
@@ -634,7 +634,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-patoso',
     name: 'Patoso', 
     type: 'Mayor', 
-    description: 'Tu héroe es torpe. Sufre una penalización de -2 a todas las tiradas de Sigilo y Atletismo (modificador general).' 
+    description: 'Tu héroe es torpe. Sufre una penalización de -2 a todas las tiradas de Sigilo y Atletismo.' 
   },
   { 
     id: 'hindrance-pequeño',
@@ -670,25 +670,25 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-sensible-menor',
     name: 'Sensible', 
     type: 'Menor', 
-    description: 'Tu héroe se ofende fácilmente. Sufre -2 a las tiradas para resistir Provocar (modificador circunstancial).' 
+    description: 'Tu héroe se ofende fácilmente. Sufre -2 a las tiradas para resistir Provocar.' 
   },
   { 
     id: 'hindrance-sensible-mayor',
     name: 'Sensible', 
     type: 'Mayor', 
-    description: 'Tu héroe es muy fácil de provocar. Sufre -4 a las tiradas para resistir Provocar (modificador circunstancial).' 
+    description: 'Tu héroe es muy fácil de provocar. Sufre -4 a las tiradas para resistir Provocar.' 
   },
   { 
     id: 'hindrance-sordo-menor',
     name: 'Sordo', 
     type: 'Menor', 
-    description: 'Tu héroe tiene dificultades auditivas. Sufre -4 a las tiradas de Notar que dependan del oído (modificador circunstancial).' 
+    description: 'Tu héroe tiene dificultades auditivas. Sufre -4 a las tiradas de Notar que dependan del oído.' 
   },
   { 
     id: 'hindrance-sordo-mayor',
     name: 'Sordo', 
     type: 'Mayor', 
-    description: 'Tu héroe es sordo. Falla automáticamente tiradas de Notar basadas en el oído (modificador circunstancial).' 
+    description: 'Tu héroe es sordo. Falla automáticamente tiradas de Notar basadas en el oído.' 
   },
   { 
     id: 'hindrance-suspicaz-menor',
@@ -700,7 +700,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-suspicaz-mayor',
     name: 'Suspicaz', 
     type: 'Mayor', 
-    description: 'La paranoia domina a tu héroe. Sufre -2 a las tiradas de Apoyo (modificador circunstancial).' 
+    description: 'La paranoia domina a tu héroe. Sufre -2 a las tiradas de Apoyo.' 
   },
   { 
     id: 'hindrance-tozudo',
@@ -712,7 +712,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-tuerto',
     name: 'Tuerto', 
     type: 'Mayor', 
-    description: 'Tu héroe ha perdido un ojo. Sufre -2 a las tiradas de rasgo a más de diez metros, no a las habilidades (modificador circunstancial).' 
+    description: 'Tu héroe ha perdido un ojo. Sufre -2 a las tiradas de rasgo a más de diez metros, no a las habilidades.' 
   },
   { 
     id: 'hindrance-vengativo-menor',

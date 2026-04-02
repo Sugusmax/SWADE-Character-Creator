@@ -194,9 +194,8 @@ const getAttributeLimits = (attrName: string, speciesName: string, heritageChoic
   const isElderly = hindrances?.some(h => h && h.name === 'Anciano');
   
   if (isElderly && attrName === 'Astucia') {
-    // If they start at d4, they effectively have d6. 
-    // But we want to let them buy up to d12 (effective d12+1).
-    // So we don't need to change min/max here if we use getEffectiveAttribute for calculations.
+    min = upgradeDie(min);
+    max = upgradeDie(max);
   }
 
   return { min, max };
@@ -227,6 +226,31 @@ const getSkillLimits = (skillName: string, speciesName: string, heritageChoice?:
   return { min, max };
 };
 
+const formatDice = (val: number) => {
+  if (val <= 12) return `d${val}`;
+  return `d12+${val - 12}`;
+};
+
+const upgradeDie = (val: number): Dice => {
+  if (val === 4) return 6;
+  if (val === 6) return 8;
+  if (val === 8) return 10;
+  if (val === 10) return 12;
+  if (val === 12) return 13;
+  if (val === 13) return 14;
+  return val as Dice;
+};
+
+const downgradeDie = (val: number): Dice => {
+  if (val === 14) return 13;
+  if (val === 13) return 12;
+  if (val === 12) return 10;
+  if (val === 10) return 8;
+  if (val === 8) return 6;
+  if (val === 6) return 4;
+  return 4 as Dice;
+};
+
 const calculateAttributePointsSpent = (char: Character) => {
   if (!char || !char.attributes) return 0;
   let spent = 0;
@@ -236,11 +260,7 @@ const calculateAttributePointsSpent = (char: Character) => {
     
     let temp = min;
     while (temp < current) {
-      if (temp === 12) {
-        temp = 13;
-      } else {
-        temp += 2;
-      }
+      temp = upgradeDie(temp);
       spent += 1;
     }
   });
@@ -269,12 +289,7 @@ const calculateSkillPointsSpent = (char: Character) => {
       } else {
         const cost = currentVal < attrVal ? 1 : 2;
         pointsForThisSkill += cost;
-        
-        if (currentVal === 12) {
-          currentVal = 13;
-        } else {
-          currentVal += 2;
-        }
+        currentVal = upgradeDie(currentVal);
       }
     }
 
@@ -494,11 +509,6 @@ const checkRequirements = (char: Character, requirements: string): { met: boolea
     met: unmet.length === 0,
     reason: unmet.length > 0 ? `Falta: ${unmet.join(', ')}` : undefined
   };
-};
-
-const formatDice = (val: number) => {
-  if (val <= 12) return `d${val}`;
-  return `d12+${val - 12}`;
 };
 
 const sortByName = (a: { name: string }, b: { name: string }) => {
@@ -748,10 +758,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasHindrance(char, 'Monstruoso') && skillName === 'Persuadir') {
     generalValue -= 4;
     modifiers.push({ name: 'Monstruoso', value: -4 });
-  }
-  if (char.species === 'Rakhasa' && skillName === 'Atletismo') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Rakhasa', value: -2 });
   }
 
   // --- SITUATIONAL MODIFIERS ---
@@ -1468,6 +1474,13 @@ export default function App() {
                       
                       if (spentHP > totalHP) return true;
 
+                      if (currentStep === 1) { // Especie
+                        const speciesData = SPECIES.find(s => s.name === currentCharacter.species);
+                        if (speciesData?.heritageChoices && !currentCharacter.heritageChoice) {
+                          return true;
+                        }
+                      }
+
                       if (currentStep === 3) { // Atributos
                         return calculateAttributePointsSpent(currentCharacter) > (5 + (currentCharacter.spentHindrancePoints?.attributes || 0));
                       }
@@ -2000,7 +2013,14 @@ function renderStep(
                     </div>
                     {s.heritageChoices && (
                       <div className="space-y-4 pt-4">
-                        <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Elige tu Herencia</h4>
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">Elige tu Herencia</h4>
+                          {!char.heritageChoice && (
+                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 animate-pulse">
+                              Selección obligatoria
+                            </span>
+                          )}
+                        </div>
                         <div className="grid grid-cols-1 gap-3">
                           {s.heritageChoices.map(choice => (
                             <div
@@ -2245,7 +2265,7 @@ function renderStep(
                       <button 
                         onClick={() => {
                           if (current <= min) return;
-                          const nextVal = current === 4 ? 4 : current - 2;
+                          const nextVal = downgradeDie(current);
                           update({ attributes: { ...char.attributes, [attr]: nextVal } });
                         }}
                         className="w-6 h-6 bg-stone-100 border border-stone-200 rounded-full flex items-center justify-center hover:bg-stone-200 transition-colors"
@@ -2255,7 +2275,7 @@ function renderStep(
                       <button 
                         onClick={() => {
                           if (current >= max) return;
-                          const nextVal = current + 2;
+                          const nextVal = upgradeDie(current);
                           const cost = 1;
                           const currentSpent = calculateAttributePointsSpent(char);
                           
@@ -2363,11 +2383,10 @@ function renderStep(
                       <button 
                         onClick={() => {
                           const nextSkills = { ...char.skills };
-                          const maxSkill = attrVal > 12 ? 13 : 12;
-                          if (val < maxSkill) {
+                          if (val < max) {
                             const cost = val === 0 ? 1 : (val < attrVal ? 1 : 2);
                             
-                            const nextVal = (val === 12 ? 13 : (val || 2) + 2) as Dice;
+                            const nextVal = upgradeDie(val === 0 ? 0 : val);
                             const nextChar = { ...char, skills: { ...char.skills, [skill.name]: nextVal } };
                             const { smartsSpent: nextSmarts, otherSpent: nextOther } = calculateSkillPointsSpent(nextChar);
                             
@@ -2393,7 +2412,7 @@ function renderStep(
                                 cost: cost,
                                 onConfirm: () => {
                                   const confirmedSkills = { ...char.skills };
-                                  confirmedSkills[skill.name] = (val === 12 ? 13 : (val || 2) + 2) as Dice;
+                                  confirmedSkills[skill.name] = nextVal;
                                   update({ 
                                     skills: confirmedSkills,
                                     spentHindrancePoints: { ...char.spentHindrancePoints, skills: (char.spentHindrancePoints.skills || 0) + cost }
@@ -2404,19 +2423,26 @@ function renderStep(
                           }
                         }}
                         className="w-5 h-5 bg-stone-900 text-white rounded flex items-center justify-center text-xs hover:bg-stone-800 disabled:opacity-30"
-                        disabled={val >= (attrVal > 12 ? 13 : 12)}
+                        disabled={val >= max}
                       >
                         +
                       </button>
                       <button 
                         onClick={() => {
                           const nextSkills = { ...char.skills };
-                          if (val === 13) {
-                            nextSkills[skill.name] = 12 as Dice;
-                          } else if (val === 4 && min === 0) {
-                            delete nextSkills[skill.name];
-                          } else if (val > min) {
-                            nextSkills[skill.name] = (val - 2) as Dice;
+                          if (val === 0) return;
+
+                          let nextVal: Dice | 0 = 0;
+                          if (val === 4) {
+                            if (min === 0) {
+                              delete nextSkills[skill.name];
+                              nextVal = 0;
+                            } else {
+                              return; // Cannot go below min
+                            }
+                          } else {
+                            nextVal = downgradeDie(val);
+                            nextSkills[skill.name] = nextVal;
                           }
                           
                           const { basicNeeded } = calculateSkillPointsSpent({ ...char, skills: nextSkills });
@@ -2837,7 +2863,18 @@ function renderStep(
         </div>
       );
     }
-    case 7: // Equipo
+    case 7: { // Equipo
+      const allWeapons = [...(char.weapons || [])];
+      if (char.species === 'Rakhasa') {
+        if (!allWeapons.some(w => w.name === 'Garras/Mordisco')) {
+          allWeapons.unshift({ name: 'Garras/Mordisco', damage: 'FUE+d4', ap: 0, notes: 'Arma natural' });
+        }
+      } else if (char.species === 'Saurio') {
+        if (!allWeapons.some(w => w.name === 'Mordisco')) {
+          allWeapons.unshift({ name: 'Mordisco', damage: 'FUE+d4', ap: 0, notes: 'Arma natural' });
+        }
+      }
+
       return (
         <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -2848,16 +2885,29 @@ function renderStep(
                   <button onClick={() => setIsAddingWeapon(true)} className="p-2 bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition-colors"><Plus size={16} /></button>
                 </div>
                 <div className="space-y-2">
-                  {char.weapons?.map((w, idx) => (
-                    <div key={w.instanceId || `w-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center">
-                      <div>
-                        <div className="font-bold text-stone-900 text-sm">{w.name}</div>
-                        <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{w.damage} {w.range ? `| ${w.range}` : ''}</div>
+                  {allWeapons.map((w, idx) => {
+                    const isNatural = w.notes === 'Arma natural';
+                    return (
+                      <div key={w.instanceId || `w-${idx}`} className="p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-stone-900 text-sm">{w.name}</div>
+                          <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{w.damage} {w.range ? `| ${w.range}` : ''}</div>
+                          {isNatural && <div className="text-[9px] text-stone-400 italic">Arma natural</div>}
+                        </div>
+                        {!isNatural && (
+                          <button onClick={() => {
+                            const charIdx = char.weapons?.findIndex(cw => cw.instanceId === w.instanceId);
+                            if (charIdx !== undefined && charIdx !== -1) {
+                              removeWeapon(charIdx);
+                            }
+                          }} className="text-stone-300 hover:text-red-500 transition-colors">
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
-                      <button onClick={() => removeWeapon(idx)} className="text-stone-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
-                    </div>
-                  ))}
-                  {(!char.weapons || char.weapons.length === 0) && <p className="text-xs text-stone-400 italic">No has añadido armas.</p>}
+                    );
+                  })}
+                  {allWeapons.length === 0 && <p className="text-xs text-stone-400 italic">No has añadido armas.</p>}
                 </div>
               </div>
 
@@ -2950,6 +3000,7 @@ function renderStep(
           </div>
         </div>
       );
+    }
     case 8: // Resumen
       return (
         <div className="space-y-10">
@@ -3087,16 +3138,6 @@ const DERIVED_DESCRIPTIONS: { [key: string]: string } = {
   'Carrera': 'Es el dado que tiras cuando tu personaje realiza una acción de carrera para moverse más rápido en un asalto.'
 };
 
-const upgradeDie = (val: number): Dice => {
-  if (val === 4) return 6;
-  if (val === 6) return 8;
-  if (val === 8) return 10;
-  if (val === 10) return 12;
-  if (val === 12) return 13;
-  if (val === 13) return 14;
-  return val as Dice;
-};
-
 const canTakeAttributeAdvance = (char: Character) => {
   if (!char) return false;
   const advances = char.advancesList || [];
@@ -3123,16 +3164,6 @@ const canTakeAttributeAdvance = (char: Character) => {
   });
 
   return !alreadyTakenInRank;
-};
-
-const downgradeDie = (val: Dice): Dice => {
-  if (val === 14) return 13;
-  if (val === 13) return 12;
-  if (val === 12) return 10;
-  if (val === 10) return 8;
-  if (val === 8) return 6;
-  if (val === 6) return 4;
-  return 4;
 };
 
 function ArcaneBackgroundModal({ isOpen, onClose, onSelect }: { isOpen: boolean, onClose: () => void, onSelect: (ab: any) => void }) {
@@ -3286,6 +3317,7 @@ function CharacterSheetView({
     dice: string;
     traitRoll: { die: number, result: number, explosions: number[] };
     wildRoll?: { die: number, result: number, explosions: number[] };
+    damageDice?: { name: string, die: number, result: number, explosions: number[] }[];
     modifier: number;
     appliedModifiers: AppliedModifier[];
     total: number;
@@ -3315,22 +3347,24 @@ function CharacterSheetView({
   
   const speciesData = useMemo(() => SPECIES.find(s => s.name === character.species), [character.species]);
 
+  const allWeapons = useMemo(() => {
+    const weapons = [...(character.weapons || [])];
+    if (character.species === 'Rakhasa') {
+      if (!weapons.some(w => w.name === 'Garras/Mordisco')) {
+        weapons.unshift({ name: 'Garras/Mordisco', damage: 'FUE+d4', ap: 0, notes: 'Arma natural' });
+      }
+    } else if (character.species === 'Saurio') {
+      if (!weapons.some(w => w.name === 'Mordisco')) {
+        weapons.unshift({ name: 'Mordisco', damage: 'FUE+d4', ap: 0, notes: 'Arma natural' });
+      }
+    }
+    return weapons;
+  }, [character.species, character.weapons]);
+
   const isIncapacitated = (character.wounds || 0) >= 4 || (character.fatigue || 0) >= 3;
   const totalPenalty = getWoundPenalty(character) + getFatiguePenalty(character);
 
   const performRoll = (traitName: string, dieStr: string, isTraitRoll: boolean = true, traitModifier: number = 0, explodes: boolean = true, modifiers: AppliedModifier[] = []) => {
-    // Handle d12+X format
-    let dieType = 6;
-    let baseModifier = 0;
-    
-    if (dieStr.includes('+')) {
-      const parts = dieStr.split('+');
-      dieType = parseInt(parts[0].replace('d', '')) || 6;
-      baseModifier = parseInt(parts[1]) || 0;
-    } else {
-      dieType = parseInt(dieStr.replace('d', '')) || 6;
-    }
-    
     const rollSingleDie = (sides: number, canExplode: boolean) => {
       let total = 0;
       let explosions: number[] = [];
@@ -3343,11 +3377,53 @@ function CharacterSheetView({
       return { die: sides, result: total, explosions };
     };
 
-    const traitRoll = rollSingleDie(dieType, explodes);
+    let finalTotal = 0;
+    let traitRoll = { die: 0, result: 0, explosions: [] as number[] };
     let wildRoll = undefined;
-    let finalTotal = traitRoll.result;
+    let damageDice: { name: string, die: number, result: number, explosions: number[] }[] = [];
+    let baseModifier = 0;
 
-    if (isTraitRoll) {
+    if (!isTraitRoll) {
+      // Damage roll logic
+      // Split by '+' but handle 'FUE'
+      const parts = dieStr.split('+').map(p => p.trim());
+      
+      parts.forEach(part => {
+        if (part.toUpperCase() === 'FUE') {
+          const strengthDie = character.attributes.Fuerza;
+          const roll = rollSingleDie(strengthDie, explodes);
+          damageDice.push({ name: 'FUE', ...roll });
+          finalTotal += roll.result;
+        } else if (part.startsWith('d')) {
+          const sides = parseInt(part.replace('d', '')) || 6;
+          const roll = rollSingleDie(sides, explodes);
+          damageDice.push({ name: part, ...roll });
+          finalTotal += roll.result;
+        } else {
+          // Constant modifier
+          baseModifier += parseInt(part) || 0;
+        }
+      });
+      
+      // For damage rolls, traitRoll is just the first die for backward compatibility in UI if needed
+      // but we'll use damageDice for rendering
+      if (damageDice.length > 0) {
+        traitRoll = { die: damageDice[0].die, result: damageDice[0].result, explosions: damageDice[0].explosions };
+      }
+    } else {
+      // Trait roll logic
+      let dieType = 6;
+      if (dieStr.includes('+')) {
+        const parts = dieStr.split('+');
+        dieType = parseInt(parts[0].replace('d', '')) || 6;
+        baseModifier = parseInt(parts[1]) || 0;
+      } else {
+        dieType = parseInt(dieStr.replace('d', '')) || 6;
+      }
+
+      traitRoll = rollSingleDie(dieType, explodes);
+      finalTotal = traitRoll.result;
+      
       wildRoll = rollSingleDie(6, true);
       finalTotal = Math.max(traitRoll.result, wildRoll.result);
     }
@@ -3357,6 +3433,9 @@ function CharacterSheetView({
     const totalWithMod = Math.max(1, finalTotal + totalModifier);
 
     const allModifiers = [...modifiers];
+    if (baseModifier !== 0) {
+      allModifiers.push({ name: isTraitRoll ? 'Bono de Rasgo' : 'Bono de Arma', value: baseModifier });
+    }
     if (penalty > 0) {
       allModifiers.push({ name: 'Heridas/Fatiga', value: -penalty });
     }
@@ -3366,6 +3445,7 @@ function CharacterSheetView({
       dice: dieStr,
       traitRoll,
       wildRoll,
+      damageDice: damageDice.length > 0 ? damageDice : undefined,
       modifier: totalModifier,
       appliedModifiers: allModifiers,
       total: totalWithMod
@@ -3592,27 +3672,43 @@ function CharacterSheetView({
                   <div className="text-5xl font-black text-stone-900 tracking-tighter">{rollResult.total}</div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col items-center">
-                    <span className="text-[10px] font-black uppercase text-stone-400 mb-2">Dado {rollResult.dice}</span>
-                    <div className="flex flex-wrap justify-center gap-1">
-                      {rollResult.traitRoll.explosions.map((e, i) => (
-                        <span key={`${e}-${i}`} className={`text-xl font-black ${i < rollResult.traitRoll.explosions.length - 1 ? 'text-amber-500' : 'text-stone-900'}`}>{e}</span>
-                      ))}
-                    </div>
-                    <div className="text-[10px] font-bold text-stone-500 mt-1">Total: {rollResult.traitRoll.result}</div>
-                  </div>
-
-                  {rollResult.wildRoll && (
-                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex flex-col items-center">
-                      <span className="text-[10px] font-black uppercase text-amber-600/60 mb-2">Dado Salvaje</span>
-                      <div className="flex flex-wrap justify-center gap-1">
-                        {rollResult.wildRoll.explosions.map((e, i) => (
-                          <span key={`${e}-${i}`} className={`text-xl font-black ${i < rollResult.wildRoll.explosions.length - 1 ? 'text-amber-500' : 'text-amber-700'}`}>{e}</span>
-                        ))}
+                <div className={rollResult.damageDice ? "grid grid-cols-1 gap-4" : "grid grid-cols-2 gap-4"}>
+                  {rollResult.damageDice ? (
+                    rollResult.damageDice.map((d, i) => (
+                      <div key={`${d.name}-${i}`} className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col items-center">
+                        <span className="text-[10px] font-black uppercase text-stone-400 mb-2">{d.name === 'FUE' ? `FUE: d${d.die}` : `Daño: d${d.die}`}</span>
+                        <div className="flex flex-wrap justify-center gap-1">
+                          {d.explosions.map((e, idx) => (
+                            <span key={`${e}-${idx}`} className={`text-xl font-black ${idx < d.explosions.length - 1 ? 'text-amber-500' : 'text-stone-900'}`}>{e}</span>
+                          ))}
+                        </div>
+                        <div className="text-[10px] font-bold text-stone-500 mt-1">Total: {d.result}</div>
                       </div>
-                      <div className="text-[10px] font-bold text-amber-600 mt-1">Total: {rollResult.wildRoll.result}</div>
-                    </div>
+                    ))
+                  ) : (
+                    <>
+                      <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex flex-col items-center">
+                        <span className="text-[10px] font-black uppercase text-stone-400 mb-2">Dado {rollResult.dice}</span>
+                        <div className="flex flex-wrap justify-center gap-1">
+                          {rollResult.traitRoll.explosions.map((e, i) => (
+                            <span key={`${e}-${i}`} className={`text-xl font-black ${i < rollResult.traitRoll.explosions.length - 1 ? 'text-amber-500' : 'text-stone-900'}`}>{e}</span>
+                          ))}
+                        </div>
+                        <div className="text-[10px] font-bold text-stone-500 mt-1">Total: {rollResult.traitRoll.result}</div>
+                      </div>
+
+                      {rollResult.wildRoll && (
+                        <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex flex-col items-center">
+                          <span className="text-[10px] font-black uppercase text-amber-600/60 mb-2">Dado Salvaje</span>
+                          <div className="flex flex-wrap justify-center gap-1">
+                            {rollResult.wildRoll.explosions.map((e, i) => (
+                              <span key={`${e}-${i}`} className={`text-xl font-black ${i < rollResult.wildRoll.explosions.length - 1 ? 'text-amber-500' : 'text-amber-700'}`}>{e}</span>
+                            ))}
+                          </div>
+                          <div className="text-[10px] font-bold text-amber-600 mt-1">Total: {rollResult.wildRoll.result}</div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -4585,31 +4681,41 @@ function CharacterSheetView({
                 <button onClick={() => setIsAddingWeapon(true)} className="p-1 text-stone-400 hover:text-stone-900 transition-colors"><Plus size={16} /></button>
               </div>
               <div className="grid grid-cols-1 gap-2">
-                {character.weapons?.map((w, idx) => (
-                  <div key={w.instanceId || `w-${idx}`} className="p-4 bg-white border border-stone-200 rounded-xl shadow-sm relative flex items-center gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-black text-stone-900 uppercase tracking-tight mb-2 pr-6">{w.name}</div>
-                      <div className="grid grid-cols-3 gap-2 text-[10px] font-bold uppercase tracking-widest text-stone-500">
-                        <div>Daño: <span className="text-stone-900">{w.damage}</span></div>
-                        {w.range && <div>Alcance: <span className="text-stone-900">{w.range}</span></div>}
-                        {w.ap !== 0 && <div>AP: <span className="text-stone-900">{w.ap}</span></div>}
+                {allWeapons.map((w, idx) => {
+                  const isNatural = w.notes === 'Arma natural';
+                  return (
+                    <div key={w.instanceId || `w-${idx}`} className="p-4 bg-white border border-stone-200 rounded-xl shadow-sm relative flex items-center gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black text-stone-900 uppercase tracking-tight mb-2 pr-6">{w.name}</div>
+                        <div className="grid grid-cols-3 gap-2 text-[10px] font-bold uppercase tracking-widest text-stone-500">
+                          <div>Daño: <span className="text-stone-900">{w.damage}</span></div>
+                          {w.range && <div>Alcance: <span className="text-stone-900">{w.range}</span></div>}
+                          {w.ap !== 0 && <div>AP: <span className="text-stone-900">{w.ap}</span></div>}
+                        </div>
+                        {w.notes && <p className="text-[10px] text-stone-400 italic mt-2 line-clamp-1">{w.notes}</p>}
                       </div>
-                      {w.notes && <p className="text-[10px] text-stone-400 italic mt-2 line-clamp-1">{w.notes}</p>}
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => {
+                          const bonus = getDamageBonus(character, w.name);
+                          performRoll(`Daño: ${w.name}`, w.damage, false, bonus.generalValue, true, bonus.modifiers);
+                        }} className="flex-shrink-0 px-3 py-2 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-stone-800 transition-colors">
+                          Dañar
+                        </button>
+                        {!isNatural && (
+                          <button onClick={() => {
+                            const charIdx = character.weapons?.findIndex(cw => cw.instanceId === w.instanceId);
+                            if (charIdx !== undefined && charIdx !== -1) {
+                              removeWeapon(charIdx);
+                            }
+                          }} className="p-2 text-stone-300 hover:text-red-500 transition-all flex-shrink-0">
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => {
-                        const bonus = getDamageBonus(character, w.name);
-                        performRoll(`Daño: ${w.name}`, w.damage, false, bonus.generalValue, true, bonus.modifiers);
-                      }} className="flex-shrink-0 px-3 py-2 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-stone-800 transition-colors">
-                        Dañar
-                      </button>
-                      <button onClick={() => removeWeapon(idx)} className="p-2 text-stone-300 hover:text-red-500 transition-all flex-shrink-0">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {(!character.weapons || character.weapons.length === 0) && <p className="text-xs text-stone-400 italic">Sin armas registradas.</p>}
+                  );
+                })}
+                {allWeapons.length === 0 && <p className="text-xs text-stone-400 italic">Sin armas registradas.</p>}
               </div>
             </div>
 
