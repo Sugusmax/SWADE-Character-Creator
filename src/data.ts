@@ -250,289 +250,289 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-analfabeto',
     name: 'Analfabeto', 
     type: 'Menor', 
-    description: 'No puedes leer ni escribir. -2 a tiradas de AST (Conocimientos Generales) cuando la información esté escrita.' 
+    description: 'Tu héroe no sabe leer ni escribir.' 
   },
   { 
     id: 'hindrance-anciano',
     name: 'Anciano', 
     type: 'Mayor', 
-    description: 'Tu héroe es mayor. -1 al Paso y carrera, -1 a tiradas de AGI, FUE y VIG; ganas cinco puntos extra de habilidad.' 
+    description: 'Tu héroe es de edad avanzada. Sufres -1 al Paso y el dado de carrera es un d4. Además, restas 1 a todas las tiradas de Agilidad, Fuerza y Vigor (modificador general), pero ganas 5 puntos extra de habilidad (solo para Astucia).' 
   },
   { 
     id: 'hindrance-anemico',
     name: 'Anémico', 
     type: 'Menor', 
-    description: 'Tu héroe es enfermizo y tiene poca resistencia física. -2 a Vigor cuando resistes la fatiga.' 
+    description: 'Tu héroe es enfermizo. Sufres una penalización de -2 a las tiradas de Vigor para resistir la fatiga (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-apacible',
     name: 'Apacible', 
     type: 'Menor', 
-    description: '-2 a Intimidar.' 
+    description: 'Tu héroe evita el conflicto. Sufres una penalización de -2 a todas las tiradas de Intimidar (modificador general).' 
   },
   { 
     id: 'hindrance-apocado',
     name: 'Apocado', 
     type: 'Mayor', 
-    description: 'Confundes las palabras o, en ocasiones, las equivocas. -1 a Intimidar, Interpretar, Persuadir y Provocar (solo comunicación verbal).' 
+    description: 'Tu héroe tiene dificultades para expresarse. Sufres -1 a Intimidar, Interpretar, Persuadir y Provocar cuando la comunicación sea verbal (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-arrogante',
     name: 'Arrogante', 
     type: 'Mayor', 
-    description: 'Siempre buscas el desafío más difícil para demostrar tu superioridad. Humillas a tus oponentes.' 
+    description: 'Tu héroe se cree superior a los demás. Siempre busca el desafío más difícil para demostrar su valía.' 
   },
   { 
     id: 'hindrance-avaricioso-menor',
     name: 'Avaricioso', 
     type: 'Menor', 
-    description: 'Eres un tacaño.' 
+    description: 'Tu héroe es tacaño con su dinero y posesiones.' 
   },
   { 
     id: 'hindrance-avaricioso-mayor',
     name: 'Avaricioso', 
     type: 'Mayor', 
-    description: 'Eres un codicioso, harás cualquier cosa por dinero.' 
+    description: 'La codicia consume a tu héroe. Hará casi cualquier cosa por dinero.' 
   },
   { 
     id: 'hindrance-avergonzado-menor',
     name: 'Avergonzado', 
     type: 'Menor', 
-    description: 'Tienes algo de lo que te avergüenzas, como un pasado criminal menor o un fracaso público.' 
+    description: 'Tu héroe oculta un secreto o fracaso menor de su pasado.' 
   },
   { 
     id: 'hindrance-avergonzado-mayor',
     name: 'Avergonzado', 
     type: 'Mayor', 
-    description: 'Vives atormentado por una gran vergüenza que ha arruinado su reputación.' 
+    description: 'Tu héroe vive atormentado por una gran vergüenza o un crimen del pasado.' 
   },
   { 
     id: 'hindrance-bocazas',
     name: 'Bocazas', 
     type: 'Menor', 
-    description: 'No sabes guardar secretos.' 
+    description: 'Tu héroe es incapaz de guardar un secreto.' 
   },
   { 
     id: 'hindrance-buscado-menor',
     name: 'Buscado', 
     type: 'Menor', 
-    description: 'Las autoridades te buscan por un delito menor o una confusión.' 
+    description: 'Las autoridades buscan a tu héroe por un delito menor.' 
   },
   { 
     id: 'hindrance-buscado-mayor',
     name: 'Buscado', 
     type: 'Mayor', 
-    description: 'Eres un fugitivo de la justicia por un delito grave.' 
+    description: 'Tu héroe es un fugitivo de la justicia por un delito grave.' 
   },
   { 
     id: 'hindrance-canalla',
     name: 'Canalla', 
     type: 'Menor', 
-    description: '-1 a Persuadir. Eres un perdonavidas.' 
+    description: 'Tu héroe tiene una actitud prepotente. Sufres una penalización de -1 a todas las tiradas de Persuadir (modificador general).' 
   },
   { 
     id: 'hindrance-cauto',
     name: 'Cauto', 
     type: 'Menor', 
-    description: 'Planeas cada paso meticulosamente. Pierdes oportunidades.' 
+    description: 'Tu héroe planea cada paso con excesiva meticulosidad.' 
   },
   { 
     id: 'hindrance-ciego',
     name: 'Ciego', 
     type: 'Mayor', 
-    description: '-6 a tareas de visión. Ganas una ventaja extra.' 
+    description: 'Tu héroe es ciego. Sufre -6 a todas las tareas que dependan de la visión (modificador circunstancial), pero gana una ventaja adicional.' 
   },
   { 
     id: 'hindrance-cobarde',
     name: 'Cobarde', 
     type: 'Mayor', 
-    description: '-2 a las tiradas de miedo y resistirse a Intimidar.' 
+    description: 'Tu héroe se asusta con facilidad. Sufre una penalización de -2 a todas las tiradas de Miedo y para resistir la Intimidación (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-codigo-de-honor',
     name: 'Código de Honor', 
     type: 'Mayor', 
-    description: 'Vives según un estricto código moral.' 
+    description: 'Tu héroe vive según un estricto código moral.' 
   },
   { 
     id: 'hindrance-cojo-menor',
     name: 'Cojo', 
     type: 'Menor', 
-    description: '-1 al Paso y d4 para correr. Penalización a Atletismo y resistirlo. Es posible que tengas que usar muletas, miembros protésicos o sillas de ruedas.' 
+    description: 'Tu héroe tiene una pierna lesionada. Sufre -1 al Paso y su dado de carrera es un d4. Además, sufre -2 a Atletismo en tiradas que dependan de la movilidad (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-cojo-mayor',
     name: 'Cojo', 
     type: 'Mayor', 
-    description: '-2 al Paso y d4-1 para correr. Penalización a Atletismo y resistirlo. Es posible que tengas que usar muletas, miembros protésicos o sillas de ruedas.' 
+    description: 'Tu héroe apenas puede caminar. Sufre -2 al Paso y su dado de carrera es un d4-1. Sufre -4 a Atletismo en tiradas que dependan de la movilidad (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-corto-de-vista-menor',
     name: 'Corto de Vista', 
     type: 'Menor', 
-    description: 'Debes usar gafas o sufres -1 en todas las tiradas de rasgo que dependan de la visión. 50 % de perder las gafas al sufrir un trauma.' 
+    description: 'Tu héroe necesita gafas. Si no las lleva, sufre -1 en las tiradas de rasgo que dependan de la visión de lejos (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-corto-de-vista-mayor',
     name: 'Corto de Vista', 
     type: 'Mayor', 
-    description: 'Debes usar gafas o sufres -2 en todas las tiradas de rasgo que dependan de la visión. 50 % de perder las gafas al sufrir un trauma.' 
+    description: 'La visión de tu héroe es muy deficiente. Sin gafas, sufre una penalización de -2 en todas las tiradas de rasgo que dependan de la visión de lejos (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-curioso',
     name: 'Curioso', 
     type: 'Mayor', 
-    description: 'Tu héroe no puede evitar investigar cosas nuevas. Si ve algo misterioso, debe realizar una tirada de Astucia para no ir a investigarlo.' 
+    description: 'Tu héroe no puede evitar investigar cualquier misterio.' 
   },
   { 
     id: 'hindrance-delirio-menor',
     name: 'Delirio', 
     type: 'Menor', 
-    description: 'Tu héroe cree en algo que no es cierto. Sufre una penalización de -1 a Persuadir con aquellos que conocen su delirio.' 
+    description: 'Tu héroe cree en algo falso. Sufre -1 a Persuadir con aquellos que conocen su creencia (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-delirio-mayor',
     name: 'Delirio', 
     type: 'Mayor', 
-    description: 'Tu héroe sufre una locura importante que afecta a su comportamiento diario. Penalización de -2 a Persuadir.' 
+    description: 'Tu héroe sufre una locura importante. Sufre una penalización de -2 a todas las tiradas de Persuadir (modificador general).' 
   },
   { 
     id: 'hindrance-deseo-mortal',
     name: 'Deseo Mortal', 
     type: 'Menor', 
-    description: 'Tu héroe busca una muerte gloriosa en combate.' 
+    description: 'Tu héroe busca un final glorioso en combate.' 
   },
   { 
     id: 'hindrance-despiadado-menor',
     name: 'Despiadado', 
     type: 'Menor', 
-    description: 'Tu héroe no muestra compasión con sus enemigos una vez que la batalla ha terminado.' 
+    description: 'Tu héroe no muestra compasión con sus enemigos derrotados.' 
   },
   { 
     id: 'hindrance-despiadado-mayor',
     name: 'Despiadado', 
     type: 'Mayor', 
-    description: 'Tu héroe es cruel y brutal. Disfruta con el sufrimiento ajeno.' 
+    description: 'Tu héroe es cruel y disfruta con el sufrimiento ajeno.' 
   },
   { 
     id: 'hindrance-despistado',
     name: 'Despistado', 
     type: 'Mayor', 
-    description: '-1 a Conocimientos Generales y Notar.' 
+    description: 'Tu héroe no presta atención a su entorno. Sufre una penalización de -1 a todas las tiradas de Conocimientos Generales y Notar (modificador general).' 
   },
   { 
     id: 'hindrance-dubitativo',
     name: 'Dubitativo', 
     type: 'Menor', 
-    description: 'En el primer asalto de cualquier combate, roba dos cartas de iniciativa y quédate con la peor.' 
+    description: 'Tu héroe duda en combate. En el primer asalto, roba dos cartas de iniciativa y se queda con la peor.' 
   },
   { 
     id: 'hindrance-enemigo-menor',
     name: 'Enemigo', 
     type: 'Menor', 
-    description: 'Alguien con cierta influencia quiere ver a tu héroe arruinado o humillado.' 
+    description: 'Alguien con cierta influencia quiere ver a tu héroe arruinado.' 
   },
   { 
     id: 'hindrance-enemigo-mayor',
     name: 'Enemigo', 
     type: 'Mayor', 
-    description: 'Alguien poderoso quiere ver a tu héroe muerto.' 
+    description: 'Alguien muy poderoso quiere ver a tu héroe muerto.' 
   },
   { 
     id: 'hindrance-envidioso-menor',
     name: 'Envidioso', 
     type: 'Menor', 
-    description: 'Tu héroe envidia lo que otros tienen, ya sea dinero, fama o talento.' 
+    description: 'Tu héroe envidia los logros o posesiones de los demás.' 
   },
   { 
     id: 'hindrance-envidioso-mayor',
     name: 'Envidioso', 
     type: 'Mayor', 
-    description: 'La envidia consume a tu héroe. Es capaz de sabotear a sus propios aliados.' 
+    description: 'La envidia consume a tu héroe y sabotea a sus aliados.' 
   },
   { 
     id: 'hindrance-esceptico',
     name: 'Escéptico', 
     type: 'Menor', 
-    description: 'No crees en lo sobrenatural, a menudo exponiéndote a peligros innecesarios por ello.' 
+    description: 'Tu héroe no cree en lo sobrenatural.' 
   },
   { 
     id: 'hindrance-exceso-de-confianza',
     name: 'Exceso de Confianza', 
     type: 'Mayor', 
-    description: 'Tu héroe cree que es invencible y que puede superar cualquier obstáculo. Nunca se retira de una pelea.' 
+    description: 'Tu héroe cree que es invencible.' 
   },
   { 
     id: 'hindrance-feo-menor',
     name: 'Feo', 
     type: 'Menor', 
-    description: '-1 a Persuadir.' 
+    description: 'La apariencia de tu héroe es desagradable. Sufre una penalización de -1 a todas las tiradas de Persuadir (modificador general).' 
   },
   { 
     id: 'hindrance-feo-mayor',
     name: 'Feo', 
     type: 'Mayor', 
-    description: '-2 a Persuadir.' 
+    description: 'Tu héroe es repulsivo. Sufre una penalización de -2 a todas las tiradas de Persuadir (modificador general).' 
   },
   { 
     id: 'hindrance-fobia-menor',
     name: 'Fobia', 
     type: 'Menor', 
-    description: 'Resta 1 a todas tus tiradas cuando estés en presencia de tu fobia.' 
+    description: 'Tu héroe tiene un miedo irracional. Sufre -1 a todas sus tiradas de rasgo en presencia de su fobia (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-fobia-mayor',
     name: 'Fobia', 
     type: 'Mayor', 
-    description: 'Resta 2 a todas tus tiradas cuando estés en presencia de tu fobia.' 
+    description: 'Tu héroe siente terror ante su fobia. Sufre -2 a todas sus tiradas de rasgo en presencia de su fobia (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-habito-menor',
     name: 'Hábito', 
     type: 'Menor', 
-    description: '-1 a Persuadir.' 
+    description: 'Tu héroe tiene una costumbre molesta. Sufre una penalización de -1 a todas las tiradas de Persuadir (modificador general).' 
   },
   { 
     id: 'hindrance-habito-mayor',
     name: 'Hábito', 
     type: 'Mayor', 
-    description: 'Adicción grave que puede causar niveles de fatiga.' 
+    description: 'Tu héroe sufre una adicción grave. Si no la satisface, puede sufrir niveles de fatiga (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-heroico',
     name: 'Heroico', 
     type: 'Mayor', 
-    description: 'Tu héroe siempre ayuda a los necesitados, incluso si eso le pone en peligro mortal.' 
+    description: 'Tu héroe siempre ayuda a los necesitados.' 
   },
   { 
     id: 'hindrance-impulsivo',
     name: 'Impulsivo', 
     type: 'Mayor', 
-    description: 'Tu héroe actúa antes de pensar.' 
+    description: 'Tu héroe actúa por instinto sin pensar.' 
   },
   { 
     id: 'hindrance-joven-menor',
     name: 'Joven', 
     type: 'Menor', 
-    description: 'Repartes menos puntos en atributos y habilidades; ganas benis extras al comienzo de la sesión.' 
+    description: 'Tu héroe es muy joven. Solo dispones de 4 puntos para atributos (en lugar de 5) y 10 para habilidades (en lugar de 12). Como compensación, recibes un beni adicional al comienzo de cada sesión.' 
   },
   { 
     id: 'hindrance-joven-mayor',
     name: 'Joven', 
     type: 'Mayor', 
-    description: 'Repartes menos puntos en atributos y habilidades; ganas benis extras al comienzo de la sesión.' 
+    description: 'Tu héroe es apenas un niño. Solo dispones de 3 puntos para atributos (en lugar de 5) y 10 para habilidades (en lugar de 12). Como compensación, recibes un beni adicional al comienzo de cada sesión.' 
   },
   { 
     id: 'hindrance-juramento-menor',
     name: 'Juramento', 
     type: 'Menor', 
-    description: 'Tu héroe ha hecho una promesa menor a una persona o institución.' 
+    description: 'Tu héroe ha hecho una promesa menor.' 
   },
   { 
     id: 'hindrance-juramento-mayor',
     name: 'Juramento', 
     type: 'Mayor', 
-    description: 'Tu héroe ha dedicado su vida a una causa sagrada o una misión vital.' 
+    description: 'Tu héroe ha dedicado su vida a una causa.' 
   },
   { 
     id: 'hindrance-leal',
@@ -544,43 +544,43 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-mal-nadador',
     name: 'Mal Nadador', 
     type: 'Menor', 
-    description: '-2 a Atletismo (nadar), tu paso nadando es 1/3 del normal andando.' 
+    description: 'Tu héroe se siente incómodo en el agua. Sufre -2 a Atletismo para nadar (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-mala-suerte',
     name: 'Mala Suerte', 
     type: 'Mayor', 
-    description: 'Recibes un beni menos de lo normal al comienzo de cada sesión.' 
+    description: 'Recibes un beni menos al comienzo de cada sesión.' 
   },
   { 
     id: 'hindrance-manazas',
     name: 'Manazas', 
     type: 'Menor', 
-    description: '-2 a usar instrumentos mecánicos o electrónicos.' 
+    description: 'Tu héroe es torpe con objetos delicados. Sufre una penalización de -2 al usar instrumentos mecánicos o electrónicos (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-manco',
     name: 'Manco', 
     type: 'Mayor', 
-    description: '-4 a las tareas (como Atletismo o Pelear) que requieran dos manos.' 
+    description: 'Tu héroe ha perdido un brazo. Sufre una penalización de -4 a las tareas que requieran el uso de las dos manos (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-mania',
     name: 'Manía', 
     type: 'Menor', 
-    description: 'Obsesión menor. -1 a Espíritu si no puedes realizarla.' 
+    description: 'Tu héroe tiene un hábito repetitivo narrativo.' 
   },
   { 
     id: 'hindrance-marginado-menor',
     name: 'Marginado', 
     type: 'Menor', 
-    description: 'No casas en el entorno local y -2 a Persuadir.' 
+    description: 'Tu héroe no encaja en la sociedad. Sufre una penalización de -2 a todas las tiradas de Persuadir (modificador general).' 
   },
   { 
     id: 'hindrance-marginado-mayor',
     name: 'Marginado', 
     type: 'Mayor', 
-    description: 'No casas en el entorno local y -2 a Persuadir. Como mayor, además, no tienes derechos legales (u otra consecuencia grave igual de importante).' 
+    description: 'Tu héroe es un paria social. Sufre una penalización de -2 a todas las tiradas de Persuadir (modificador general) y no tiene derechos legales.' 
   },
   { 
     id: 'hindrance-mudo',
@@ -592,7 +592,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-obeso',
     name: 'Obeso', 
     type: 'Menor', 
-    description: '+1 a Tamaño, Paso -1 y d4 corriendo. Tu FUE es un dado menos para FUEMín.' 
+    description: 'Tu héroe tiene sobrepeso. Gana +1 a Tamaño, pero su Paso se reduce en 1 y su dado de carrera es un d4.' 
   },
   { 
     id: 'hindrance-obligaciones-menor',
@@ -604,19 +604,19 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-obligaciones-mayor',
     name: 'Obligaciones', 
     type: 'Mayor', 
-    description: 'Tu héroe está atado por grandes responsabilidades que dominan su vida.' 
+    description: 'Tu héroe está atado por grandes responsabilidades.' 
   },
   { 
     id: 'hindrance-obsesion-menor',
     name: 'Obsesión', 
     type: 'Menor', 
-    description: 'Tu héroe está obsesionado con algo.' 
+    description: 'Tu héroe tiene una fijación con algo.' 
   },
   { 
     id: 'hindrance-obsesion-mayor',
     name: 'Obsesión', 
     type: 'Mayor', 
-    description: 'Una obsesión domina la vida de tu héroe.' 
+    description: 'Una obsesión absoluta domina la vida de tu héroe.' 
   },
   { 
     id: 'hindrance-pacifista-menor',
@@ -628,91 +628,91 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-pacifista-mayor',
     name: 'Pacifista', 
     type: 'Mayor', 
-    description: 'Tu héroe se niega a usar la violencia.' 
+    description: 'Tu héroe se niega a usar la violencia contra seres vivos.' 
   },
   { 
     id: 'hindrance-patoso',
     name: 'Patoso', 
     type: 'Mayor', 
-    description: '-2 a Sigilo y Atletismo.' 
+    description: 'Tu héroe es torpe. Sufre una penalización de -2 a todas las tiradas de Sigilo y Atletismo (modificador general).' 
   },
   { 
     id: 'hindrance-pequeño',
     name: 'Pequeño', 
     type: 'Menor', 
-    description: 'Tamaño -1, Dureza -1.' 
+    description: 'Tu héroe es menudo. Sufre -1 a su Tamaño y a su Dureza.' 
   },
   { 
     id: 'hindrance-pobreza',
     name: 'Pobreza', 
     type: 'Menor', 
-    description: 'Dinero inicial a la mitad.' 
+    description: 'Tu héroe empieza con la mitad del dinero inicial.' 
   },
   { 
     id: 'hindrance-sanguinario',
     name: 'Sanguinario', 
     type: 'Mayor', 
-    description: 'Nunca tomas prisioneros. -4 a Persuadir con personas honorables.' 
+    description: 'Tu héroe nunca toma prisioneros. Sufre -2 a todas las tiradas de Persuadir con gente civilizada (modificador general).' 
   },
   { 
     id: 'hindrance-secreto-menor',
     name: 'Secreto', 
     type: 'Menor', 
-    description: 'Ocultas algo que podría causarte problemas sociales o legales.' 
+    description: 'Tu héroe oculta algo vergonzoso.' 
   },
   { 
     id: 'hindrance-secreto-mayor',
     name: 'Secreto', 
     type: 'Mayor', 
-    description: 'Ocultas algo que podría arruinar tu vida.' 
+    description: 'Tu héroe oculta un secreto terrible.' 
   },
   { 
     id: 'hindrance-sensible-menor',
     name: 'Sensible', 
     type: 'Menor', 
-    description: '-2 a defenderte de Provocar.' 
+    description: 'Tu héroe se ofende fácilmente. Sufre -2 a las tiradas para resistir Provocar (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-sensible-mayor',
     name: 'Sensible', 
     type: 'Mayor', 
-    description: '-4 a defenderte de Provocar.' 
+    description: 'Tu héroe es muy fácil de provocar. Sufre -4 a las tiradas para resistir Provocar (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-sordo-menor',
     name: 'Sordo', 
     type: 'Menor', 
-    description: '-4 a las tiradas de Notar (escuchar).' 
+    description: 'Tu héroe tiene dificultades auditivas. Sufre -4 a las tiradas de Notar que dependan del oído (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-sordo-mayor',
     name: 'Sordo', 
     type: 'Mayor', 
-    description: '-4 a las tiradas de Notar (escuchar), fallo automático si eres completamente sordo.' 
+    description: 'Tu héroe es sordo. Falla automáticamente tiradas de Notar basadas en el oído (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-suspicaz-menor',
     name: 'Suspicaz', 
     type: 'Menor', 
-    description: 'Eres paranoico.' 
+    description: 'Tu héroe no confía en los demás.' 
   },
   { 
     id: 'hindrance-suspicaz-mayor',
     name: 'Suspicaz', 
     type: 'Mayor', 
-    description: 'Eres paranoico. -2 a las tiradas de apoyo.' 
+    description: 'La paranoia domina a tu héroe. Sufre -2 a las tiradas de Apoyo (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-tozudo',
     name: 'Tozudo', 
     type: 'Menor', 
-    description: 'Tu héroe siempre quiere tener la razón.' 
+    description: 'Tu héroe siempre quiere tener la última palabra.' 
   },
   { 
     id: 'hindrance-tuerto',
     name: 'Tuerto', 
     type: 'Mayor', 
-    description: '-2 a todas las acciones a más de 5 pasos (10 m) de distancia.' 
+    description: 'Tu héroe ha perdido un ojo. Sufre -2 a todas las acciones a más de 5 pasos (10 metros) de distancia (modificador circunstancial).' 
   },
   { 
     id: 'hindrance-vengativo-menor',
@@ -724,7 +724,7 @@ export const HINDRANCES: Hindrance[] = [
     id: 'hindrance-vengativo-mayor',
     name: 'Vengativo', 
     type: 'Mayor', 
-    description: 'Vives para vengarte.' 
+    description: 'Tu héroe vive para la venganza.' 
   },
 ];
 
@@ -785,9 +785,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-arma-distintiva',
-    name: 'Arma predilecta', 
+    name: 'Arma Distintiva', 
     requirements: 'Novato, Pelear d8+ o Disparar d8+', 
-    effects: '+1 a ataque y +1 a Parada con un arma específica.' 
+    effects: '+1 a Pelear o Disparar si la habilidad es d8+ (además del bonificador de parada situacional en los dos casos) con un arma específica.' 
   },
   { 
     id: 'edge-as',

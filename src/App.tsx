@@ -167,19 +167,6 @@ const calculateStartingBennies = (char: Character) => {
 const getEffectiveAttribute = (char: Character, attrName: string) => {
   if (!char || !char.attributes) return 4;
   let val = char.attributes[attrName as keyof typeof char.attributes] || 4;
-  const isElderly = hasHindrance(char, 'Anciano');
-  
-  if (isElderly && (attrName === 'Fuerza' || attrName === 'Vigor')) {
-    // SWADE: -1 die type (minimum d4)
-    if (val === 13) val = 12;
-    else if (val > 4) val = (val - 2) as Dice;
-  }
-  
-  if (isElderly && attrName === 'Astucia') {
-    // SWADE: +1 die type (maximum d12+1)
-    if (val === 12) val = 13;
-    else if (val < 12) val = (val + 2) as Dice;
-  }
   
   return val;
 };
@@ -261,8 +248,9 @@ const calculateAttributePointsSpent = (char: Character) => {
 };
 
 const calculateSkillPointsSpent = (char: Character) => {
-  if (!char || !char.skills || !char.attributes) return { basicNeeded: 0, ancianoUsed: 0, ancianoTotal: 5 };
-  let basicNeeded = 0;
+  if (!char || !char.skills || !char.attributes) return { basicNeeded: 0, smartsSpent: 0, otherSpent: 0, ancianoTotal: 5 };
+  let smartsSpent = 0;
+  let otherSpent = 0;
 
   SKILLS.forEach(skill => {
     if (!skill || !skill.name) return;
@@ -272,14 +260,15 @@ const calculateSkillPointsSpent = (char: Character) => {
     
     const attrVal = getEffectiveAttribute(char, skill.attribute);
     let currentVal = min;
+    let pointsForThisSkill = 0;
     
     while (currentVal < val) {
       if (currentVal === 0) {
-        basicNeeded += 1;
+        pointsForThisSkill += 1;
         currentVal = 4;
       } else {
         const cost = currentVal < attrVal ? 1 : 2;
-        basicNeeded += cost;
+        pointsForThisSkill += cost;
         
         if (currentVal === 12) {
           currentVal = 13;
@@ -288,11 +277,18 @@ const calculateSkillPointsSpent = (char: Character) => {
         }
       }
     }
+
+    if (skill.attribute === 'Astucia') {
+      smartsSpent += pointsForThisSkill;
+    } else {
+      otherSpent += pointsForThisSkill;
+    }
   });
   
   return {
-    basicNeeded,
-    ancianoUsed: 0,
+    basicNeeded: smartsSpent + otherSpent,
+    smartsSpent,
+    otherSpent,
     ancianoTotal: 5
   };
 };
@@ -728,14 +724,10 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     generalValue -= 1;
     modifiers.push({ name: 'Canalla', value: -1 });
   }
-  if (hasHindrance(char, 'Cojo', 'Mayor') && skillName === 'Atletismo') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Cojo (Mayor)', value: -2 });
-  }
   if (hasHindrance(char, 'Despistado')) {
     if (skillName === 'Notar' || skillName === 'Conocimientos Generales') {
-      generalValue -= 2;
-      modifiers.push({ name: 'Despistado', value: -2 });
+      generalValue -= 1;
+      modifiers.push({ name: 'Despistado', value: -1 });
     }
   }
   if (hasHindrance(char, 'Feo', 'Mayor') && skillName === 'Persuadir') {
@@ -752,13 +744,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasHindrance(char, 'Delirio', 'Mayor') && skillName === 'Persuadir') {
     generalValue -= 2;
     modifiers.push({ name: 'Delirio (Mayor)', value: -2 });
-  } else if (hasHindrance(char, 'Delirio', 'Menor') && skillName === 'Persuadir') {
-    generalValue -= 1;
-    modifiers.push({ name: 'Delirio (Menor)', value: -1 });
-  }
-  if (hasHindrance(char, 'Manazas') && skillName === 'Reparar') {
-    generalValue -= 2;
-    modifiers.push({ name: 'Manazas', value: -2 });
   }
   if (hasHindrance(char, 'Marginado') && skillName === 'Persuadir') {
     generalValue -= 2;
@@ -768,13 +753,16 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     generalValue -= 2;
     modifiers.push({ name: 'Patoso', value: -2 });
   }
-  if (hasHindrance(char, 'Sanguinario') && skillName === 'Persuadir') {
-    generalValue -= 4;
-    modifiers.push({ name: 'Sanguinario', value: -4 });
-  }
-  if (hasHindrance(char, 'Suspicaz') && skillName === 'Persuadir') {
+  if (hasHindrance(char, 'Suspicaz', 'Menor') && skillName === 'Persuadir') {
     generalValue -= 1;
-    modifiers.push({ name: 'Suspicaz', value: -1 });
+    modifiers.push({ name: 'Suspicaz (Menor)', value: -1 });
+  }
+  if (hasHindrance(char, 'Monstruoso') && skillName === 'Persuadir') {
+    generalValue -= 4;
+    modifiers.push({ name: 'Monstruoso', value: -4 });
+  }
+  if (hasHindrance(char, 'Sanguinario') && skillName === 'Persuadir') {
+    situational.push({ value: -2, note: 'Gente civilizada' });
   }
 
   // Species
@@ -848,8 +836,11 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Mentalista') && skillName.startsWith('Psiónica')) {
     situational.push({ value: 2, note: 'Tiradas enfrentadas' });
   }
-  if (hasEdge(char, 'Arma predilecta') && (skillName === 'Pelear' || skillName === 'Disparar')) {
-    situational.push({ value: 1, note: 'Con arma específica' });
+  if (hasEdge(char, 'Arma Distintiva')) {
+    const skillVal = char.skills[skillName] || 0;
+    if ((skillName === 'Pelear' || skillName === 'Disparar') && skillVal >= 8) {
+      situational.push({ value: 1, note: 'Con arma específica' });
+    }
   }
   if (hasEdge(char, 'Berserker') && skillName === 'Pelear') {
     situational.push({ value: 2, note: 'En furia' });
@@ -857,7 +848,7 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
 
   // Hindrances
   if (hasHindrance(char, 'Ciego')) {
-    if (['Notar', 'Disparar', 'Pelear', 'Atletismo', 'Sigilo', 'Conducir', 'Pilotar', 'Navegar'].includes(skillName)) {
+    if (['Notar', 'Disparar', 'Pelear', 'Atletismo', 'Sigilo', 'Conducir', 'Pilotar', 'Navegar', 'Investigar', 'Sanar', 'Reparar', 'Latrocinio'].includes(skillName)) {
       situational.push({ value: -6, note: 'Tareas visuales' });
     }
   }
@@ -870,12 +861,12 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasHindrance(char, 'Sordo')) {
     if (skillName === 'Notar') {
       const isMayor = hasHindrance(char, 'Sordo', 'Mayor');
-      situational.push({ value: isMayor ? -4 : -2, note: 'Basado en sonido' });
+      situational.push({ value: isMayor ? -99 : -4, note: isMayor ? 'Fallo automático (oído)' : 'Basado en sonido' });
     }
   }
   if (hasHindrance(char, 'Tuerto')) {
-    if (skillName === 'Disparar' || skillName === 'Conducir') {
-      situational.push({ value: -2, note: 'A distancia' });
+    if (['Disparar', 'Conducir', 'Pilotar', 'Navegar', 'Atletismo'].includes(skillName)) {
+      situational.push({ value: -2, note: 'Acciones a distancia (>5 pasos)' });
     }
   }
   if (hasHindrance(char, 'Mal Nadador') && skillName === 'Atletismo') {
@@ -883,6 +874,28 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   }
   if (hasHindrance(char, 'Apocado') && ['Intimidar', 'Interpretar', 'Persuadir', 'Provocar'].includes(skillName)) {
     situational.push({ value: -1, note: 'Comunicación verbal' });
+  }
+  if (hasHindrance(char, 'Delirio', 'Menor') && skillName === 'Persuadir') {
+    situational.push({ value: -1, note: 'Si se conoce el delirio' });
+  }
+  if (hasHindrance(char, 'Manazas')) {
+    situational.push({ value: -2, note: 'Usar instrumentos mecánicos/electrónicos' });
+  }
+  if (hasHindrance(char, 'Manco')) {
+    situational.push({ value: -4, note: 'Tareas que requieran dos manos' });
+  }
+  if (hasHindrance(char, 'Suspicaz', 'Mayor')) {
+    situational.push({ value: -2, note: 'Tiradas de Apoyo' });
+  }
+  if (hasHindrance(char, 'Cojo')) {
+    const isMayor = hasHindrance(char, 'Cojo', 'Mayor');
+    if (skillName === 'Atletismo') {
+      situational.push({ value: isMayor ? -4 : -2, note: 'Movilidad' });
+    }
+  }
+  if (char.hindrances.some(h => h.name === 'Fobia')) {
+    const fobia = char.hindrances.find(h => h.name === 'Fobia');
+    situational.push({ value: fobia?.type === 'Mayor' ? -2 : -1, note: 'En presencia de la fobia' });
   }
 
   // Species
@@ -903,10 +916,28 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   const situational: SituationalBonus[] = [];
   
   // --- PERMANENT MODIFIERS (General) ---
+  if (hasHindrance(char, 'Anciano') && (attrName === 'Agilidad' || attrName === 'Fuerza' || attrName === 'Vigor')) {
+    generalValue -= 1;
+    modifiers.push({ name: 'Anciano', value: -1 });
+  }
   
   // --- SITUATIONAL MODIFIERS ---
   if (hasHindrance(char, 'Anémico') && attrName === 'Vigor') {
     situational.push({ value: -2, note: 'Resistir fatiga' });
+  }
+  if (hasHindrance(char, 'Ciego') && attrName === 'Agilidad') {
+    situational.push({ value: -6, note: 'Tareas visuales' });
+  }
+  if (hasHindrance(char, 'Cobarde') && attrName === 'Espíritu') {
+    situational.push({ value: -2, note: 'Resistir miedo o intimidación' });
+  }
+  if (hasHindrance(char, 'Sensible') && attrName === 'Espíritu') {
+    const isMayor = hasHindrance(char, 'Sensible', 'Mayor');
+    situational.push({ value: isMayor ? -4 : -2, note: 'Resistir Provocar' });
+  }
+  if (char.hindrances.some(h => h.name === 'Fobia')) {
+    const fobia = char.hindrances.find(h => h.name === 'Fobia');
+    situational.push({ value: fobia?.type === 'Mayor' ? -2 : -1, note: 'En presencia de la fobia' });
   }
   if (hasEdge(char, 'Voluntad firme') && attrName === 'Espíritu') {
     situational.push({ value: 2, note: 'Resistir Intimidación/Provocación' });
@@ -2128,10 +2159,13 @@ function renderStep(
                   const hasExact = char.hindrances.some(h => h.name === currentPreview.name && h.type === currentPreview.type);
                   const hasOther = char.hindrances.some(h => h.name === currentPreview.name && h.type !== currentPreview.type);
                   
+                  const isConflicting = (currentPreview.name === 'Joven' && char.hindrances.some(h => h.name === 'Anciano')) ||
+                                        (currentPreview.name === 'Anciano' && char.hindrances.some(h => h.name === 'Joven'));
+                  
                   return (
                     <button
                       onClick={() => {
-                        if (hasExact) return;
+                        if (hasExact || isConflicting) return;
                         
                         // Remove other version if it exists
                         let nextHindrances = char.hindrances;
@@ -2149,15 +2183,17 @@ function renderStep(
                         });
                         setPreviewHindranceName('');
                       }}
-                      disabled={hasExact}
+                      disabled={hasExact || isConflicting}
                       className={`w-full py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 ${
-                        hasExact 
+                        (hasExact || isConflicting)
                           ? 'bg-stone-200 text-stone-400 cursor-not-allowed' 
                           : 'bg-stone-900 text-white hover:bg-stone-800'
                       }`}
                     >
                       {hasExact ? (
                         <>Ya seleccionada</>
+                      ) : isConflicting ? (
+                        <>Conflicto: {currentPreview.name === 'Joven' ? 'Anciano' : 'Joven'}</>
                       ) : hasOther ? (
                         <>
                           <Plus size={20} />
@@ -2274,17 +2310,30 @@ function renderStep(
       const isYoung = hasHindrance(char, 'Joven');
       const isElderly = hasHindrance(char, 'Anciano');
       
-      const { basicNeeded, ancianoUsed, ancianoTotal } = calculateSkillPointsSpent(char);
+      const { basicNeeded, smartsSpent, otherSpent } = calculateSkillPointsSpent(char);
       const totalHP_Skills = calculateHindrancePoints(char.hindrances);
       const spentHP_Skills = (char.spentHindrancePoints?.attributes || 0) * 2 + 
                              (char.spentHindrancePoints?.skills || 0) * 1 + 
                              (char.spentHindrancePoints?.edges || 0) * 2;
       const availableHP_Skills = totalHP_Skills - spentHP_Skills;
       
-      const baseAllowed = isYoung ? 10 : (isElderly ? 17 : 12);
-      const totalAllowed_Skills = baseAllowed + (char.spentHindrancePoints?.skills || 0);
+      const baseAllowed = isYoung ? 10 : 12;
+      const extraFromHindrances = char.spentHindrancePoints?.skills || 0;
       
-      const isOverLimit_Skills = basicNeeded > totalAllowed_Skills;
+      let isOverLimit_Skills = false;
+      let totalAllowed_Display = baseAllowed + extraFromHindrances;
+      
+      if (isElderly) {
+        // Anciano: 5 extra points ONLY for Smarts.
+        const ancianoBonusUsed = Math.min(5, smartsSpent);
+        const remainingSmarts = smartsSpent - ancianoBonusUsed;
+        const totalBasicNeeded = otherSpent + remainingSmarts;
+        
+        isOverLimit_Skills = totalBasicNeeded > (baseAllowed + extraFromHindrances);
+        totalAllowed_Display = baseAllowed + extraFromHindrances + 5;
+      } else {
+        isOverLimit_Skills = basicNeeded > (baseAllowed + extraFromHindrances);
+      }
 
       return (
         <div className="space-y-6">
@@ -2293,10 +2342,12 @@ function renderStep(
               {isOverLimit_Skills ? <AlertTriangle size={20} /> : <Info size={20} />}
               <div className="flex-1">
                 <div className="flex justify-between items-center">
-                  <p className="text-sm font-bold">Puntos Habilidad: {basicNeeded} / {baseAllowed + (char.spentHindrancePoints?.skills || 0)}</p>
+                  <p className="text-sm font-bold">Puntos Habilidad: {basicNeeded} / {totalAllowed_Display}</p>
                 </div>
                 <p className="text-xs">
-                  {isYoung ? '10 base' : (isElderly ? '17 base' : '12 base')} {char.spentHindrancePoints?.skills > 0 ? `+ ${char.spentHindrancePoints.skills} de Desventajas` : ''}
+                  {isYoung ? '10 base' : '12 base'} 
+                  {isElderly ? ' + 5 (Anciano, solo Astucia)' : ''}
+                  {extraFromHindrances > 0 ? ` + ${extraFromHindrances} de Desventajas` : ''}
                 </p>
               </div>
             </div>
@@ -2335,11 +2386,25 @@ function renderStep(
                           if (val < maxSkill) {
                             const cost = val === 0 ? 1 : (val < attrVal ? 1 : 2);
                             
-                            const currentPoints = calculateSkillPointsSpent(char);
-                            const canAffordWithBasic = currentPoints.basicNeeded + cost <= totalAllowed_Skills;
+                            const nextVal = (val === 12 ? 13 : (val || 2) + 2) as Dice;
+                            const nextChar = { ...char, skills: { ...char.skills, [skill.name]: nextVal } };
+                            const { smartsSpent: nextSmarts, otherSpent: nextOther } = calculateSkillPointsSpent(nextChar);
+                            
+                            const baseAllowed = isYoung ? 10 : 12;
+                            const extraFromHindrances = char.spentHindrancePoints?.skills || 0;
+                            
+                            let canAffordWithBasic = false;
+                            if (isElderly) {
+                              const ancianoBonusUsed = Math.min(5, nextSmarts);
+                              const remainingSmarts = nextSmarts - ancianoBonusUsed;
+                              const totalBasicNeeded = nextOther + remainingSmarts;
+                              canAffordWithBasic = totalBasicNeeded <= (baseAllowed + extraFromHindrances);
+                            } else {
+                              canAffordWithBasic = (nextSmarts + nextOther) <= (baseAllowed + extraFromHindrances);
+                            }
 
                             if (canAffordWithBasic) {
-                              nextSkills[skill.name] = (val === 12 ? 13 : (val || 2) + 2) as Dice;
+                              nextSkills[skill.name] = nextVal;
                               update({ skills: nextSkills });
                             } else if (availableHP_Skills >= cost) {
                               setPendingHindranceSpend({
@@ -4166,7 +4231,7 @@ function CharacterSheetView({
           <DerivedStat 
             label="Parada" 
             value={character.derived.Parada} 
-            situational={hasEdge(character, 'Arma predilecta') ? [{ value: 1, note: 'Con arma específica' }] : []}
+            situational={hasEdge(character, 'Arma Distintiva') ? [{ value: 1, note: 'Con arma específica' }] : []}
             onInfo={() => setSelectedTrait({ name: 'Parada', description: DERIVED_DESCRIPTIONS['Parada'], type: 'Estadística Derivada' })}
           />
           <DerivedStat 
@@ -4550,15 +4615,17 @@ function CharacterSheetView({
                       </div>
                       {w.notes && <p className="text-[10px] text-stone-400 italic mt-2 line-clamp-1">{w.notes}</p>}
                     </div>
-                    <button onClick={() => {
-                      const bonus = getDamageBonus(character, w.name);
-                      performRoll(`Daño: ${w.name}`, w.damage, false, bonus.generalValue, true, bonus.modifiers);
-                    }} className="flex-shrink-0 px-3 py-2 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-stone-800 transition-colors">
-                      Dañar
-                    </button>
-                    <button onClick={() => removeWeapon(idx)} className="absolute top-2 right-2 p-1 text-stone-300 hover:text-red-500 transition-all">
-                      <Trash2 size={14} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => {
+                        const bonus = getDamageBonus(character, w.name);
+                        performRoll(`Daño: ${w.name}`, w.damage, false, bonus.generalValue, true, bonus.modifiers);
+                      }} className="flex-shrink-0 px-3 py-2 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-stone-800 transition-colors">
+                        Dañar
+                      </button>
+                      <button onClick={() => removeWeapon(idx)} className="p-2 text-stone-300 hover:text-red-500 transition-all flex-shrink-0">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 ))}
                 {(!character.weapons || character.weapons.length === 0) && <p className="text-xs text-stone-400 italic">Sin armas registradas.</p>}
