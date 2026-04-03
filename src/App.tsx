@@ -139,8 +139,8 @@ const getMaxPowers = (char: Character) => {
   if (!ab) return 0;
   
   let powers = ab.powers || 0;
-  const newPowerEdges = char.edges.filter(e => e && e.name === 'Nuevo poder');
-  powers += newPowerEdges.length;
+  const newPowerEdges = char.edges.filter(e => e && e.name === 'Nuevos Poderes');
+  powers += newPowerEdges.length * 2;
   
   return powers;
 };
@@ -160,6 +160,8 @@ const calculateStartingBennies = (char: Character) => {
   // Edges
   if (hasEdge(char, 'Afortunado')) bennies += 1;
   if (hasEdge(char, 'Afortunado, Muy')) bennies += 1;
+  if (hasEdge(char, 'Suerte')) bennies += 1;
+  if (hasEdge(char, 'Suerte Mejorada')) bennies += 1;
   
   return Math.max(0, bennies);
 };
@@ -743,6 +745,11 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     }
   });
 
+  if (hasEdge(char, 'Hombre de Recursos') && !char.skills[skillName]) {
+    generalValue += 2;
+    modifiers.push({ name: 'Hombre de Recursos', value: 2 });
+  }
+
   // Hindrances
   if (hasHindrance(char, 'Apacible') && skillName === 'Intimidar') {
     generalValue -= 2;
@@ -781,6 +788,18 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   // --- SITUATIONAL MODIFIERS ---
   
   // Edges
+  if (hasEdge(char, 'Humillar') && skillName === 'Provocar') {
+    situational.push({ value: 0, note: 'Enemigo queda Vulnerable además de Distraído' });
+  }
+  if (hasEdge(char, 'Improvisación') && ['Reparar', 'Latrocinio', 'Medicina', 'Supervivencia'].includes(skillName)) {
+    situational.push({ value: 0, note: 'Ignora penalizaciones por herramientas improvisadas' });
+  }
+  if (hasEdge(char, 'Inspiración')) {
+    situational.push({ value: 0, note: '+1 adicional al éxito en tiradas de Apoyo' });
+  }
+  if (hasEdge(char, 'Inventor') && (skillName === 'Reparar' || skillName === 'Ciencia')) {
+    situational.push({ value: 0, note: 'Crear dispositivos temporales' });
+  }
   if (hasEdge(char, 'Chi')) {
     situational.push({ value: 0, note: 'Potenciar habilidades con energía' });
   }
@@ -834,13 +853,235 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Ladrón')) {
     if (skillName === 'Sigilo') situational.push({ value: 1, note: 'Entornos urbanos' });
     if (skillName === 'Atletismo') situational.push({ value: 1, note: 'Trepar' });
-    if (skillName === 'Latrocinio') situational.push({ value: 1, note: 'Forzar/Desactivar' });
   }
-  if (hasEdge(char, 'Investigador') && skillName === 'Notar') {
+  if (hasEdge(char, 'Líder Nato')) {
+    situational.push({ value: 0, note: 'Puedes entregar tus benis a aliados en Radio de Mando' });
+  }
+  if (hasEdge(char, 'Lingüista')) {
+    situational.push({ value: 0, note: 'Conoces idiomas adicionales (Astucia/2)' });
+  }
+  if ((hasEdge(char, 'Investigador') || hasEdge(char, 'Investigador Jefe')) && skillName === 'Notar') {
     situational.push({ value: 2, note: 'Buscar pistas' });
   }
   if (hasEdge(char, 'Sentido del Peligro') && skillName === 'Notar') {
     situational.push({ value: 2, note: 'Detectar peligros/sorpresa' });
+  }
+  if (hasEdge(char, 'Demagogo') && (skillName === 'Provocar' || skillName === 'Intimidar')) {
+    situational.push({ value: 0, note: 'Afecta a múltiples oponentes' });
+  }
+  if (hasEdge(char, 'Disparo Doble') && skillName === 'Disparar') {
+    situational.push({ value: 0, note: 'Dispara dos flechas/proyectiles' });
+  }
+  if (hasEdge(char, 'Disparo Rápido') && skillName === 'Disparar') {
+    situational.push({ value: 0, note: 'Ataque adicional (-2)' });
+  }
+  if (hasEdge(char, 'Disparo Rápido Mejorado') && skillName === 'Disparar') {
+    situational.push({ value: 0, note: 'Ataque adicional (sin penalización)' });
+  }
+  if (hasEdge(char, 'Maestro') && char.skills[skillName] >= 12) {
+    situational.push({ value: 0, note: 'Repite una tirada fallida de esta habilidad (1/sesión)' });
+  }
+  if (hasEdge(char, 'Mago') && (skillName.includes('Magia') || skillName.includes('Arcano'))) {
+    situational.push({ value: 0, note: 'Bonos a la magia y gestión de PP' });
+  }
+  if (hasEdge(char, 'Mando') && skillName === 'Espíritu') {
+    situational.push({ value: 0, note: 'Aliados en Radio de Mando repiten recuperación' });
+  }
+  if (hasEdge(char, 'Mando, Presencia de')) {
+    situational.push({ value: 0, note: 'Radio de Mando aumentado a 10"' });
+  }
+  if (hasEdge(char, '¡Mantene la Formación!') && skillName === 'Espíritu') {
+    situational.push({ value: 0, note: '+1 a la Dureza de los aliados en Radio de Mando' });
+  }
+  if (hasEdge(char, 'Manos Firmes') && (skillName === 'Disparar' || skillName === 'Pelear' || skillName === 'Atletismo')) {
+    situational.push({ value: 0, note: 'Ignora penalización por plataforma inestable' });
+  }
+  if (hasEdge(char, 'Matón') && skillName === 'Intimidar') {
+    situational.push({ value: 0, note: 'Bono a la intimidación física' });
+  }
+  if (hasEdge(char, 'McGyver')) {
+    situational.push({ value: 0, note: 'Improvisa herramientas y dispositivos temporales' });
+  }
+  if (hasEdge(char, 'Ofuscar') && (skillName === 'Sigilo' || skillName === 'Persuadir')) {
+    situational.push({ value: 0, note: 'Dificulta que otros te detecten o lean tus intenciones' });
+  }
+  if (hasEdge(char, 'Parkour') && skillName === 'Atletismo') {
+    situational.push({ value: 0, note: 'Ignora penalización por terreno difícil al moverte' });
+  }
+  if (hasEdge(char, 'Puntería') && skillName === 'Disparar') {
+    situational.push({ value: 0, note: 'Ignora penalizaciones por cobertura o alcance si no te mueves' });
+  }
+  if (hasEdge(char, 'Profesional') && char.skills[skillName] >= 12) {
+    situational.push({ value: 1, note: 'Si esta es tu habilidad elegida' });
+  }
+  if (hasEdge(char, 'Experto') && char.skills[skillName] >= 12) {
+    situational.push({ value: 2, note: 'Si esta es tu habilidad elegida' });
+  }
+  if (hasEdge(char, 'Rápido')) {
+    situational.push({ value: 0, note: 'Descarta carta de acción de 5 o menos y roba nueva' });
+  }
+  if (hasEdge(char, 'Rico')) {
+    situational.push({ value: 0, note: 'Empieza con el triple del dinero inicial' });
+  }
+  if (hasEdge(char, 'Rico, Muy')) {
+    situational.push({ value: 0, note: 'Cinco veces los fondos iniciales y sueldo anual' });
+  }
+  if (hasEdge(char, 'Rodar') && (skillName === 'Atletismo' || skillName === 'Pelear')) {
+    situational.push({ value: 0, note: 'Bonos a la defensa al moverte por el suelo' });
+  }
+  if (hasEdge(char, 'Sabio') && (skillName === 'Ciencias' || skillName === 'Humanidades' || skillName === 'Ocultismo' || skillName === 'Investigar')) {
+    situational.push({ value: 2, note: 'Si esta es tu área de estudio' });
+  }
+  if (hasEdge(char, 'Sangre Fría')) {
+    situational.push({ value: 0, note: 'Sacas una carta de acción adicional y eliges' });
+  }
+  if (hasEdge(char, 'Sentido del Peligro') && skillName === 'Notar') {
+    situational.push({ value: 2, note: 'Detectar emboscadas o peligros inmediatos' });
+  }
+  if (hasEdge(char, 'Siempre Preparado')) {
+    situational.push({ value: 0, note: 'Siempre tienes el equipo adecuado a mano' });
+  }
+  if (hasEdge(char, 'Temerario')) {
+    situational.push({ value: 0, note: 'Bonos al realizar acciones arriesgadas' });
+  }
+  if (hasEdge(char, 'Tirador') && skillName === 'Disparar') {
+    situational.push({ value: 0, note: 'Bonos al disparar si no te mueves' });
+  }
+  if (hasEdge(char, 'Tiro Preciso') && skillName === 'Disparar') {
+    situational.push({ value: 0, note: 'Reduce penalizaciones por disparar a objetivos pequeños' });
+  }
+  if (hasEdge(char, 'Trabajo en Equipo')) {
+    situational.push({ value: 0, note: 'Bonos adicionales al realizar apoyos o ser apoyado' });
+  }
+  if (hasEdge(char, 'Trampero') && (skillName === 'Supervivencia' || skillName === 'Notar')) {
+    situational.push({ value: 2, note: 'Colocar y detectar trampas' });
+  }
+  if (hasEdge(char, 'Vínculo Común')) {
+    situational.push({ value: 0, note: 'Puedes entregar tus benis a cualquier aliado' });
+  }
+  if (hasEdge(char, 'Voz de Mando') && skillName === 'Espíritu') {
+    situational.push({ value: 1, note: 'Habilidades de mando basadas en la voz' });
+  }
+  if (hasEdge(char, 'Voz Potente')) {
+    situational.push({ value: 0, note: 'Tu voz se escucha a grandes distancias' });
+  }
+  if (hasEdge(char, 'Voz Muy Potente')) {
+    situational.push({ value: 0, note: 'Tu voz puede aturdir o ensordecer a otros' });
+  }
+  if (hasEdge(char, 'Acaparador')) {
+    situational.push({ value: 0, note: 'Encuentra un objeto esencial una vez por sesión' });
+  }
+  if (hasEdge(char, 'Alcurnia') && skillName === 'Conocimientos Generales') {
+    situational.push({ value: 2, note: 'Relacionado con la clase alta' });
+  }
+  if (hasEdge(char, 'Animar') && skillName === 'Espíritu') {
+    situational.push({ value: 0, note: 'Puedes realizar un apoyo con Espíritu para ayudar a un aliado' });
+  }
+  if (hasEdge(char, 'Ardor') && skillName === 'Espíritu') {
+    situational.push({ value: 0, note: '+1 al daño cuerpo a cuerpo para aliados en Radio de Mando' });
+  }
+  if (hasEdge(char, 'Artífice')) {
+    situational.push({ value: 0, note: 'Permite crear objetos mágicos temporales' });
+  }
+  if (hasEdge(char, 'As') && (skillName === 'Conducir' || skillName === 'Pilotar' || skillName === 'Navegar')) {
+    situational.push({ value: 2, note: 'Gasta benis para ignorar Heridas del vehículo' });
+  }
+  if (hasEdge(char, 'Ataque Repentino')) {
+    situational.push({ value: 0, note: 'Ataque gratuito cuando un enemigo entra en tu alcance' });
+  }
+  if (hasEdge(char, 'Ayudante') && skillName === 'Espíritu') {
+    situational.push({ value: 0, note: 'Puedes repetir cualquier tirada de Apoyo' });
+  }
+  if (hasEdge(char, 'Bestia')) {
+    situational.push({ value: 0, note: 'Puedes gastar tus propios Benis por tus animales' });
+  }
+  if (hasEdge(char, 'Calculador')) {
+    situational.push({ value: 0, note: 'Ignora hasta 2 puntos de penalizaciones si no se mueve' });
+  }
+  if (hasEdge(char, 'Callejear') && (skillName === 'Persuadir' || skillName === 'Investigar')) {
+    situational.push({ value: 2, note: 'En entornos urbanos' });
+  }
+  if (hasEdge(char, 'Canalización') && (skillName.includes('Arcano') || skillName.includes('Magia') || skillName.includes('Milagros') || skillName.includes('Psiónica') || skillName.includes('Ciencia') || skillName === 'Concentración')) {
+    situational.push({ value: 0, note: 'Si saca un aumento, el coste en PP se reduce en 1' });
+  }
+  if (hasEdge(char, 'Chi')) {
+    situational.push({ value: 0, note: 'Usa tu energía interna para potenciar tus habilidades' });
+  }
+  if (hasEdge(char, 'Con un Par') && skillName === 'Pelear') {
+    situational.push({ value: 0, note: 'Ataque extra con la mano torpe sin penalización' });
+  }
+  if (hasEdge(char, 'Concentración')) {
+    situational.push({ value: 0, note: 'La duración de los poderes con Duración 5 o más se duplica' });
+  }
+  if (hasEdge(char, 'Conexiones') && skillName === 'Persuadir') {
+    situational.push({ value: 2, note: 'Con el grupo de tus conexiones' });
+  }
+  if (hasEdge(char, 'Demagogo') && (skillName === 'Provocar' || skillName === 'Intimidar')) {
+    situational.push({ value: 0, note: 'Afectas a múltiples oponentes' });
+  }
+  if (hasEdge(char, 'Disparo Doble') && skillName === 'Disparar') {
+    situational.push({ value: 0, note: 'Dispara dos flechas/proyectiles a la vez' });
+  }
+  if (hasEdge(char, 'Disparo Mortal') && skillName === 'Disparar') {
+    situational.push({ value: 0, note: 'Aumenta drásticamente el daño a distancia' });
+  }
+  if (hasEdge(char, 'Fervor') && skillName === 'Espíritu') {
+    situational.push({ value: 0, note: '+1 al daño cuerpo a cuerpo para aliados' });
+  }
+  if (hasEdge(char, 'Finta') && skillName === 'Pelear') {
+    situational.push({ value: 0, note: 'Realiza finta para que el objetivo quede Distraído o Vulnerable' });
+  }
+  if (hasEdge(char, 'Fuga')) {
+    situational.push({ value: 0, note: 'Evitas ataque gratuito al huir de combate' });
+  }
+  if (hasEdge(char, 'Golpe Poderoso') && skillName === 'Pelear') {
+    situational.push({ value: -2, note: 'Para obtener +4 al daño' });
+  }
+  if (hasEdge(char, 'Gorila') && skillName === 'Pelear') {
+    situational.push({ value: 0, note: 'Bonos al combate cuerpo a cuerpo basados en la fuerza bruta' });
+  }
+  if (hasEdge(char, 'Guerrero Impío/Sagrado')) {
+    situational.push({ value: 0, note: 'Canaliza poder divino para el combate' });
+  }
+  if (hasEdge(char, 'Hombre de Recursos')) {
+    situational.push({ value: 0, note: 'No sufres penalización por habilidades sin entrenamiento' });
+  }
+  if (hasEdge(char, 'Humillar') && skillName === 'Provocar') {
+    situational.push({ value: 0, note: 'El enemigo queda Vulnerable además de Distraído' });
+  }
+  if (hasEdge(char, 'Improvisación')) {
+    situational.push({ value: 0, note: 'Ignora penalizaciones por usar herramientas improvisadas' });
+  }
+  if (hasEdge(char, 'Inspiración') && skillName === 'Espíritu') {
+    situational.push({ value: 0, note: 'Bonos de apoyo a los aliados en Radio de Mando' });
+  }
+  if (hasEdge(char, 'Inventor')) {
+    situational.push({ value: 0, note: 'Permite crear dispositivos tecnológicos temporales' });
+  }
+  if (hasEdge(char, 'Líder Nato') && skillName === 'Espíritu') {
+    situational.push({ value: 0, note: 'Puedes entregar tus benis a aliados en Radio de Mando' });
+  }
+  if (hasEdge(char, 'Lingüista') && skillName === 'Idioma') {
+    situational.push({ value: 0, note: 'Conoces idiomas adicionales' });
+  }
+  if (hasEdge(char, 'Kid Dos Pistolas') && skillName === 'Disparar') {
+    situational.push({ value: 0, note: 'Ataque extra con arma de fuego (sin penalización)' });
+  }
+  if (hasEdge(char, 'Drenar el Alma') && (skillName.includes('Arcano') || skillName.includes('Magia') || skillName.includes('Milagros') || skillName.includes('Psiónica') || skillName.includes('Ciencia') || skillName === 'Concentración')) {
+    situational.push({ value: 0, note: 'Sacrifica fatiga por PP' });
+  }
+  if (hasEdge(char, 'Esfuerzo Extra')) {
+    situational.push({ value: 0, note: 'Gasta beni para +d6 al rasgo' });
+  }
+  if (hasEdge(char, 'Esquiva Mejorada') && skillName === 'Atletismo') {
+    situational.push({ value: -4, note: 'Evadir ataques de área' });
+  } else if (hasEdge(char, 'Esquiva') && skillName === 'Atletismo') {
+    situational.push({ value: -2, note: 'Evadir ataques de área' });
+  }
+  if (hasEdge(char, 'Esquiva Mejorada')) {
+    situational.push({ value: -4, note: 'Ataques a distancia contra ti' });
+  } else if (hasEdge(char, 'Esquiva')) {
+    situational.push({ value: -2, note: 'Ataques a distancia contra ti' });
   }
   if (hasEdge(char, 'Tirador') && skillName === 'Disparar') {
     situational.push({ value: 2, note: 'Si no se mueve' });
@@ -879,6 +1120,31 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     if (skillName === 'Pelear' || skillName === 'Disparar') {
       situational.push({ value: 1, note: 'Con arma específica' });
     }
+  }
+  if (hasEdge(char, 'Fervor')) {
+    situational.push({ value: 1, note: 'Aliados a 6" (cuerpo a cuerpo)' });
+  }
+  if (hasEdge(char, 'Finta') && skillName === 'Pelear') {
+    situational.push({ value: 0, note: 'Finta (Distraído/Vulnerable)' });
+  }
+  if (hasEdge(char, 'Frenesí Mejorado') && skillName === 'Pelear') {
+    situational.push({ value: 0, note: 'Ataque adicional (sin penalización)' });
+  } else if (hasEdge(char, 'Frenesí') && skillName === 'Pelear') {
+    situational.push({ value: 0, note: 'Ataque adicional (-2)' });
+  }
+  if (hasEdge(char, 'Fuga Mejorada')) {
+    situational.push({ value: 0, note: 'Evita ataques gratuitos al huir (múltiples)' });
+  } else if (hasEdge(char, 'Fuga')) {
+    situational.push({ value: 0, note: 'Evita ataques gratuitos al huir (uno)' });
+  }
+  if (hasEdge(char, 'Golpe Poderoso') && skillName === 'Pelear') {
+    situational.push({ value: -2, note: 'Golpe Poderoso (+4 daño)' });
+  }
+  if (hasEdge(char, 'Gorila') && skillName === 'Pelear') {
+    situational.push({ value: 0, note: 'Bonos por fuerza bruta' });
+  }
+  if (hasEdge(char, 'Guerrero Impío/Sagrado') && skillName === 'Pelear') {
+    situational.push({ value: 0, note: 'Canaliza poder divino' });
   }
   if (hasEdge(char, 'Berserk') && skillName === 'Pelear') {
     situational.push({ value: 2, note: 'En furia' });
@@ -970,8 +1236,14 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   }
   
   // --- SITUATIONAL MODIFIERS ---
+  if (hasEdge(char, 'Esfuerzo Extra')) {
+    situational.push({ value: 0, note: 'Gasta beni para +d6 al rasgo' });
+  }
   if (hasHindrance(char, 'Anémico') && attrName === 'Vigor') {
     situational.push({ value: -2, note: 'Resistir fatiga' });
+  }
+  if (hasEdge(char, 'Mandíbula de Hierro') && attrName === 'Vigor') {
+    situational.push({ value: 2, note: 'Resistir Aturdido' });
   }
   if (hasHindrance(char, 'Ciego') && attrName === 'Agilidad') {
     situational.push({ value: -6, note: 'Tareas visuales' });
@@ -1029,6 +1301,12 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   if (hasEdge(char, 'Curación Rápida') && attrName === 'Vigor') {
     situational.push({ value: 2, note: 'Curación natural' });
   }
+  if (hasEdge(char, 'Difícil de Matar') && attrName === 'Vigor') {
+    situational.push({ value: 0, note: 'Ignora penalización por heridas en Incapacitación' });
+  }
+  if (hasEdge(char, 'Difícil de Matar, Aún Más') && attrName === 'Vigor') {
+    situational.push({ value: 0, note: 'Dado para sobrevivir a la muerte' });
+  }
   if (hasEdge(char, 'Resistencia Arcana Mejorada')) {
     situational.push({ value: 4, note: 'Resistir poderes' });
   } else if (hasEdge(char, 'Resistencia Arcana')) {
@@ -1037,8 +1315,14 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   if (hasEdge(char, 'Fuerza de Voluntad') && attrName === 'Espíritu') {
     situational.push({ value: 2, note: 'Resistir poderes/ataques sociales' });
   }
+  if (hasEdge(char, 'Templado') && attrName === 'Espíritu') {
+    situational.push({ value: 2, note: 'Resistencia mental y emocional' });
+  }
+  if (hasEdge(char, 'Tozudo') && attrName === 'Espíritu') {
+    situational.push({ value: 2, note: 'Resistir efectos que nublen la mente' });
+  }
   if (hasEdge(char, 'Osado') && attrName === 'Espíritu') {
-    situational.push({ value: 2, note: 'Tiradas de Miedo' });
+    situational.push({ value: 2, note: 'Tiradas de Miedo (-2 en tabla de Terror)' });
   }
   
   return { generalValue, modifiers, situational };
@@ -1062,11 +1346,29 @@ const getDamageBonus = (char: Character, weaponName: string): BonusInfo => {
   if (hasEdge(char, 'Asesino')) {
     situational.push({ value: 2, note: 'Por la espalda/sorpresa' });
   }
+  if (hasEdge(char, 'Fervor')) {
+    situational.push({ value: 1, note: 'Aliados a 6" (cuerpo a cuerpo)' });
+  }
   if (hasEdge(char, 'Matagigantes')) {
-    situational.push({ value: 3, note: 'Vs Tamaño 4+' });
+    situational.push({ value: 0, note: '+1d6 al daño contra criaturas de Tamaño 4+' });
   }
   if (hasEdge(char, 'Campeón')) {
     situational.push({ value: 2, note: 'Vs criaturas del mal' });
+  }
+  if (hasEdge(char, 'Instinto Asesino')) {
+    situational.push({ value: 0, note: 'Repetir dados de daño que saquen 1' });
+  }
+  if (hasEdge(char, 'Disparo Mortal')) {
+    situational.push({ value: 0, note: 'Doble daño con Comodín (a distancia)' });
+  }
+  if (hasEdge(char, 'Golpe Poderoso')) {
+    situational.push({ value: 4, note: 'Golpe Poderoso (-2 Pelear)' });
+  }
+  if (hasEdge(char, 'Gorila')) {
+    situational.push({ value: 0, note: 'Bonos por fuerza bruta' });
+  }
+  if (hasEdge(char, 'Guerrero Impío/Sagrado')) {
+    situational.push({ value: 0, note: 'Canaliza poder divino' });
   }
   
   return { generalValue, modifiers, situational };
@@ -1126,10 +1428,11 @@ const calculateDerived = (char: Character) => {
   if (hasEdge(char, 'Arma Distintiva Mejorada')) parry += 2;
   else if (hasEdge(char, 'Arma Distintiva')) parry += 1;
   
-  if (hasEdge(char, 'Bloqueo')) parry += 1;
-  if (hasEdge(char, 'Bloqueo Mejorado')) parry += 1; // Total +2
-  if (hasEdge(char, 'Maestro de Armas')) parry += 1;
-  if (hasEdge(char, 'Maestro de Armas Mejorado')) parry += 1; // Total +2
+  if (hasEdge(char, 'Bloqueo Mejorado')) parry += 2;
+  else if (hasEdge(char, 'Bloqueo')) parry += 1;
+  
+  if (hasEdge(char, 'Maestro de Armas Mejorado')) parry += 2;
+  else if (hasEdge(char, 'Maestro de Armas')) parry += 1;
   
   if (hasEdge(char, 'Hueso Duro de Roer')) toughness += 1;
   if (hasEdge(char, 'Hueso Muy Duro de Roer')) toughness += 1;
@@ -2355,16 +2658,15 @@ function renderStep(
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {ATTRIBUTES.map(attr => {
               const { min, max } = getAttributeLimits(attr, char.species, char.heritageChoice, char.hindrances);
               const current = char.attributes[attr as keyof typeof char.attributes];
               
               return (
-                <div key={attr} className="flex flex-col items-center gap-4">
-                  <label className="font-bold uppercase tracking-tighter text-stone-400 text-xs">{attr}</label>
+                <div key={attr} className="flex items-center gap-4">
                   <div className="relative group">
-                    <div className="w-20 h-20 bg-white border-4 border-stone-900 rounded-xl flex items-center justify-center text-2xl font-mono font-black shadow-inner">
+                    <div className="w-16 h-16 bg-white border-4 border-stone-900 rounded-xl flex items-center justify-center text-xl font-mono font-black shadow-inner">
                       {formatDice(current)}
                     </div>
                     
@@ -2407,6 +2709,7 @@ function renderStep(
                       </button>
                     </div>
                   </div>
+                  <label className="font-bold uppercase tracking-tighter text-stone-400 text-xs">{attr}</label>
                 </div>
               );
             })}
