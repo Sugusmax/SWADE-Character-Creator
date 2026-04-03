@@ -142,7 +142,7 @@ export const SKILLS: Omit<Skill, 'value'>[] = [
   { id: 'skill-intimidar', name: 'Intimidar', attribute: 'Espíritu', isBasic: false, description: 'Habilidad para asustar o coaccionar a otros.' },
   { id: 'skill-investigar', name: 'Investigar', attribute: 'Astucia', isBasic: false, description: 'Habilidad para buscar información en libros, registros o bases de datos.' },
   { id: 'skill-latrocinio', name: 'Latrocinio', attribute: 'Agilidad', isBasic: false, description: 'Habilidad para forzar cerraduras, robar bolsillos o desactivar trampas.' },
-  { id: 'skill-sanar', name: 'Sanar', attribute: 'Astucia', isBasic: false, description: 'Habilidad para tratar heridas y enfermedades.' },
+  { id: 'skill-sanar', name: 'Medicina', attribute: 'Astucia', isBasic: false, description: 'Habilidad para diagnosticar y curar heridas o enfermedades, así como descifrar pistas forenses.' },
   { id: 'skill-navegar', name: 'Navegar', attribute: 'Agilidad', isBasic: false, description: 'Habilidad para manejar barcos y otras embarcaciones acuáticas.' },
   { id: 'skill-notar', name: 'Notar', attribute: 'Astucia', isBasic: true, description: 'Habilidad para percibir detalles, detectar emboscadas o encontrar objetos ocultos.' },
   { id: 'skill-ocultismo', name: 'Ocultismo', attribute: 'Astucia', isBasic: false, description: 'Conocimiento de lo sobrenatural, lo arcano y lo prohibido.' },
@@ -743,15 +743,15 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-afortunado',
-    name: 'Suerte', 
+    name: 'Afortunado', 
     requirements: 'Novato', 
     effects: '+1 beni al comienzo de cada sesión.' 
   },
   { 
     id: 'edge-agitador',
-    name: 'Agitador', 
+    name: 'Demagogo', 
     requirements: 'Experimentado, Espíritu d8+', 
-    effects: 'Usa Intimidar o Provocar en área de plantilla de ráfaga pequeña.' 
+    effects: '1/turno, afectas a todos los oponentes en una plantilla de área mediana con Provocar o Intimidar.' 
   },
   { 
     id: 'edge-alerta',
@@ -761,9 +761,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-ambas-manos',
-    name: 'A dos manos', 
+    name: 'Con un Par', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Ignora penalización por acción múltiple al atacar con dos armas (cuerpo a cuerpo).' 
+    effects: 'Haces un ataque adicional de Pelear con el arma de la mano mala sin penalización por múltiples acciones.' 
   },
   { 
     id: 'edge-ambidiestro',
@@ -778,10 +778,28 @@ export const EDGES: Edge[] = [
     effects: '+2 a Intimidar.' 
   },
   { 
+    id: 'edge-apoyar',
+    name: 'Apoyar', 
+    requirements: 'Novato, Espíritu d8+', 
+    effects: 'Puedes realizar un apoyo con Espíritu para ayudar a un aliado en cualquier tirada de rasgo.' 
+  },
+  { 
+    id: 'edge-arengar',
+    name: 'Arengar', 
+    requirements: 'Novato, Espíritu d8+', 
+    effects: 'Cuando realizas un apoyo con una habilidad social, afectas a todos los aliados en Radio de Mando.' 
+  },
+  { 
+    id: 'edge-arengar-mejorado',
+    name: 'Arengar mejorado', 
+    requirements: 'Experimentado, Arengar', 
+    effects: 'Como Arengar, pero el bono se aplica a todas las tiradas de rasgo del aliado hasta su próximo turno.' 
+  },
+  { 
     id: 'edge-aristocrata',
-    name: 'Aristócrata', 
+    name: 'Alcurnia', 
     requirements: 'Novato', 
-    effects: '+2 a Persuadir (alta sociedad o autoridades).' 
+    effects: '+2 a Conocimientos Generales y red de contactos con la clase alta.' 
   },
   { 
     id: 'edge-arma-distintiva',
@@ -820,16 +838,10 @@ export const EDGES: Edge[] = [
     effects: 'Ignora el -2 de Barrido.' 
   },
   { 
-    id: 'edge-beni-adicional',
-    name: 'Beni adicional', 
-    requirements: 'Legendario', 
-    effects: '+1 beni al comienzo de cada sesión.' 
-  },
-  { 
     id: 'edge-berserk',
-    name: 'Berserker', 
+    name: 'Berserk', 
     requirements: 'Novato', 
-    effects: 'Entra en furia al sufrir una Herida (tirada de Espíritu). +2 a Pelea, Fuerza y Dureza.' 
+    effects: 'Tras ser aturdido o herido, todos los ataques c/c deben ser salvajes, +2 a Dureza, ignoras 1 punto de pen. por heridas; con pifia golpeas a otro. Astucia (-2) como acción para abandonar la furia. Sufres fatiga si estás mucho tiempo.' 
   },
   { 
     id: 'edge-bloqueo',
@@ -845,9 +857,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-bruto',
-    name: 'Bruto', 
+    name: 'Bestia', 
     requirements: 'Novato, Fuerza d6+, Vigor d6+', 
-    effects: 'Usa Fuerza en lugar de Agilidad para movimiento y resistir maniobras.' 
+    effects: 'Usas Fuerza con Atletismo (incluyendo para resistirte). Aumentas el alcance de arrojadizas en un paso.' 
   },
   { 
     id: 'edge-calculador',
@@ -875,9 +887,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-conexiones',
-    name: 'Contactos', 
+    name: 'Conexiones', 
     requirements: 'Novato', 
-    effects: 'Red de contactos en una organización.' 
+    effects: 'Una vez por sesión, tus contactos te proporcionan ayuda o favores.' 
   },
   { 
     id: 'edge-contraataque',
@@ -893,9 +905,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-curandero',
-    name: 'Sanador', 
+    name: 'Curandero', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: '+2 a Sanar.' 
+    effects: '+2 a las tiradas para curar, sean de carácter mágico o mundano.' 
   },
   { 
     id: 'edge-desenfundado-rapido',
@@ -911,15 +923,15 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-drenaje-de-alma',
-    name: 'Drenaje de alma', 
-    requirements: 'Experimentado, Trasfondo arcano, Habilidad arcana d8+', 
-    effects: 'Obtiene 5 PP a cambio de un nivel de fatiga.' 
+    name: 'Drenar el Alma', 
+    requirements: 'Experimentado, Trasfondo arcano, Habilidad arcana d10+', 
+    effects: 'Sacrificas un nivel de fatiga y recibes 5 PP.' 
   },
   { 
     id: 'edge-duro-de-pelar',
-    name: 'Más difícil de matar', 
+    name: 'Difícil de Matar, Aún Más', 
     requirements: 'Veterano, Difícil de Matar', 
-    effects: 'Si resultase muerto, realiza tirada de Espíritu para quedar Incapacitado.' 
+    effects: 'Tira un dado cuando vayas a morir; con par, quedas incapacitado y sobrevives de algún modo.' 
   },
   { 
     id: 'edge-erudito',
@@ -971,9 +983,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-fornido',
-    name: 'Forzudo', 
+    name: 'Fornido', 
     requirements: 'Novato, Fuerza d6+, Vigor d6+', 
-    effects: 'Tamaño +1, Dureza +1.' 
+    effects: '+1 a Tamaño (y Dureza). Tratas la FUEMín como un nivel de dado menos. Tratas la FUE como un nivel más para carga.' 
   },
   { 
     id: 'edge-frenesi',
@@ -1001,21 +1013,21 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-impetu',
-    name: 'Brío', 
+    name: 'Ardor', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: '+2 a tiradas cuando gastas un beni para repetir una tirada.' 
+    effects: '+2 cuando usas un beni para repetir tirada de rasgo.' 
   },
   { 
     id: 'edge-indomable',
-    name: 'Indomable', 
-    requirements: 'Experimentado, Espíritu d8+', 
-    effects: '+2 a resistir poderes o ataques sociales.' 
+    name: 'Fuerza de Voluntad', 
+    requirements: 'Novato, Espíritu d8+', 
+    effects: '+2 a Astucia y Espíritu contra trucos.' 
   },
   { 
     id: 'edge-inspiracion',
-    name: 'Inspirar', 
-    requirements: 'Novato, Mando', 
-    effects: '+1 a Espíritu para recuperarse de Sacudido (aliados en Radio de Mando).' 
+    name: 'Inspiración', 
+    requirements: 'Experimentado, Mando', 
+    effects: '1/turno, haces un apoyo a un rasgo específico de todos los aliados dentro del radio de mando.' 
   },
   { 
     id: 'edge-inspiracion-heroica',
@@ -1067,9 +1079,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-luchador-improvisado',
-    name: 'Luchador improvisado', 
+    name: 'Improvisación', 
     requirements: 'Experimentado, Astucia d6+', 
-    effects: 'Ignora penalización por armas improvisadas.' 
+    effects: 'Ignoras penalizaciones al usar armas improvisadas.' 
   },
   { 
     id: 'edge-mando',
@@ -1091,9 +1103,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-mantener-la-linea',
-    name: '¡Mantened la línea!', 
-    requirements: 'Experimentado, Mando', 
-    effects: '+1 a Dureza (aliados en Radio de Mando).' 
+    name: '¡Mantened la Formación!', 
+    requirements: 'Experimentado, Mando, Astucia d8+', 
+    effects: '+1 a la Dureza de los Extras.' 
   },
   { 
     id: 'edge-maestro',
@@ -1139,15 +1151,15 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-montaraz',
-    name: 'Montaraz', 
+    name: 'Leñador', 
     requirements: 'Novato, Espíritu d6+, Supervivencia d8+', 
-    effects: 'Tu héroe es un experto en la vida al aire libre. Recibe un bono de +2 a las tiradas de Supervivencia y Sigilo en entornos naturales.' 
+    effects: '+2 a Supervivencia y +2 a Sigilo en entornos naturales.' 
   },
   { 
     id: 'edge-muy-afortunado',
-    name: 'Gran suerte', 
-    requirements: 'Novato, Suerte', 
-    effects: 'Tu héroe tiene una suerte excepcional. Recibe un beni adicional al comienzo de cada sesión (esto se apila con Suerte, para un total de dos benis adicionales).' 
+    name: 'Afortunado, Muy', 
+    requirements: 'Novato, Afortunado', 
+    effects: '+2 benis al comienzo de cada sesión.' 
   },
   { 
     id: 'edge-muy-atractivo',
@@ -1157,9 +1169,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-muy-rico',
-    name: 'Muy Rico', 
+    name: 'Rico, Asquerosamente', 
     requirements: 'Novato, Rico', 
-    effects: 'Empieza con cinco veces el dinero inicial.' 
+    effects: 'Cinco veces los fondos iniciales y sueldo anual.' 
   },
   { 
     id: 'edge-nervios-de-acero',
@@ -1181,9 +1193,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-pistolero',
-    name: 'Dos pistolas', 
+    name: 'Kid Dos Pistolas', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Ignora penalización por acción múltiple al usar dos armas de fuego.' 
+    effects: 'Haces un ataque adicional de Disparar con el arma de la mano mala sin penalización por múltiples acciones.' 
   },
   { 
     id: 'edge-presencia-de-mando',
@@ -1193,15 +1205,15 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-primer-golpe',
-    name: 'Primer ataque', 
+    name: 'Ataque Repentino', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Ataque de Pelea gratuito contra enemigo que se mueva a posición adyacente.' 
+    effects: 'Ataque gratuito una vez por turno cuando un enemigo entre dentro de tu alcance.' 
   },
   { 
     id: 'edge-primer-golpe-mejorado',
-    name: 'Primer ataque mejorado', 
-    requirements: 'Heroico, Primer ataque', 
-    effects: 'Ataque gratuito contra cada enemigo que se mueva a posición adyacente.' 
+    name: 'Ataque Repentino Mejorado', 
+    requirements: 'Heroico, Ataque Repentino', 
+    effects: 'Como Ataque Repentino, pero con hasta tres oponentes distintos por turno.' 
   },
   { 
     id: 'edge-profesional',
@@ -1211,9 +1223,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-pulso-firme',
-    name: 'Pulso firme', 
+    name: 'Manos Firmes', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Ignora plataforma inestable y reduce a la mitad penalización por movimiento al disparar.' 
+    effects: 'Ignoras la penalización por plataforma inestable.' 
   },
   { 
     id: 'edge-rapido',
@@ -1241,9 +1253,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-replica',
-    name: 'Réplica', 
+    name: 'Replicar', 
     requirements: 'Experimentado, Astucia d6+, Provocar d6+', 
-    effects: 'Si enemigo falla Provocar, queda Distraído.' 
+    effects: 'Resistirte con aumento a un truco de Provocar o Intimidar deja distraído al atacante.' 
   },
   { 
     id: 'edge-resistencia-arcana',
@@ -1259,21 +1271,27 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-resistente',
-    name: 'Resistente', 
+    name: 'Duro de Pelar', 
     requirements: 'Legendario, Vigor d10+', 
     effects: 'Dureza +1.' 
   },
   { 
+    id: 'edge-resistente-mejorado',
+    name: 'Duro de Pelar Mejorado', 
+    requirements: 'Legendario, Duro de Pelar', 
+    effects: 'Dureza +2.' 
+  },
+  { 
     id: 'edge-retirada',
-    name: 'Extracción', 
+    name: 'Fuga', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Enemigos no reciben ataque gratuito cuando te retiras.' 
+    effects: 'Evitas ataque gratuito de un oponente al huir de un combate c/c.' 
   },
   { 
     id: 'edge-retirada-mejorada',
-    name: 'Extracción mejorada', 
-    requirements: 'Novato, Extracción', 
-    effects: 'Puede retirarse incluso rodeado.' 
+    name: 'Fuga Mejorada', 
+    requirements: 'Experimentado, Fuga', 
+    effects: 'Como Fuga, pero hasta tres oponentes distintos.' 
   },
   { 
     id: 'edge-rico',
@@ -1289,27 +1307,27 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-sanador-rapido',
-    name: 'Sanación rápida', 
+    name: 'Curación Rápida', 
     requirements: 'Novato, Vigor d8+', 
-    effects: '+2 a Vigor para curación natural.' 
+    effects: '+2 a Vigor en tiradas de curación natural. Curación natural cada 3 días en vez de cada 5.' 
   },
   { 
     id: 'edge-sangre-fria',
-    name: 'Sangre fría', 
+    name: 'Temple', 
     requirements: 'Experimentado, Astucia d8+', 
-    effects: 'Roba carta de acción adicional y quédate con la mejor.' 
+    effects: 'Sacas una carta de acción adicional por ronda y eliges cuál usar.' 
   },
   { 
     id: 'edge-sangre-fria-mejorada',
-    name: 'Sangre fría mejorada', 
-    requirements: 'Veterano, Sangre fría', 
-    effects: 'Roba dos cartas adicionales y quédate con la mejor.' 
+    name: 'Temple Mejorado', 
+    requirements: 'Experimentado, Temple', 
+    effects: 'Sacas dos cartas de acción adicional por ronda y eliges cuál usar.' 
   },
   { 
     id: 'edge-sentir-el-peligro',
-    name: 'Sentido del peligro', 
+    name: 'Sentir el Peligro', 
     requirements: 'Novato', 
-    effects: '+2 a Notar para detectar ataques sorpresa o trampas.' 
+    effects: 'Notar (+2) para detectar emboscadas, etc.' 
   },
   { 
     id: 'edge-sin-piedad',
@@ -1331,15 +1349,15 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-tactico-veterano',
-    name: 'Táctico veterano', 
+    name: 'Táctico, Genio', 
     requirements: 'Veterano, Táctico', 
-    effects: 'Éxito en Tácticas: +2 cartas acción grupo (aumento: +3).' 
+    effects: 'Saca y distribuye dos cartas de acción extras en vez de una.' 
   },
   { 
     id: 'edge-tirador',
-    name: 'Tirador', 
-    requirements: 'Experimentado, Atletismo d8+ o Disparar d8+', 
-    effects: 'Si no se mueve, ignora hasta 2 puntos de penalización.' 
+    name: 'Puntería', 
+    requirements: 'Experimentado, Atletismo o Disparar d8+', 
+    effects: 'Si no te mueves y no usas CdF superior a 1, ganas +1 a atacar o ignoras hasta dos puntos de penalización en el primer ataque a distancia del turno.' 
   },
   { 
     id: 'edge-tirador-de-elite',
@@ -1355,9 +1373,9 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-puntos-de-poder-adicionales',
-    name: 'Puntos de poder adicionales', 
+    name: 'Puntos de Poder', 
     requirements: 'Novato, Trasfondo arcano', 
-    effects: '+5 PP.' 
+    effects: 'Ganas +5 PP, máximo 1/rango.' 
   },
   { 
     id: 'edge-nuevo-poder',
@@ -1367,15 +1385,21 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-valiente',
-    name: 'Valiente', 
+    name: 'Osado', 
     requirements: 'Novato, Espíritu d6+', 
-    effects: '+2 a tiradas de Miedo.' 
+    effects: '+2 a tiradas de miedo y restas 2 en la tabla de Terror.' 
   },
   { 
-    id: 'edge-voluntad-de-hierro',
-    name: 'Voluntad firme', 
+    id: 'edge-vinculo-comun',
+    name: 'Vínculo Común', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: '+2 a resistir Intimidación y Provocación.' 
+    effects: 'Puedes entregar tus benis a cualquier aliado que pueda verte o escucharte.' 
+  },
+  { 
+    id: 'edge-voluntad-firme',
+    name: 'Voluntad de Hierro', 
+    requirements: 'Novato, Fuerza de Voluntad', 
+    effects: '+2 a Astucia y Espíritu a la hora de resistir poderes y recuperarte de ellos.' 
   },
 ];
 

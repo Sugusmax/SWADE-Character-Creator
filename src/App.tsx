@@ -158,8 +158,8 @@ const calculateStartingBennies = (char: Character) => {
   if (hasHindrance(char, 'Joven', 'Mayor')) bennies += 2;
   
   // Edges
-  if (hasEdge(char, 'Suerte')) bennies += 1;
-  if (hasEdge(char, 'Gran suerte')) bennies += 1;
+  if (hasEdge(char, 'Afortunado')) bennies += 1;
+  if (hasEdge(char, 'Afortunado, Muy')) bennies += 1;
   
   return Math.max(0, bennies);
 };
@@ -604,14 +604,14 @@ const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): { edges:
     
     // Handle specific cases where name doesn't match perfectly
     const specialCases = [
-      { base: 'Suerte', improved: 'Gran suerte' },
+      { base: 'Afortunado', improved: 'Afortunado, Muy' },
       { base: 'Atractivo', improved: 'Muy Atractivo' },
-      { base: 'Rico', improved: 'Muy Rico' },
+      { base: 'Rico', improved: 'Rico, Asquerosamente' },
       { base: 'Famoso', improved: 'Muy famoso' },
-      { base: 'Inspirar', improved: 'Inspiración heroica' },
+      { base: 'Inspiración', improved: 'Inspiración heroica' },
       { base: 'Investigador', improved: 'Investigador jefe' },
-      { base: 'Táctico', improved: 'Táctico veterano' },
-      { base: 'Difícil de Matar', improved: 'Más difícil de matar' },
+      { base: 'Táctico', improved: 'Táctico, Genio' },
+      { base: 'Difícil de Matar', improved: 'Difícil de Matar, Aún Más' },
     ];
     
     const isSpecialCase = specialCases.some(sc => 
@@ -685,7 +685,7 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     generalValue += 1;
     modifiers.push({ name: 'Atractivo', value: 1 });
   }
-  if (hasEdge(char, 'Curandero') && skillName === 'Sanar') {
+  if (hasEdge(char, 'Curandero') && skillName === 'Medicina') {
     generalValue += 2;
     modifiers.push({ name: 'Curandero', value: 2 });
   }
@@ -763,10 +763,10 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   // --- SITUATIONAL MODIFIERS ---
   
   // Edges
-  if (hasEdge(char, 'Aristócrata') && skillName === 'Persuadir') {
+  if (hasEdge(char, 'Alcurnia') && skillName === 'Persuadir') {
     situational.push({ value: 2, note: 'Alta sociedad/autoridades' });
   }
-  if (hasEdge(char, 'Indomable')) {
+  if (hasEdge(char, 'Fuerza de Voluntad')) {
     situational.push({ value: 2, note: 'Resistir poderes/ataques sociales' });
   }
   if (hasEdge(char, 'Montaraz')) {
@@ -782,13 +782,13 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Investigador') && skillName === 'Notar') {
     situational.push({ value: 2, note: 'Buscar pistas' });
   }
-  if (hasEdge(char, 'Sentido del peligro') && skillName === 'Notar') {
+  if (hasEdge(char, 'Sentir el Peligro') && skillName === 'Notar') {
     situational.push({ value: 2, note: 'Detectar peligros/sorpresa' });
   }
-  if (hasEdge(char, 'Tirador') && skillName === 'Disparar') {
+  if (hasEdge(char, 'Puntería') && skillName === 'Disparar') {
     situational.push({ value: 2, note: 'Si no se mueve' });
   }
-  if (hasEdge(char, '¡Rock & Roll!') && skillName === 'Disparar') {
+  if (hasEdge(char, '¡Rock and Roll!') && skillName === 'Disparar') {
     situational.push({ value: 0, note: 'Ignora retroceso si no se mueve' });
   }
   if (hasEdge(char, 'Resistencia arcana mejorada')) {
@@ -819,13 +819,13 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
       situational.push({ value: 1, note: 'Con arma específica' });
     }
   }
-  if (hasEdge(char, 'Berserker') && skillName === 'Pelear') {
+  if (hasEdge(char, 'Berserk') && skillName === 'Pelear') {
     situational.push({ value: 2, note: 'En furia' });
   }
 
   // Hindrances
   if (hasHindrance(char, 'Ciego')) {
-    if (['Notar', 'Disparar', 'Pelear', 'Atletismo', 'Sigilo', 'Conducir', 'Pilotar', 'Navegar', 'Investigar', 'Sanar', 'Reparar', 'Latrocinio'].includes(skillName)) {
+    if (['Notar', 'Disparar', 'Pelear', 'Atletismo', 'Sigilo', 'Conducir', 'Pilotar', 'Navegar', 'Investigar', 'Medicina', 'Reparar', 'Latrocinio'].includes(skillName)) {
       situational.push({ value: -6, note: 'Tareas visuales' });
     }
   }
@@ -926,19 +926,19 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   if (hasHindrance(char, 'Tuerto')) {
     situational.push({ value: -2, note: 'Acciones a distancia (>10m)' });
   }
-  if (hasEdge(char, 'Voluntad firme') && attrName === 'Espíritu') {
+  if (hasEdge(char, 'Voluntad de Hierro') && attrName === 'Espíritu') {
     situational.push({ value: 2, note: 'Resistir Intimidación/Provocación' });
   }
   if (hasEdge(char, 'Reflejos de combate') && attrName === 'Espíritu') {
     situational.push({ value: 2, note: 'Recuperarse de Aturdido' });
   }
-  if (hasEdge(char, 'Berserker') && attrName === 'Fuerza') {
+  if (hasEdge(char, 'Berserk') && attrName === 'Fuerza') {
     situational.push({ value: 2, note: 'En furia' });
   }
   if (hasEdge(char, 'Mandíbula de hierro') && attrName === 'Vigor') {
     situational.push({ value: 2, note: 'Resistir Aturdido' });
   }
-  if (hasEdge(char, 'Sanación rápida') && attrName === 'Vigor') {
+  if (hasEdge(char, 'Curación Rápida') && attrName === 'Vigor') {
     situational.push({ value: 2, note: 'Curación natural' });
   }
   if (hasEdge(char, 'Resistencia arcana mejorada')) {
@@ -946,7 +946,7 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   } else if (hasEdge(char, 'Resistencia arcana')) {
     situational.push({ value: 2, note: 'Resistir poderes' });
   }
-  if (hasEdge(char, 'Indomable') && attrName === 'Espíritu') {
+  if (hasEdge(char, 'Fuerza de Voluntad') && attrName === 'Espíritu') {
     situational.push({ value: 2, note: 'Resistir poderes/ataques sociales' });
   }
   if (hasEdge(char, 'Valiente') && attrName === 'Espíritu') {
@@ -962,8 +962,8 @@ const getDamageBonus = (char: Character, weaponName: string): BonusInfo => {
   const modifiers: AppliedModifier[] = [];
   const situational: SituationalBonus[] = [];
   
-  if (hasEdge(char, 'Berserker')) {
-    // Berserker applies to melee damage. We'll assume for now it applies if they are in fury.
+  if (hasEdge(char, 'Berserk')) {
+    // Berserk applies to melee damage. We'll assume for now it applies if they are in fury.
     situational.push({ value: 2, note: 'Cuerpo a cuerpo (en furia)' });
   }
   
@@ -1016,7 +1016,7 @@ const calculateDerived = (char: Character) => {
   if (hasHindrance(char, 'Joven', 'Mayor')) { size -= 2; toughness -= 2; }
 
   // Edges that modify (Applied after base adjustments)
-  if (hasEdge(char, 'Pies Ligeros')) { pace += 2; runningDieIndex = Math.min(4, runningDieIndex + 1); }
+  if (hasEdge(char, 'Pies ligeros')) { pace += 2; runningDieIndex = Math.min(4, runningDieIndex + 1); }
   
   const isWearingHeavyArmor = char.armor?.some(a => a && (a.bonus >= 3 || a.notes?.toLowerCase().includes('pesada') || a.name?.toLowerCase().includes('pesada')));
   if (hasEdge(char, 'Acróbata') && !isWearingHeavyArmor) parry += 1;
@@ -1025,8 +1025,9 @@ const calculateDerived = (char: Character) => {
   if (hasEdge(char, 'Bloqueo mejorado')) parry += 1; // Total +2
   if (hasEdge(char, 'Maestro de armas')) parry += 1;
   
-  if (hasEdge(char, 'Resistente')) toughness += 1;
-  if (hasEdge(char, 'Forzudo')) { size += 1; toughness += 1; }
+  if (hasEdge(char, 'Duro de Pelar')) toughness += 1;
+  if (hasEdge(char, 'Duro de Pelar Mejorado')) toughness += 1;
+  if (hasEdge(char, 'Fornido')) { size += 1; toughness += 1; }
   if (hasEdge(char, 'Gigante')) { size += 1; toughness += 1; } // Total +2 size/toughness with Fornido
 
   // Gear bonuses
@@ -4314,7 +4315,7 @@ function CharacterSheetView({
           <DerivedStat 
             label="Dureza" 
             value={character.derived.Dureza} 
-            situational={hasEdge(character, 'Berserker') ? [{ value: 2, note: 'En furia' }] : []}
+            situational={hasEdge(character, 'Berserk') ? [{ value: 2, note: 'En furia' }] : []}
             onInfo={() => setSelectedTrait({ name: 'Dureza', description: DERIVED_DESCRIPTIONS['Dureza'], type: 'Estadística Derivada' })}
           />
         </div>
