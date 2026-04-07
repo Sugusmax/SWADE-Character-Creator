@@ -1,5 +1,5 @@
 
-export type Dice = 4 | 6 | 8 | 10 | 12 | 13 | 14; // 13 is d12+1, 14 is d12+2
+export type Dice = 4 | 6 | 8 | 10 | 12 | number; // 13 is d12+1, 14 is d12+2, etc.
 
 export interface Attribute {
   name: string;
@@ -23,6 +23,16 @@ export interface Hindrance {
   description: string;
 }
 
+export interface AppliedModifier {
+  name: string;
+  value: number;
+}
+
+export interface SituationalBonus {
+  value: number;
+  note: string;
+}
+
 export interface Edge {
   id: string;
   instanceId?: string;
@@ -30,6 +40,8 @@ export interface Edge {
   requirements: string;
   effects: string;
   replaces?: string;
+  modifiers?: AppliedModifier[];
+  situationalModifiers?: SituationalBonus[];
 }
 
 export interface SpeciesAbility {
@@ -72,6 +84,30 @@ export interface Power {
   description: string;
 }
 
+export interface Weapon {
+  instanceId?: string;
+  name: string;
+  damage: string;
+  range?: string;
+  ap?: number;
+  notes?: string;
+}
+
+export interface Armor {
+  instanceId?: string;
+  name: string;
+  bonus: number;
+  notes?: string;
+}
+
+export interface Shield {
+  instanceId?: string;
+  name: string;
+  parryBonus: number;
+  coverBonus: number;
+  notes?: string;
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -89,27 +125,9 @@ export interface Character {
   hindrances: Hindrance[];
   edges: Edge[];
   gear: string[];
-  weapons?: {
-    instanceId?: string;
-    name: string;
-    damage: string;
-    range?: string;
-    ap?: number;
-    notes?: string;
-  }[];
-  armor?: {
-    instanceId?: string;
-    name: string;
-    bonus: number;
-    notes?: string;
-  }[];
-  shield?: {
-    instanceId?: string;
-    name: string;
-    parryBonus: number;
-    coverBonus: number;
-    notes?: string;
-  };
+  weapons?: Weapon[];
+  armor?: Armor[];
+  shield?: Shield;
   powers?: Power[];
   powerPoints?: {
     max: number;
@@ -129,6 +147,9 @@ export interface Character {
   };
   bennies?: number;
   wounds?: number;
+  aturdido?: boolean;
+  isBerserk?: boolean;
+  berserkRounds?: number;
   fatigue?: number;
   advances?: number;
   advancesList?: Advance[];

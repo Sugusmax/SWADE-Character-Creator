@@ -31,10 +31,11 @@ import {
   X,
   Heart,
   TrendingUp,
-  Minus
+  Minus,
+  Flame
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Character, Dice, Species, Skill, Hindrance, Edge, Advance } from './types';
+import { Character, Dice, Species, Skill, Hindrance, Edge, Advance, AppliedModifier, SituationalBonus, Weapon } from './types';
 import { SPECIES, ATTRIBUTES, SKILLS, HINDRANCES, EDGES, ARCANE_BACKGROUNDS, POWERS, WEAPONS, ARMOR, SHIELDS } from './data';
 
 const STEPS = [
@@ -91,6 +92,8 @@ const INITIAL_CHARACTER: Character = {
   },
   bennies: undefined,
   wounds: undefined,
+  aturdido: false,
+  isBerserk: false,
   fatigue: undefined,
   advances: undefined,
 };
@@ -139,7 +142,7 @@ const getMaxPowers = (char: Character) => {
   if (!ab) return 0;
   
   let powers = ab.powers || 0;
-  const newPowerEdges = char.edges.filter(e => e && e.name === 'Nuevos Poderes');
+  const newPowerEdges = char.edges.filter(e => e && e.name === 'Nuevo poder');
   powers += newPowerEdges.length * 2;
   
   return powers;
@@ -169,6 +172,10 @@ const calculateStartingBennies = (char: Character) => {
 const getEffectiveAttribute = (char: Character, attrName: string) => {
   if (!char || !char.attributes) return 4;
   let val = char.attributes[attrName as keyof typeof char.attributes] || 4;
+  
+  if (char.isBerserk && attrName === 'Fuerza') {
+    return upgradeDie(val);
+  }
   
   return val;
 };
@@ -240,14 +247,11 @@ const upgradeDie = (val: number): Dice => {
   if (val === 6) return 8;
   if (val === 8) return 10;
   if (val === 10) return 12;
-  if (val === 12) return 13;
-  if (val === 13) return 14;
-  return val as Dice;
+  return (val + 1) as Dice;
 };
 
 const downgradeDie = (val: number): Dice => {
-  if (val === 14) return 13;
-  if (val === 13) return 12;
+  if (val > 12) return (val - 1) as Dice;
   if (val === 12) return 10;
   if (val === 10) return 8;
   if (val === 8) return 6;
@@ -429,7 +433,7 @@ const checkRequirements = (char: Character, requirements: string): { met: boolea
     if (isEdgeRequirement) {
       const reqName = part.toLowerCase();
       if (reqName.startsWith('trasfondo arcano')) {
-        const hasTA = hasEdge(char, 'Trasfondo Arcano');
+        const hasTA = hasEdge(char, 'Trasfondo arcano');
         if (!hasTA) {
           unmet.push(`Ventaja: ${part}`);
         }
@@ -637,16 +641,6 @@ const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): { edges:
   return { edges: [...currentEdges, newEdge].sort(sortByName) };
 };
 
-interface SituationalBonus {
-  value: number;
-  note: string;
-}
-
-interface AppliedModifier {
-  name: string;
-  value: number;
-}
-
 interface BonusInfo {
   generalValue: number;
   modifiers: AppliedModifier[];
@@ -659,6 +653,7 @@ const getWoundPenalty = (char: Character): number => {
   let ignore = 0;
   if (hasEdge(char, 'Nervios de Acero Mejorados')) ignore += 2;
   else if (hasEdge(char, 'Nervios de Acero')) ignore += 1;
+  if (char.isBerserk) ignore += 1;
   return Math.max(0, rawPenalty - ignore);
 };
 
@@ -833,11 +828,8 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Ayudante')) {
     situational.push({ value: 0, note: 'Repetir tiradas de Apoyo' });
   }
-  if (hasEdge(char, 'Alcurnia') && skillName === 'Conocimientos Generales') {
+  if (hasEdge(char, 'Alcurnia') && (skillName === 'Conocimientos Generales' || skillName === 'Persuadir')) {
     situational.push({ value: 2, note: 'Alta sociedad' });
-  }
-  if (hasEdge(char, 'Alcurnia') && skillName === 'Persuadir') {
-    situational.push({ value: 2, note: 'Alta sociedad/autoridades' });
   }
   if (hasEdge(char, 'Fuerza de Voluntad')) {
     situational.push({ value: 2, note: 'Resistir poderes/ataques sociales' });
@@ -971,9 +963,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Acaparador')) {
     situational.push({ value: 0, note: 'Encuentra un objeto esencial una vez por sesión' });
   }
-  if (hasEdge(char, 'Alcurnia') && skillName === 'Conocimientos Generales') {
-    situational.push({ value: 2, note: 'Relacionado con la clase alta' });
-  }
   if (hasEdge(char, 'Animar') && skillName === 'Espíritu') {
     situational.push({ value: 0, note: 'Puedes realizar un apoyo con Espíritu para ayudar a un aliado' });
   }
@@ -992,7 +981,7 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Ayudante') && skillName === 'Espíritu') {
     situational.push({ value: 0, note: 'Puedes repetir cualquier tirada de Apoyo' });
   }
-  if (hasEdge(char, 'Bestia')) {
+  if (hasEdge(char, 'Vínculo animal')) {
     situational.push({ value: 0, note: 'Puedes gastar tus propios Benis por tus animales' });
   }
   if (hasEdge(char, 'Calculador')) {
@@ -1037,9 +1026,7 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Golpe Poderoso') && skillName === 'Pelear') {
     situational.push({ value: -2, note: 'Para obtener +4 al daño' });
   }
-  if (hasEdge(char, 'Gorila') && skillName === 'Pelear') {
-    situational.push({ value: 0, note: 'Bonos al combate cuerpo a cuerpo basados en la fuerza bruta' });
-  }
+
   if (hasEdge(char, 'Guerrero Impío/Sagrado')) {
     situational.push({ value: 0, note: 'Canaliza poder divino para el combate' });
   }
@@ -1140,17 +1127,14 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Golpe Poderoso') && skillName === 'Pelear') {
     situational.push({ value: -2, note: 'Golpe Poderoso (+4 daño)' });
   }
-  if (hasEdge(char, 'Gorila') && skillName === 'Pelear') {
-    situational.push({ value: 0, note: 'Bonos por fuerza bruta' });
-  }
+
   if (hasEdge(char, 'Guerrero Impío/Sagrado') && skillName === 'Pelear') {
     situational.push({ value: 0, note: 'Canaliza poder divino' });
   }
-  if (hasEdge(char, 'Berserk') && skillName === 'Pelear') {
-    situational.push({ value: 2, note: 'En furia' });
-  }
-  if (hasEdge(char, 'Berserk') && char.wounds > 0) {
-    situational.push({ value: getWoundPenalty(char), note: 'Ignora heridas en furia' });
+
+  if (char.isBerserk && skillName === 'Pelear') {
+    generalValue += 2;
+    modifiers.push({ name: 'Berserk (Ataque Salvaje)', value: 2 });
   }
 
   // Hindrances
@@ -1271,18 +1255,11 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   if (hasEdge(char, 'Reflejos de Combate') && attrName === 'Espíritu') {
     situational.push({ value: 2, note: 'Recuperarse de Aturdido' });
   }
-  if (hasEdge(char, 'Berserk') && attrName === 'Fuerza') {
-    situational.push({ value: 2, note: 'En furia' });
+  if (char.isBerserk && attrName === 'Dureza') {
+    generalValue += 2;
+    modifiers.push({ name: 'Berserk', value: 2 });
   }
-  if (hasEdge(char, 'Berserk') && char.wounds > 0) {
-    situational.push({ value: getWoundPenalty(char), note: 'Ignora heridas en furia' });
-  }
-  if (hasEdge(char, 'Berserk') && attrName === 'Dureza') {
-    situational.push({ value: 2, note: 'En furia' });
-  }
-  if (hasEdge(char, 'Berserk') && attrName === 'Parada') {
-    situational.push({ value: -2, note: 'En furia' });
-  }
+  
   if (hasEdge(char, 'Chi')) {
     situational.push({ value: 0, note: 'Potenciar habilidades con energía' });
   }
@@ -1328,15 +1305,17 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   return { generalValue, modifiers, situational };
 };
 
-const getDamageBonus = (char: Character, weaponName: string): BonusInfo => {
+const getDamageBonus = (char: Character, weapon: Weapon): BonusInfo => {
   if (!char) return { generalValue: 0, modifiers: [], situational: [] };
   let generalValue = 0;
   const modifiers: AppliedModifier[] = [];
   const situational: SituationalBonus[] = [];
   
-  if (hasEdge(char, 'Berserk')) {
-    // Berserk applies to melee damage. We'll assume for now it applies if they are in fury.
-    situational.push({ value: 2, note: 'Cuerpo a cuerpo (en furia)' });
+  if (char.isBerserk) {
+    if (!weapon.range || weapon.range.toLowerCase() === 'cuerpo a cuerpo') {
+      generalValue += 2;
+      modifiers.push({ name: 'Berserk (Ataque Salvaje)', value: 2 });
+    }
   }
   if (hasEdge(char, 'Artista Marcial Mejorado')) {
     situational.push({ value: 3, note: 'Desarmado (FUE+d6)' });
@@ -1364,9 +1343,7 @@ const getDamageBonus = (char: Character, weaponName: string): BonusInfo => {
   if (hasEdge(char, 'Golpe Poderoso')) {
     situational.push({ value: 4, note: 'Golpe Poderoso (-2 Pelear)' });
   }
-  if (hasEdge(char, 'Gorila')) {
-    situational.push({ value: 0, note: 'Bonos por fuerza bruta' });
-  }
+
   if (hasEdge(char, 'Guerrero Impío/Sagrado')) {
     situational.push({ value: 0, note: 'Canaliza poder divino' });
   }
@@ -1389,6 +1366,7 @@ const calculateDerived = (char: Character) => {
   const pelear = char.skills?.['Pelear'] || 0;
   
   let toughness = 2 + (Math.floor(vig / 2));
+  if (char.isBerserk) toughness += 2;
   let size = 0;
   let pace = 6;
   let parry = 2 + (Math.floor(pelear / 2));
@@ -1598,8 +1576,8 @@ export default function App() {
     let next = { ...currentCharacter, ...updates };
 
     // If species or heritage choice or hindrances changed, we might need to recalculate base attributes
-    const speciesChanged = updates.species !== undefined;
-    const heritageChanged = updates.heritageChoice !== undefined;
+    const speciesChanged = updates.species !== undefined && updates.species !== currentCharacter.species;
+    const heritageChanged = updates.heritageChoice !== undefined && updates.heritageChoice !== currentCharacter.heritageChoice;
     const hindrancesChanged = updates.hindrances !== undefined;
 
     if (speciesChanged || heritageChanged || hindrancesChanged) {
@@ -2058,7 +2036,7 @@ export default function App() {
         isOpen={!!arcaneModalOnSelect} 
         onClose={() => {
           setArcaneModalOnSelect(null);
-          if (previewEdgeName === 'Trasfondo Arcano') {
+          if (previewEdgeName === 'Trasfondo arcano') {
             setPreviewEdgeName('');
           }
         }}
@@ -2658,13 +2636,13 @@ function renderStep(
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 justify-items-center">
             {ATTRIBUTES.map(attr => {
               const { min, max } = getAttributeLimits(attr, char.species, char.heritageChoice, char.hindrances);
               const current = char.attributes[attr as keyof typeof char.attributes];
               
               return (
-                <div key={attr} className="flex items-center gap-4">
+                <div key={attr} className="flex items-center justify-center gap-4 w-full max-w-[160px]">
                   <div className="relative group">
                     <div className="w-16 h-16 bg-white border-4 border-stone-900 rounded-xl flex items-center justify-center text-xl font-mono font-black shadow-inner">
                       {formatDice(current)}
@@ -3606,9 +3584,9 @@ function ArcaneBackgroundModal({ isOpen, onClose, onSelect }: { isOpen: boolean,
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-black uppercase tracking-tight text-stone-900 group-hover:text-amber-900">{ab.name}</h3>
-                  <div className="flex gap-2">
-                    <span className="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-md uppercase tracking-widest">{ab.powerPoints} PP</span>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-black rounded-md uppercase tracking-widest">{ab.powers} Poderes</span>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <span className="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-md uppercase tracking-widest whitespace-nowrap">{ab.powerPoints} PP</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-black rounded-md uppercase tracking-widest whitespace-nowrap">{ab.powers} Poderes</span>
                   </div>
                 </div>
                 <p className="text-sm text-stone-600 leading-relaxed italic mb-3">
@@ -3732,6 +3710,8 @@ function CharacterSheetView({
     appliedModifiers: AppliedModifier[];
     situationalModifiers?: SituationalBonus[];
     total: number;
+    isBerserkRoll?: boolean;
+    isCalmRoll?: boolean;
   } | null>(null);
 
   // Use a ref to always have the latest character state in closures (like modal callbacks)
@@ -3775,17 +3755,21 @@ function CharacterSheetView({
   const isIncapacitated = (character.wounds || 0) >= 4 || (character.fatigue || 0) >= 3;
   const totalPenalty = getWoundPenalty(character) + getFatiguePenalty(character);
 
-  const performRoll = (traitName: string, dieStr: string, isTraitRoll: boolean = true, traitModifier: number = 0, explodes: boolean = true, modifiers: AppliedModifier[] = [], situational: SituationalBonus[] = []) => {
+  const performRoll = (traitName: string, dieStr: string, isTraitRoll: boolean = true, traitModifier: number = 0, explodes: boolean = true, modifiers: AppliedModifier[] = [], situational: SituationalBonus[] = [], isBerserkRoll: boolean = false, isCalmRoll: boolean = false) => {
     const rollSingleDie = (sides: number, canExplode: boolean) => {
+      let actualSides = sides;
+      let bonus = 0;
+      if (sides > 12) { actualSides = 12; bonus = sides - 12; }
+      
       let total = 0;
       let explosions: number[] = [];
       let currentRoll = 0;
       do {
-        currentRoll = Math.floor(Math.random() * sides) + 1;
+        currentRoll = Math.floor(Math.random() * actualSides) + 1;
         total += currentRoll;
         explosions.push(currentRoll);
-      } while (canExplode && currentRoll === sides);
-      return { die: sides, result: total, explosions };
+      } while (canExplode && currentRoll === actualSides);
+      return { die: actualSides, result: total + bonus, explosions };
     };
 
     let finalTotal = 0;
@@ -3801,7 +3785,7 @@ function CharacterSheetView({
       
       parts.forEach(part => {
         if (part.toUpperCase() === 'FUE') {
-          const strengthDie = character.attributes.Fuerza;
+          const strengthDie = getEffectiveAttribute(character, 'Fuerza');
           const roll = rollSingleDie(strengthDie, explodes);
           damageDice.push({ name: 'FUE', ...roll });
           finalTotal += roll.result;
@@ -3855,7 +3839,7 @@ function CharacterSheetView({
       allModifiers.push({ name: 'Heridas/Fatiga', value: -penalty });
     }
 
-    setRollResult({
+    const result = {
       trait: traitName,
       dice: dieStr,
       traitRoll,
@@ -3864,18 +3848,67 @@ function CharacterSheetView({
       modifier: totalModifier,
       appliedModifiers: allModifiers,
       situationalModifiers: situational,
-      total: totalWithMod
-    });
+      total: totalWithMod,
+      isBerserkRoll,
+      isCalmRoll
+    };
+
+    setRollResult(result);
+
+    if (isBerserkRoll && totalWithMod < 4) {
+      onUpdate({ ...charRef.current, isBerserk: true, berserkRounds: 1 });
+    }
+    
+    if (isCalmRoll && totalWithMod >= 4) {
+      onUpdate({ ...charRef.current, isBerserk: false, berserkRounds: 0 });
+    }
   };
 
   const updatePlayState = (field: keyof Character, delta: number) => {
+    let updatedChar = { ...character };
+    let triggerBerserk = false;
+
+    if (field === 'wounds') {
+      const currentWounds = character.wounds || 0;
+      const isAturdido = !!character.aturdido;
+
+      if (delta > 0) {
+        triggerBerserk = hasEdge(character, 'Berserk') && !character.isBerserk;
+        if (currentWounds === 0 && !isAturdido) {
+          updatedChar = { ...character, aturdido: true };
+        } else if (currentWounds === 0 && isAturdido) {
+          updatedChar = { ...character, wounds: 1 };
+        } else {
+          updatedChar = { ...character, wounds: Math.min(4, currentWounds + 1) };
+        }
+      } else if (delta < 0) {
+        if (currentWounds > 1) {
+          updatedChar = { ...character, wounds: currentWounds - 1 };
+        } else if (currentWounds === 1) {
+          updatedChar = { ...character, wounds: 0, aturdido: false };
+        } else if (currentWounds === 0 && isAturdido) {
+          updatedChar = { ...character, aturdido: false };
+        }
+      }
+      onUpdate(updatedChar);
+      charRef.current = updatedChar;
+      
+      if (triggerBerserk) {
+        // Automatic Smarts (Astucia) roll for Berserk
+        performRoll('Astucia', formatDice(character.attributes.Astucia), true, 0, true, [], [], true);
+      }
+      return;
+    }
+
     const currentVal = (character[field] as number) || 0;
     let newVal = currentVal + delta;
     
     if (field === 'fatigue') {
       newVal = Math.min(3, Math.max(0, newVal));
-    } else if (field === 'wounds') {
-      newVal = Math.min(4, Math.max(0, newVal));
+      if (newVal >= 3 && character.isBerserk) {
+        onUpdate({ ...character, fatigue: newVal, isBerserk: false, berserkRounds: 0 });
+        return;
+      }
     } else {
       newVal = Math.max(0, newVal);
     }
@@ -4056,10 +4089,17 @@ function CharacterSheetView({
     return 'Incapacitado';
   };
 
-  const getWoundsLabel = (val: number) => {
-    if (val === 0) return 'Normal';
-    if (val === 4) return 'Incapacitado';
-    return `${val} ${val === 1 ? 'Herida' : 'Heridas'} (-${val})`;
+  const getWoundsLabel = (val: number, isAturdido: boolean) => {
+    let label = '';
+    if (val === 0 && isAturdido) label = 'Aturdido';
+    else if (val === 0) label = 'Normal';
+    else if (val === 4) label = 'Incapacitado';
+    else label = `${val} ${val === 1 ? 'Herida' : 'Heridas'} (-${val})`;
+    
+    if (character.isBerserk) {
+      label = `EN FURIA (${label})`;
+    }
+    return label;
   };
 
   return (
@@ -4174,6 +4214,30 @@ function CharacterSheetView({
                 >
                   Listo
                 </button>
+
+                {rollResult.isBerserkRoll && !character.isBerserk && (
+                  <button 
+                    onClick={() => {
+                      onUpdate({ ...charRef.current, isBerserk: true, berserkRounds: 1 });
+                      setRollResult(null);
+                    }}
+                    className="w-full py-4 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all shadow-lg"
+                  >
+                    Furia de todos modos
+                  </button>
+                )}
+
+                {rollResult.isCalmRoll && character.isBerserk && (
+                  <button 
+                    onClick={() => {
+                      onUpdate({ ...charRef.current, isBerserk: false, berserkRounds: 0 });
+                      setRollResult(null);
+                    }}
+                    className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg"
+                  >
+                    Calmarse de todas formas
+                  </button>
+                )}
               </div>
             </motion.div>
           </div>
@@ -4739,8 +4803,7 @@ function CharacterSheetView({
             label="Parada" 
             value={character.derived.Parada} 
             situational={[
-              ...(hasEdge(character, 'Arma Distintiva Mejorada') ? [{ value: 2, note: 'Con arma específica' }] : (hasEdge(character, 'Arma Distintiva') ? [{ value: 1, note: 'Con arma específica' }] : [])),
-              ...(hasEdge(character, 'Berserk') ? [{ value: -2, note: 'En furia' }] : [])
+              ...(hasEdge(character, 'Arma Distintiva Mejorada') ? [{ value: 2, note: 'Con arma específica' }] : (hasEdge(character, 'Arma Distintiva') ? [{ value: 1, note: 'Con arma específica' }] : []))
             ]}
             onInfo={() => setSelectedTrait({ name: 'Parada', description: DERIVED_DESCRIPTIONS['Parada'], type: 'Estadística Derivada' })}
           />
@@ -4748,7 +4811,6 @@ function CharacterSheetView({
             label="Dureza" 
             value={character.derived.Dureza} 
             situational={[
-              ...(hasEdge(character, 'Berserk') ? [{ value: 2, note: 'En furia' }] : []),
               ...(hasEdge(character, 'Campeón') ? [{ value: 2, note: 'Vs el mal' }] : [])
             ]}
             onInfo={() => setSelectedTrait({ name: 'Dureza', description: DERIVED_DESCRIPTIONS['Dureza'], type: 'Estadística Derivada' })}
@@ -4757,6 +4819,72 @@ function CharacterSheetView({
 
       {/* Tracking Section: Bennies, Wounds, Fatigue, Advances */}
       <div className="space-y-4">
+        {character.isBerserk && (
+          <div className="bg-red-600 text-white p-4 rounded-2xl flex items-center justify-between shadow-lg">
+            <div className="flex items-center gap-3">
+              <Flame size={24} className="text-red-200 animate-pulse" />
+              <div className="flex flex-col">
+                <div className="font-black uppercase tracking-widest text-xs">Estado: EN FURIA</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center bg-white/20 rounded-lg px-2 py-1 gap-2">
+                    <span className="text-[10px] font-bold uppercase opacity-80">Rondas:</span>
+                    <button 
+                      onClick={() => {
+                        const nextRounds = Math.max(1, (character.berserkRounds || 1) - 1);
+                        onUpdate({ ...character, berserkRounds: nextRounds });
+                      }}
+                      className="bg-white/20 hover:bg-white/40 w-5 h-5 flex items-center justify-center rounded-md transition-colors"
+                    >
+                      -
+                    </button>
+                    <span className="text-sm font-black w-4 text-center">{character.berserkRounds || 1}</span>
+                    <button 
+                      onClick={() => {
+                        const nextRounds = (character.berserkRounds || 1) + 1;
+                        let nextFatigue = character.fatigue || 0;
+                        let nextIsBerserk = true;
+                        let finalRounds = nextRounds;
+
+                        if (nextRounds > 0 && nextRounds % 5 === 0) {
+                          nextFatigue = Math.min(3, nextFatigue + 1);
+                        }
+
+                        // If fatigue reaches 3, character is Incapacitated and loses Berserk
+                        if (nextFatigue >= 3) {
+                          nextIsBerserk = false;
+                          finalRounds = 0;
+                        }
+
+                        onUpdate({ 
+                          ...character, 
+                          berserkRounds: finalRounds, 
+                          fatigue: nextFatigue,
+                          isBerserk: nextIsBerserk
+                        });
+                      }}
+                      className="bg-white/20 hover:bg-white/40 w-5 h-5 flex items-center justify-center rounded-md transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                  {character.berserkRounds && character.berserkRounds > 0 && character.berserkRounds % 5 === 0 && (
+                    <span className="text-[9px] font-black bg-white text-red-600 px-1.5 py-0.5 rounded uppercase animate-bounce">
+                      +1 Fatiga
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                performRoll('Astucia', formatDice(character.attributes.Astucia), true, -2, true, [{ name: 'Intento de Calma', value: -2 }], [], false, true);
+              }}
+              className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors"
+            >
+              Calmarse
+            </button>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-8 border-y border-stone-100">
           <TrackingToken 
             icon={<Dice5 size={18} />} 
@@ -4770,10 +4898,10 @@ function CharacterSheetView({
             icon={<Heart size={18} />} 
             label="Heridas" 
             value={character.wounds || 0} 
-            color="bg-red-50 text-red-700 border-red-200"
+            color={character.aturdido && (character.wounds || 0) === 0 ? "bg-amber-50 text-amber-700 border-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.2)]" : "bg-red-50 text-red-700 border-red-200"}
             onAdd={() => updatePlayState('wounds', 1)}
             onSub={() => updatePlayState('wounds', -1)}
-            statusLabel={getWoundsLabel(character.wounds || 0)}
+            statusLabel={getWoundsLabel(character.wounds || 0, !!character.aturdido)}
           />
           <TrackingToken 
             icon={<Zap size={18} />} 
@@ -4836,6 +4964,7 @@ function CharacterSheetView({
               const val = getEffectiveAttribute(character, name);
               const bonus = getAttributeBonus(character, name);
               const displayBonus = bonus.generalValue - totalPenalty;
+
               return (
                 <div 
                   key={name} 
@@ -4862,9 +4991,9 @@ function CharacterSheetView({
                       <Info size={10} /> Info
                     </button>
                   </div>
-                  <div className="w-20 shrink-0 font-mono font-black text-2xl flex items-center">
+                  <div className={`w-20 shrink-0 font-mono font-black text-2xl flex items-center ${character.isBerserk && name === 'Fuerza' ? 'text-emerald-600' : ''}`}>
                     {formatDice(val)}
-                    {val !== purchasedVal && (
+                    {val !== purchasedVal && !(character.isBerserk && name === 'Fuerza') && (
                       <span className="text-[10px] text-stone-400 ml-1">({formatDice(purchasedVal)})</span>
                     )}
                     {displayBonus !== 0 && (
@@ -4875,8 +5004,8 @@ function CharacterSheetView({
                   </div>
                   <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
                     {bonus.situational.map((sit, idx) => (
-                      <span key={`${sit.note}-${idx}`} className={`text-[10px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : 'text-red-600'}`}>
-                        ({sit.value > 0 ? '+' : ''}{sit.value} {sit.note})
+                      <span key={`${sit.note}-${idx}`} className={`text-[10px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : (sit.value < 0 ? 'text-red-600' : 'text-stone-500')}`}>
+                        ({sit.value !== 0 ? `${sit.value > 0 ? '+' : ''}${sit.value} ` : ''}{sit.note})
                       </span>
                     ))}
                   </div>
@@ -4900,8 +5029,11 @@ function CharacterSheetView({
             {Object.entries(character.skills).map(([name, val]) => {
               const bonus = getSkillBonus(character, name);
               const displayBonus = bonus.generalValue - totalPenalty;
+              const allowedInBerserk = ['Atletismo', 'Disparar', 'Intimidar', 'Notar', 'Pelear'];
+              const isDisabled = character.isBerserk && !allowedInBerserk.includes(name);
+              
               return (
-                <div key={`${name}-sheet`} className="flex items-start py-2 border-b border-stone-100 gap-4 group">
+                <div key={`${name}-sheet`} className={`flex items-start py-2 border-b border-stone-100 gap-4 group ${isDisabled ? 'opacity-40 grayscale' : ''}`}>
                   <div className="w-32 shrink-0">
                     <div className="font-bold text-stone-900">{name}</div>
                     <button 
@@ -4912,8 +5044,9 @@ function CharacterSheetView({
                     </button>
                   </div>
                   <button 
+                    disabled={isDisabled}
                     onClick={() => performRoll(name, formatDice(val as number), true, bonus.generalValue, true, bonus.modifiers, bonus.situational)}
-                    className="flex items-center gap-1 shrink-0 w-20 hover:bg-stone-100 rounded px-1 -mx-1 transition-colors"
+                    className={`flex items-center gap-1 shrink-0 w-20 rounded px-1 -mx-1 transition-colors ${isDisabled ? 'cursor-not-allowed' : 'hover:bg-stone-100'}`}
                   >
                     <span className="font-mono font-bold text-stone-600">{formatDice(val as number)}</span>
                     {displayBonus !== 0 && (
@@ -4923,11 +5056,15 @@ function CharacterSheetView({
                     )}
                   </button>
                   <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
-                    {bonus.situational.map((sit, idx) => (
-                      <span key={`${sit.note}-${idx}`} className={`text-[10px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : 'text-red-600'}`}>
-                        ({sit.value > 0 ? '+' : ''}{sit.value} {sit.note})
-                      </span>
-                    ))}
+                    {isDisabled ? (
+                      <span className="text-[10px] font-black text-red-600 uppercase tracking-widest">Inhabilitado (Furia)</span>
+                    ) : (
+                      bonus.situational.map((sit, idx) => (
+                        <span key={`${sit.note}-${idx}`} className={`text-[10px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : (sit.value < 0 ? 'text-red-600' : 'text-stone-500')}`}>
+                          ({sit.value !== 0 ? `${sit.value > 0 ? '+' : ''}${sit.value} ` : ''}{sit.note})
+                        </span>
+                      ))
+                    )}
                   </div>
                 </div>
               );
@@ -4935,8 +5072,11 @@ function CharacterSheetView({
             {SKILLS.filter(s => s.isBasic && !character.skills[s.name]).map(s => {
               const bonus = getSkillBonus(character, s.name);
               const displayBonus = bonus.generalValue - totalPenalty;
+              const allowedInBerserk = ['Atletismo', 'Disparar', 'Intimidar', 'Notar', 'Pelear'];
+              const isDisabled = character.isBerserk && !allowedInBerserk.includes(s.name);
+
               return (
-                <div key={s.id} className="flex items-start py-2 border-b border-stone-100 gap-4 group">
+                <div key={s.id} className={`flex items-start py-2 border-b border-stone-100 gap-4 group ${isDisabled ? 'opacity-40 grayscale' : ''}`}>
                   <div className="w-32 shrink-0">
                     <div className="font-bold text-stone-700">{s.name}</div>
                     <button 
@@ -4947,8 +5087,9 @@ function CharacterSheetView({
                     </button>
                   </div>
                   <button 
+                    disabled={isDisabled}
                     onClick={() => performRoll(s.name, 'd4', true, bonus.generalValue, true, bonus.modifiers, bonus.situational)}
-                    className="flex items-center gap-1 shrink-0 w-20 hover:bg-stone-100 rounded px-1 -mx-1 transition-colors"
+                    className={`flex items-center gap-1 shrink-0 w-20 rounded px-1 -mx-1 transition-colors ${isDisabled ? 'cursor-not-allowed' : 'hover:bg-stone-100'}`}
                   >
                     <span className="font-mono font-bold text-stone-500">d4</span>
                     {displayBonus !== 0 && (
@@ -4958,11 +5099,15 @@ function CharacterSheetView({
                     )}
                   </button>
                   <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
-                    {bonus.situational.map((sit, idx) => (
-                      <span key={`${sit.note}-${idx}`} className={`text-[10px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : 'text-red-600'}`}>
-                        ({sit.value > 0 ? '+' : ''}{sit.value} {sit.note})
-                      </span>
-                    ))}
+                    {isDisabled ? (
+                      <span className="text-[10px] font-black text-red-600 uppercase tracking-widest">Inhabilitado (Furia)</span>
+                    ) : (
+                      bonus.situational.map((sit, idx) => (
+                        <span key={`${sit.note}-${idx}`} className={`text-[10px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : (sit.value < 0 ? 'text-red-600' : 'text-stone-500')}`}>
+                          ({sit.value !== 0 ? `${sit.value > 0 ? '+' : ''}${sit.value} ` : ''}{sit.note})
+                        </span>
+                      ))
+                    )}
                   </div>
                 </div>
               );
@@ -5132,7 +5277,7 @@ function CharacterSheetView({
                       </div>
                       <div className="flex items-center gap-2">
                         <button onClick={() => {
-                          const bonus = getDamageBonus(character, w.name);
+                          const bonus = getDamageBonus(character, w);
                           performRoll(`Daño: ${w.name}`, w.damage, false, bonus.generalValue, true, bonus.modifiers, bonus.situational);
                         }} className="flex-shrink-0 px-3 py-2 bg-stone-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-stone-800 transition-colors">
                           Dañar
@@ -5548,8 +5693,8 @@ function DerivedStat({ label, value, onClick, bonus, situational, onInfo }: { la
           {situational && situational.length > 0 && (
             <div className="flex flex-col items-center mt-1">
               {situational.map((sit, idx) => (
-                <span key={`${sit.note}-${idx}`} className={`text-[10px] font-bold leading-none ${sit.value > 0 ? 'text-emerald-500' : 'text-red-600'}`}>
-                  ({sit.value > 0 ? '+' : ''}{sit.value} {sit.note})
+                <span key={`${sit.note}-${idx}`} className={`text-[10px] font-bold leading-none text-center ${sit.value > 0 ? 'text-emerald-500' : (sit.value < 0 ? 'text-red-600' : 'text-stone-500')}`}>
+                  ({sit.value !== 0 ? `${sit.value > 0 ? '+' : ''}${sit.value} ` : ''}{sit.note})
                 </span>
               ))}
             </div>
