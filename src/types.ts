@@ -31,6 +31,7 @@ export interface AppliedModifier {
 export interface SituationalBonus {
   value: number;
   note: string;
+  target?: string | string[];
 }
 
 export interface Edge {
