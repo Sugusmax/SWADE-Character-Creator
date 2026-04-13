@@ -732,571 +732,571 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-acaparador', 
     name: 'Acaparador', 
-    requirements: '', 
+    requirements: 'Novato, Afortunado', 
     effects: 'Una vez por encuentro, hayas entre tus pertenencias algo útil para la situación.' 
   },
   { 
     id: 'edge-acrobata', 
     name: 'Acróbata', 
-    requirements: '', 
+    requirements: 'Novato, Agilidad d8+, Atletismo d8+', 
     effects: 'Puedes repetir una vez las tiradas de Atletismo basadas en acrobacias.' 
   },
   { 
     id: 'edge-acrobata-marcial', 
     name: 'Acróbata Marcial', 
-    requirements: '', 
+    requirements: 'Experimentado, Acróbata', 
     effects: '-1 a cualquier ataque contra ti si estás conciente de tu enemigo, no tienes penalización por carga ni fuerza mínima y puedes moverte con soltura.' 
   },
   { 
     id: 'edge-afortunado', 
     name: 'Afortunado', 
-    requirements: '', 
+    requirements: 'Novato', 
     effects: '+1 beni al comienzo de cada sesión.' 
   },
   { 
     id: 'edge-alcurnia', 
     name: 'Alcurnia', 
-    requirements: '', 
+    requirements: 'Novato', 
     effects: '+2 a Conocimientos Generales y red de contactos con la clase alta.' 
   },
   { 
     id: 'edge-alerta', 
     name: 'Alerta', 
-    requirements: '', 
+    requirements: 'Novato', 
     effects: '+2 a todas las tiradas de Notar.' 
   },
   { 
     id: 'edge-ambidextro', 
     name: 'Ambidextro', 
-    requirements: '', 
+    requirements: 'Novato, Agilidad d8+', 
     effects: 'Ignora penalización de -2 por mano mala.' 
   },
   { 
     id: 'edge-amenazador', 
     name: 'Amenazador', 
-    requirements: '', 
+    requirements: 'Novato, Canalla, Despiadado, Feo o Sanguinario', 
     effects: '+2 a Intimidar.' 
   },
   { 
     id: 'edge-animar', 
     name: 'Animar', 
-    requirements: '', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: 'Eliminas los estados distraído y vulnerable al realizar un truco con éxito' 
   },
   { 
     id: 'edge-ardor', 
     name: 'Ardor', 
-    requirements: '', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: '+2 cuando usas un beni para repetir tirada de rasgo.' 
   },
   { 
     id: 'edge-arma-distintiva', 
     name: 'Arma Distintiva', 
-    requirements: '', 
+    requirements: 'Novato, Pelear d8+ o Disparar d8+', 
     effects: '+1 a Disparar o Pelear/Atletismo y +1 a Parada usando un arma específica.' 
   },
   { 
     id: 'edge-arma-distintiva-mejorada', 
     name: 'Arma Distintiva Mejorada', 
-    requirements: '', 
+    requirements: 'Experimentado, Arma Distintiva', 
     effects: '+2 a Disparar/Pelear/Atletismo y +2 a Parada con un arma específica.' 
   },
   { 
     id: 'edge-artifice', 
     name: 'Artífice', 
-    requirements: '', 
+    requirements: 'Experimentado, Trasfondo Arcano', 
     effects: 'Permite crear artefactos y reliquias.' 
   },
   { 
     id: 'edge-artista-marcial', 
     name: 'Artista Marcial', 
-    requirements: '', 
+    requirements: 'Novato, Pelear d6+', 
     effects: 'Siempre se te considera armado; añades +1d4 al daño de tus ataques desarmados de Pelear (o lo mejoras en un nivel de dado) y +1 a Pelear desarmado.' 
   },
   { 
     id: 'edge-artista-marcial-mejorado', 
     name: 'Artista Marcial Mejorado', 
-    requirements: '', 
+    requirements: 'Experimentado, Artista Marcial', 
     effects: 'Mejoras tu nivel de daño desarmado en un nivel de dado extra y +2 a Pelear desarmado' 
   },
   { 
     id: 'edge-as', 
     name: 'As', 
-    requirements: '', 
+    requirements: 'Novato, Agilidad d8+', 
     effects: 'Puedes gastar benis en absorber las heridas que sufra tu vehículo e ignoras hasta dos puntos de penalizaciones.' 
   },
   { 
     id: 'edge-asesino', 
     name: 'Asesino', 
-    requirements: '', 
+    requirements: 'Novato, Agilidad d8+, Pelear d6+, Sigilo d8+', 
     effects: '+2 al daño contra oponentes vulnerables o cuando tienes superioridad.' 
   },
   { 
     id: 'edge-ataque-repentino', 
     name: 'Ataque Repentino', 
-    requirements: '', 
+    requirements: 'Novato, Agilidad d8+', 
     effects: 'Ataque gratuito una vez por turno cuando un enemigo entre dentro de tu alcance.' 
   },
   { 
     id: 'edge-ataque-repentino-mejorado', 
     name: 'Ataque Repentino Mejorado', 
-    requirements: '', 
+    requirements: 'Heroico, Ataque Repentino', 
     effects: 'Como Ataque Repentino, pero con hasta tres oponentes distintos por turno.' 
   },
   { 
     id: 'edge-atractivo', 
     name: 'Atractivo', 
-    requirements: '', 
+    requirements: 'Novato, Vigor d6+', 
     effects: '+1 a Persuadir e Interpretar.' 
   },
   { 
     id: 'edge-muy-atractivo', 
     name: 'Muy Atractivo', 
-    requirements: '', 
+    requirements: 'Novato, Atractivo', 
     effects: '+2 a Persuadir e Interpretar.' 
   },
   { 
     id: 'edge-ayudante', 
     name: 'Ayudante', 
-    requirements: '', 
+    requirements: 'Legendario', 
     effects: 'Tienes un seguidor que también es Comodín.' 
   },
   { 
     id: 'edge-barrido', 
     name: 'Barrido', 
-    requirements: '', 
+    requirements: 'Novato, Fuerza d8+, Pelear d8+', 
     effects: '1/turno, Pelear con -2 contra todos los objetivos dentro del Alcance del arma.' 
   },
   { 
     id: 'edge-barrido-mejorado', 
     name: 'Barrido Mejorado', 
-    requirements: '', 
+    requirements: 'Veterano, Barrido', 
     effects: 'Ignoras la penalización de -2 al hacer un barrido.' 
   },
   { 
     id: 'edge-bestia', 
     name: 'Bestia', 
-    requirements: '', 
+    requirements: 'Novato, Fuerza d6+, Vigor d6+', 
     effects: 'Usas Fuerza con Atletismo (incluyendo para resistirte). Aumentas el alcance de armas arrojadizas en un paso.' 
   },
   { 
     id: 'edge-bloqueo', 
     name: 'Bloqueo', 
-    requirements: '', 
+    requirements: 'Experimentado, Pelear d8+', 
     effects: '+1 a Parada; ignora un punto de núm. adversarios.' 
   },
   { 
     id: 'edge-bloqueo-mejorado', 
     name: 'Bloqueo Mejorado', 
-    requirements: 'Bloqueo', 
+    requirements: 'Veterano, Bloqueo', 
     effects: '+2 a Parada; ignora dos puntos de núm. adversarios.' 
   },
   { 
     id: 'edge-calculador', 
     name: 'Calculador', 
-    requirements: '', 
+    requirements: 'Novato, Astucia d8+', 
     effects: 'Ignoras hasta dos puntos de penalización en una sola acción con una carta de acción de 5 o menos.' 
   },
   { 
     id: 'edge-callejear', 
     name: 'Callejear', 
-    requirements: '', 
+    requirements: 'Novato, Astucia d6+', 
     effects: '+2 a Conocimientos Generales y red de contactos con elementos criminales.' 
   },
   { 
     id: 'edge-campeon-consagrado', 
     name: 'Campeón Consagrado (o Impío)', 
-    requirements: '', 
+    requirements: 'Novato, Espíritu d8+, Pelear d6+', 
     effects: '+2 al daño contra criaturas malignas (o benignas) sobrenaturales.' 
   },
   { 
     id: 'edge-canalizacion', 
     name: 'Canalización', 
-    requirements: '', 
+    requirements: 'Experimentado, Trasfondo Arcano', 
     effects: 'Reduce el coste en PP de un poder en uno si se obtiene un aumento al activarlo.' 
   },
   { 
     id: 'edge-carismatico', 
     name: 'Carismático', 
-    requirements: '', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: 'Puedes repetir una vez las tiradas de Persuadir.' 
   },
   { 
     id: 'edge-chi', 
     name: 'Chi', 
-    requirements: '', 
+    requirements: 'Veterano, Artista Marcial Mejorado', 
     effects: '1 vez por combate puedes repetir un ataque desarmado fallido, forzar a un oponente a repetir una tirada de ataque o añadir +1d6 a un ataque desarmado exitoso.' 
   },
   { 
     id: 'edge-con-un-par', 
     name: 'Con un Par', 
-    requirements: '', 
+    requirements: 'Novato, Agilidad d8+', 
     effects: 'Haces un ataque adicional de Pelear con el arma de la mano mala sin penalización por múltiples acciones.' 
   },
   { 
     id: 'edge-concentracion', 
     name: 'Concentración', 
-    requirements: '', 
+    requirements: 'Experimentado', 
     effects: 'Dobla la duración base de los poderes no instantáneos.' 
   },
   { 
     id: 'edge-conexiones', 
     name: 'Conexiones', 
-    requirements: '', 
+    requirements: 'Novato', 
     effects: 'Una vez por sesión, tus contactos te proporcionan ayuda o favores.' 
   },
   { 
     id: 'edge-contraataque', 
     name: 'Contraataque', 
-    requirements: '', 
+    requirements: 'Experimentado, Pelear d8+', 
     effects: 'Ataque gratuito cuando un enemigo adyacente falla un ataque de Pelear.' 
   },
   { 
     id: 'edge-contraataque-mejorado', 
     name: 'Contraataque Mejorado', 
-    requirements: 'Contraataque', 
+    requirements: 'Veterano, Contraataque', 
     effects: 'Como contraataque, pero hasta 3 adversarios por ronda.' 
   },
   { 
     id: 'edge-coraje-liquido', 
     name: 'Coraje Líquido', 
-    requirements: '', 
+    requirements: 'Novato, Vigor d8+', 
     effects: 'El alcohol aumenta tu VIG en un nivel de dado y te permite ignorar un punto de penalización por heridas. -1 a Agilidad, Astucia y habilidades asociadas.' 
   },
   { 
     id: 'edge-curacion-rapida', 
     name: 'Curación Rápida', 
-    requirements: '', 
+    requirements: 'Novato, Vigor d8+', 
     effects: '+2 a Vigor en tiradas de curación natural. Curación natural cada 3 días en vez de cada 5.' 
   },
   { 
     id: 'edge-curandero', 
     name: 'Curandero', 
-    requirements: '', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: '+2 a las tiradas para curar, sean de carácter mágico o mundano.' 
   },
   { 
     id: 'edge-demagogo', 
     name: 'Demagogo', 
-    requirements: '', 
+    requirements: 'Experimentado, Espíritu d8+', 
     effects: 'Una vez por turno, afectas a todos los oponentes en una plantilla de área mediana con Provocar o Intimidar.' 
   },
   { 
     id: 'edge-dificil-de-matar', 
     name: 'Difícil de Matar', 
-    requirements: '', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: 'Ignoras penalizaciones por heridas al tirar Vigor para evitar el desangramiento.' 
   },
   { 
     id: 'edge-aun-mas-dificil-de-matar', 
     name: 'Aún más difícil de matar', 
-    requirements: 'Difícil de Matar', 
+    requirements: 'Veterano, Difícil de Matar', 
     effects: 'Tira un dado cuando vayas a morir; con par, quedas incapacitado y sobrevives de algún modo.' 
   },
   { 
     id: 'edge-disparo-doble', 
     name: 'Disparo Doble', 
-    requirements: '', 
+    requirements: 'Experimentado, Disparar d6+', 
     effects: '+1 a dar y daño cuando disparas con CdF 1.' 
   },
   { 
     id: 'edge-disparo-mortal', 
     name: 'Disparo Mortal', 
-    requirements: '', 
+    requirements: 'Novato, Atletismo d8+ o Disparar d8+', 
     effects: 'Cuando recibes un joker, doble daño del primer ataque de Disparar o Atletismo (lanzar).' 
   },
   { 
     id: 'edge-disparo-rapido', 
     name: 'Disparo Rápido', 
-    requirements: '', 
+    requirements: 'Experimentado, Disparar d6+', 
     effects: 'Mejoras la CdF en 1 de un único ataque de Disparar una vez por turno.' 
   },
   { 
     id: 'edge-disparo-rapido-mejorado', 
     name: 'Disparo Rápido Mejorado', 
-    requirements: 'Disparo Rápido', 
+    requirements: 'Veterano, Disparo Rápido', 
     effects: 'Mejoras la CdF en 1 de dos ataques de Disparar distintos por turno.' 
   },
   { 
     id: 'edge-drenar-el-alma', 
     name: 'Drenar el Alma', 
-    requirements: '', 
+    requirements: 'Experimentado, Trasfondo Arcano, Habilidad Arcana d10+', 
     effects: 'Sacrificas un nivel de fatiga y recibes 5 PP.' 
   },
   { 
     id: 'edge-erudito', 
     name: 'Erudito', 
-    requirements: '', 
+    requirements: 'Novato, Investigar d8+', 
     effects: '+2 a una habilidad de “conocimiento”.' 
   },
   { 
     id: 'edge-esfuerzo-extra', 
     name: 'Esfuerzo Extra', 
-    requirements: '', 
+    requirements: 'Experimentado, Trasfondo Arcano (Dotado), Control d6+', 
     effects: 'Puedes gastar 1 PP (para ganar +1) o 3 PP (para ganar +2) y mejorar una tirada de Control que no sea pifia.' 
   },
   { 
     id: 'edge-esquiva', 
     name: 'Esquiva', 
-    requirements: '', 
+    requirements: 'Experimentado, Agilidad d8+', 
     effects: '-2 a ser alcanzado por ataques a distancia.' 
   },
   { 
     id: 'edge-esquiva-mejorada', 
     name: 'Esquiva Mejorada', 
-    requirements: '', 
+    requirements: 'Experimentado, Esquiva', 
     effects: '+2 a las tiradas para evadir efectos de área.' 
   },
   { 
     id: 'edge-experto', 
     name: 'Experto', 
-    requirements: '', 
+    requirements: 'Legendario, Profesional en rasgo', 
     effects: 'Aumenta el rasgo en un segundo punto.' 
   },
   { 
     id: 'edge-famoso', 
     name: 'Famoso', 
-    requirements: '', 
+    requirements: 'Novato', 
     effects: '+1 a Persuadir si te reconocen (Conocimientos Generales), paga doble al usar Interpretar.' 
   },
   { 
     id: 'edge-muy-famoso', 
     name: 'Muy Famoso', 
-    requirements: '', 
+    requirements: 'Experimentado, Famoso', 
     effects: '+2 a Persuadir si te reconocen (Conocimientos Generales), paga x5 al usar Interpretar.' 
   },
   { 
     id: 'edge-fervor', 
     name: 'Fervor', 
-    requirements: '', 
+    requirements: 'Veterano, Mando, Espíritu d8+', 
     effects: '+1 a las tiradas de Pelear de los Extras.' 
   },
   { 
     id: 'edge-finta', 
     name: 'Finta', 
-    requirements: '', 
+    requirements: 'Novato, Pelear d8+', 
     effects: 'Cuando haces trucos con Pelear, se resisten con Astucia en vez de Agilidad.' 
   },
   { 
     id: 'edge-fornido', 
     name: 'Fornido', 
-    requirements: '', 
+    requirements: 'Novato, Fuerza d6+, Vigor d6+', 
     effects: '+1 a Tamaño (y Dureza). Tratas la FUEMín como un nivel de dado menos. Tratas la FUE como un nivel más para carga.' 
   },
   { 
     id: 'edge-frenesi', 
     name: 'Frenesí', 
-    requirements: '', 
+    requirements: 'Experimentado, Pelear d8+', 
     effects: 'Tiras un segundo dado de Pelear en un ataque c/c por turno.' 
   },
   { 
     id: 'edge-frenesi-mejorado', 
     name: 'Frenesí Mejorado', 
-    requirements: '', 
+    requirements: 'Veterano, Frenesí', 
     effects: 'Tiras un segundo dado de Pelear en dos ataques c/c por turno distintos.' 
   },
   { 
     id: 'edge-fuerza-de-voluntad', 
     name: 'Fuerza de Voluntad', 
-    requirements: '', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: '+2 a Astucia y Espíritu contra trucos.' 
   },
   { 
     id: 'edge-fuga', 
     name: 'Fuga', 
-    requirements: '', 
+    requirements: 'Novato, Agilidad d8+', 
     effects: 'Evitas el ataque gratuito de un oponente al huir de un combate c/c.' 
   },
   { 
     id: 'edge-fuga-mejorada', 
     name: 'Fuga Mejorada', 
-    requirements: '', 
+    requirements: 'Experimentado, Fuga', 
     effects: 'Como Fuga, pero hasta tres oponentes distintos.' 
   },
   { 
     id: 'edge-golpe-poderoso', 
     name: 'Golpe Poderoso', 
-    requirements: '', 
+    requirements: 'Novato, Pelear d8+', 
     effects: 'Cuando recibes un joker, doble daño del primer ataque de Pelear.' 
   },
   { 
     id: 'edge-gorila', 
     name: 'Gorila', 
-    requirements: '', 
+    requirements: 'Experimentado, Matón', 
     effects: '+1 Dureza, aumenta el daño desarmado en un nivel de dado extra.' 
   },
   { 
     id: 'edge-guerrero-impio-sagrado', 
     name: 'Guerrero Impío/Sagrado', 
-    requirements: '', 
+    requirements: 'Experimentado, Trasfondo Arcano (Milagros), Fe d6+', 
     effects: 'Gasta 1-4 PP para ganar esa misma cantidad como bonificación a una tirada de absorción.' 
   },
   { 
     id: 'edge-hombre-de-recursos', 
     name: 'Hombre de Recursos', 
-    requirements: '', 
+    requirements: 'Novato, Astucia d10+', 
     effects: 'Una tirada de Astucia te otorga una habilidad a d4 (d6 con aumento).' 
   },
   { 
     id: 'edge-hueso-duro-de-roer', 
     name: 'Hueso Duro de Roer', 
-    requirements: '', 
+    requirements: 'Legendario, Vigor d8+', 
     effects: 'Aguantas cuatro heridas antes de quedar incapacitado.' 
   },
   { 
     id: 'edge-hueso-muy-duro-de-roer', 
     name: 'Hueso Muy Duro de Roer', 
-    requirements: '', 
+    requirements: 'Legendario, Hueso Duro de Roer, Vigor d12+', 
     effects: 'Aguantas cinco heridas antes de quedar incapacitado.' 
   },
   { 
     id: 'edge-humillar', 
     name: 'Humillar', 
-    requirements: '', 
+    requirements: 'Novato, Provocar d8+', 
     effects: 'Puedes repetir una vez las tiradas de Provocar.' 
   },
   { 
     id: 'edge-improvisacion', 
     name: 'Improvisación', 
-    requirements: '', 
+    requirements: 'Experimentado, Astucia d6+', 
     effects: 'Ignoras penalizaciones al usar armas improvisadas.' 
   },
   { 
     id: 'edge-inspiracion', 
     name: 'Inspiración', 
-    requirements: '', 
+    requirements: 'Experimentado, Mando', 
     effects: 'Una vez por turno, haces un apoyo a un rasgo específico de todos los aliados dentro del radio de mando.' 
   },
   { 
     id: 'edge-instinto-asesino', 
     name: 'Instinto Asesino', 
-    requirements: '', 
+    requirements: 'Experimentado', 
     effects: 'Puedes repetir una vez las tiradas opuestas que tú inicies.' 
   },
   { 
     id: 'edge-inventor', 
     name: 'Inventor', 
-    requirements: '', 
+    requirements: 'Experimentado, Trasfondo Arcano (Ciencia Extraña), Ciencia Extraña d6+', 
     effects: 'Gasta 3 PP para crear un artefacto que replique otro poder.' 
   },
   { 
     id: 'edge-investigador', 
     name: 'Investigador', 
-    requirements: '', 
+    requirements: 'Novato, Astucia d8+, Investigar d8+', 
     effects: '+2 a Investigar y ciertos tipos de tiradas de Notar.' 
   },
   { 
     id: 'edge-kid-dos-pistolas', 
     name: 'Kid Dos Pistolas', 
-    requirements: '', 
+    requirements: 'Novato, Agilidad d8+', 
     effects: 'Haces un ataque adicional de Disparar con el arma de la mano mala sin penalización por múltiples acciones.' 
   },
   { 
     id: 'edge-ladron', 
     name: 'Ladrón', 
-    requirements: '', 
+    requirements: 'Novato, Agilidad d8+, Sigilo d6+, Latrocinio d6+', 
     effects: '+1 a Latrocinio, +1 a Atletismo (trepar) y Sigilo en entornos urbanos.' 
   },
   { 
     id: 'edge-lenador', 
     name: 'Leñador', 
-    requirements: '', 
+    requirements: 'Novato, Espíritu d6+, Supervivencia d8+', 
     effects: '+2 a Supervivencia y +2 a Sigilo en entornos naturales.' 
   },
   { 
     id: 'edge-lider-nato', 
     name: 'Líder Nato', 
-    requirements: '', 
+    requirements: 'Veterano, Mando, Espíritu d8+', 
     effects: 'Las ventajas de Liderazgo que solo afectan a Extras pasan a afectar también a Comodines.' 
   },
   { 
     id: 'edge-linguista', 
     name: 'Lingüista', 
-    requirements: '', 
+    requirements: 'Novato, Astucia d6+', 
     effects: 'Tienes 1/2 dado de Astucia habilidades de Idioma gratis a d6.' 
   },
   { 
     id: 'edge-maestro', 
     name: 'Maestro', 
-    requirements: '', 
+    requirements: 'Legendario, Experto (rasgo)', 
     effects: 'Aumenta el dado salvaje a d10 con ese rasgo' 
   },
   { 
     id: 'edge-maestro-de-armas', 
     name: 'Maestro de Armas', 
-    requirements: '', 
+    requirements: 'Legendario, Pelear d12+', 
     effects: 'Aumenta la Parada en un punto y bonificación de daño c/c a d8.' 
   },
   { 
     id: 'edge-maestro-de-armas-mejorado', 
     name: 'Maestro de Armas Mejorado', 
-    requirements: 'Maestro de Armas', 
+    requirements: 'Legendario, Maestro de Armas', 
     effects: 'Aumenta la Parada en dos puntos y bonificación de daño c/c a d10 (sustituye a Maestro de Armas).' 
   },
   { 
     id: 'edge-mago', 
     name: 'Mago', 
-    requirements: '', 
+    requirements: 'Experimentado, Trasfondo Arcano (Magia), Hechicería d6+', 
     effects: 'Gastas 1 PP para cambiar el ornamento de un hechizo.' 
   },
   { 
     id: 'edge-mandibula-de-hierro', 
     name: 'Mandíbula de Hierro', 
-    requirements: '', 
+    requirements: 'Novato, Vigor d8+', 
     effects: '+2 a las tiradas de absorción y contra golpes incapacitadores.' 
   },
   { 
     id: 'edge-mando', 
     name: 'Mando', 
-    requirements: '', 
+    requirements: 'Novato, Astucia d6+', 
     effects: '+1 a las tiradas de Espíritu de los Extras para recuperarse del aturdimiento y +1 a Vigor para recuperarse de la conmoción.' 
   },
   { 
     id: 'edge-presencia-de-mando', 
     name: 'Presencia de Mando', 
-    requirements: '', 
+    requirements: 'Experimentado, Mando', 
     effects: 'Aumenta el radio de mando a 10 pasos/20 metros.' 
   },
   { 
     id: 'edge-manos-firmes', 
     name: 'Manos Firmes', 
-    requirements: '', 
+    requirements: 'Novato, Agilidad d8+', 
     effects: 'Ignoras la penalización por plataforma inestable.' 
   },
   { 
     id: 'edge-mantened-la-formacion', 
     name: '¡Mantened la Formación!', 
-    requirements: '', 
+    requirements: 'Experimentado, Mando, Astucia d8+', 
     effects: '+1 a la Dureza de los Extras.' 
   },
   { 
     id: 'edge-matagigantes', 
     name: 'Matagigantes', 
-    requirements: 'Novato', 
+    requirements: 'Veterano', 
     effects: '+1d6 al daño contra criaturas con tres puntos de Tamaño o más superior al tuyo.' 
   },
   { 
     id: 'edge-maton', 
     name: 'Matón', 
-    requirements: 'Novato, Fuerza d6+, Vigor d6+', 
+    requirements: 'Novato, Fuerza d8+, Vigor d8+', 
     effects: '+1 a Dureza; daño desarmado +d4 (o un nivel de dado más si se combina con garras o Artista Marcial).' 
   },
   { 
     id: 'edge-mcgyver', 
     name: 'McGyver', 
-    requirements: 'Novato, Astucia d6+, Reparar d6+', 
+    requirements: 'Novato, Astucia d6+, Reparar d6+, Notar d8+', 
     effects: 'Creas con facilidad artilugios improvisados.' 
   },
   { 
     id: 'edge-mentalista', 
     name: 'Mentalista', 
-    requirements: 'Novato, Trasfondo arcano (Psiónica), Astucia d8+, Psiónica d6+', 
+    requirements: 'Experimentado, Trasfondo Arcano (Psiónica), Psiónica d6+', 
     effects: '+2 a las tiradas opuestas de Psiónica.' 
   },
   { 
     id: 'edge-mr-arreglalotodo', 
     name: 'Mr. Arreglalotodo', 
-    requirements: 'Novato, Astucia d10+, Reparar d8+', 
+    requirements: 'Novato, Reparar d8+', 
     effects: '+2 a Reparar, tardas la mitad del tiempo normal con aumento.' 
   },
   { 
@@ -1320,19 +1320,19 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-ofuscar', 
     name: 'Ofuscar', 
-    requirements: 'Novato, Astucia d6+', 
+    requirements: 'Novato, Provocar d6+', 
     effects: 'Centras en ti la atención de un adversario.' 
   },
   { 
     id: 'edge-osado', 
     name: 'Osado', 
-    requirements: 'Novato, Espíritu d8+', 
+    requirements: 'Novato, Espíritu d6+', 
     effects: '+2 a tiradas de miedo y restas 2 en la tabla de Terror.' 
   },
   { 
     id: 'edge-parkour', 
     name: 'Parkour', 
-    requirements: 'Novato, Agilidad d8+, Atletismo d6+', 
+    requirements: 'Novato, Agilidad d8+', 
     effects: 'Ignoras terreno difícil y +2 a Atletismo en persecuciones a pie.' 
   },
   { 
@@ -1344,8 +1344,14 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-profesional', 
     name: 'Profesional', 
-    requirements: 'Legendario, Habilidad d12', 
+    requirements: 'Legendario, máximo en rasgo', 
     effects: 'Aumenta el rasgo a d12+1.' 
+  },
+  { 
+    id: 'edge-punteria', 
+    name: 'Puntería', 
+    requirements: 'Experimentado, Atletismo d8+ o Disparar d8+', 
+    effects: 'Si no se mueve durante su turno y no emplea una Cadencia de Fuego superior a 1 como primera acción, puede añadir +1 a su tirada de Atletismo (lanzar) o Disparar, o ignorar hasta dos puntos de penalización.' 
   },
   { 
     id: 'edge-puntos-de-poder', 
@@ -1362,7 +1368,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-recuperacion-rapida', 
     name: 'Recuperación Rápida', 
-    requirements: 'Espíritu d8+, Trasfondo Arcano', 
+    requirements: 'Experimentado, Espíritu d6+, Trasfondo Arcano', 
     effects: 'Recuperas 10 PP/hora.' 
   },
   { 
@@ -1374,13 +1380,13 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-reflejos-de-combate', 
     name: 'Reflejos de Combate', 
-    requirements: 'Curtido', 
+    requirements: 'Experimentado', 
     effects: '+2 a las tiradas para recuperarte del aturdimiento y la conmoción.' 
   },
   { 
     id: 'edge-replicar', 
     name: 'Replicar', 
-    requirements: 'Novato, Astucia d8+', 
+    requirements: 'Novato, Provocar d6+', 
     effects: 'Resistirte con aumento a un truco de Provocar o Intimidar deja distraído al atacante.' 
   },
   { 
@@ -1398,7 +1404,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-responsable', 
     name: 'Responsable', 
-    requirements: 'Novato, Espíritu d6+', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: 'Puedes repetir una vez las tiradas de apoyo.' 
   },
   { 
@@ -1416,7 +1422,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-rock-n-roll', 
     name: '¡Rock’n’roll!', 
-    requirements: 'Novato, Disparar d8+', 
+    requirements: 'Experimentado, Disparar d8+', 
     effects: 'Ignoras la penalización por retroceso cuando disparas armas con CdF 2 o superior si no te mueves.' 
   },
   { 
@@ -1440,7 +1446,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-sin-piedad', 
     name: 'Sin Piedad', 
-    requirements: 'Novato', 
+    requirements: 'Experimentado', 
     effects: '+2 al total de daño si usas un beni para repetir una tirada de daño.' 
   },
   { 
@@ -1452,13 +1458,13 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-subidon-de-poder', 
     name: 'Subidón de Poder', 
-    requirements: 'Novato, Trasfondo Arcano', 
+    requirements: 'Novato, Trasfondo Arcano, Habilidad Arcana d8+', 
     effects: 'Recuperas 10 PP cuando recibes un joker en combate.' 
   },
   { 
     id: 'edge-tactico', 
     name: 'Táctico', 
-    requirements: 'Curtido, Astucia d8+, Mando', 
+    requirements: 'Experimentado, Mando, Astucia d8+, Tácticas d6+', 
     effects: 'Saca una carta de acción extra en cada turno, puedes asignarla a un Extra aliado en el radio de mando.' 
   },
   { 
@@ -1470,31 +1476,31 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-temple', 
     name: 'Temple', 
-    requirements: 'Novato, Espíritu d8+', 
+    requirements: 'Experimentado, Astucia d8+', 
     effects: 'Sacas una carta de acción adicional por ronda y eliges cuál usar.' 
   },
   { 
     id: 'edge-temple-mejorado', 
     name: 'Temple Mejorado', 
-    requirements: 'Curtido, Temple', 
+    requirements: 'Experimentado, Temple', 
     effects: 'Sacas dos cartas de acción adicional por ronda y eliges cuál usar.' 
   },
   { 
     id: 'edge-vinculo', 
     name: 'Vínculo', 
-    requirements: 'Novato', 
+    requirements: 'Novato, especial', 
     effects: 'Puedes regalar tus benis a otros.' 
   },
   { 
     id: 'edge-vinculo-animal', 
     name: 'Vínculo Animal', 
-    requirements: 'Novato', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: 'Puedes usar benis en los animales que están bajo tu control.' 
   },
   { 
     id: 'edge-voluntad-de-hierro', 
     name: 'Voluntad de Hierro', 
-    requirements: 'Novato, Espíritu d8+', 
+    requirements: 'Novato, Fuerza de Voluntad', 
     effects: '+2 a Astucia y Espíritu a la hora de resistir poderes y recuperarte de ellos.',
     situationalModifiers: [
       { value: 2, note: 'resistir/recuperar poderes', target: 'Astucia' },
@@ -1504,7 +1510,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-voz-potente', 
     name: 'Voz Potente', 
-    requirements: 'Novato', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: 'Una vez por turno, añades un segundo dado de rasgo a una tirada de apoyo de Persuadir o Interpretar.' 
   },
   { 
@@ -1516,7 +1522,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-muy-afortunado', 
     name: 'Muy afortunado', 
-    requirements: '', 
+    requirements: 'Novato, Afortunado', 
     effects: '+2 benis al comienzo de cada sesión.' 
   },
   { 

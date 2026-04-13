@@ -2399,7 +2399,7 @@ function renderStep(
       const currentPreview = selectedHindranceData.find(h => h.type === previewHindranceType) || selectedHindranceData[0];
 
       return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-40">
           <div className="flex flex-wrap gap-2">
               {[...char.hindrances].sort(sortByName).map((h) => (
                 <div key={h.instanceId} className="px-4 py-2 bg-red-50 border border-red-100 text-red-700 rounded-full flex items-center gap-2 text-sm font-bold shadow-sm">
@@ -2825,7 +2825,7 @@ function renderStep(
       const alreadyHasEdge = previewEdgeName === 'Erudito' ? false : hasEdge(char, previewEdgeName);
 
       return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-40">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 flex items-center gap-3 text-stone-600">
               <Shield size={20} className="text-emerald-500" />
@@ -2850,7 +2850,7 @@ function renderStep(
             </div>
           </div>
 
-          <div className="bg-stone-50 p-6 rounded-2xl border border-stone-200 space-y-4">
+          <div className="bg-stone-50 p-6 pb-40 rounded-2xl border border-stone-200 space-y-4">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <label className="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-1">Seleccionar Ventaja</label>
@@ -4306,7 +4306,7 @@ function CharacterSheetView({
                 <p className="text-stone-500 font-medium">Elige cómo quieres mejorar a tu personaje.</p>
               </div>
 
-              <div className="flex-1 overflow-y-auto pr-2 space-y-8 overscroll-contain">
+              <div className="flex-1 overflow-y-auto pr-2 pb-24 space-y-8 overscroll-contain">
                 {!advanceType ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div 
