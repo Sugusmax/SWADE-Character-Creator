@@ -757,13 +757,19 @@ export const EDGES: Edge[] = [
     id: 'edge-alcurnia', 
     name: 'Alcurnia', 
     requirements: 'Novato', 
-    effects: '+2 a Conocimientos Generales y red de contactos con la clase alta.' 
+    effects: '+2 a Conocimientos Generales y red de contactos con la clase alta.',
+    situationalModifiers: [
+      { value: 2, note: 'clase alta/realeza', target: 'Conocimientos Generales' }
+    ]
   },
   { 
     id: 'edge-alerta', 
     name: 'Alerta', 
     requirements: 'Novato', 
-    effects: '+2 a todas las tiradas de Notar.' 
+    effects: '+2 a todas las tiradas de Notar.',
+    modifiers: [
+      { name: 'Notar', value: 2 }
+    ]
   },
   { 
     id: 'edge-ambidextro', 
@@ -775,7 +781,10 @@ export const EDGES: Edge[] = [
     id: 'edge-amenazador', 
     name: 'Amenazador', 
     requirements: 'Novato, Canalla, Despiadado, Feo o Sanguinario', 
-    effects: '+2 a Intimidar.' 
+    effects: '+2 a Intimidar.',
+    modifiers: [
+      { name: 'Intimidar', value: 2 }
+    ]
   },
   { 
     id: 'edge-animar', 
@@ -811,19 +820,25 @@ export const EDGES: Edge[] = [
     id: 'edge-artista-marcial', 
     name: 'Artista Marcial', 
     requirements: 'Novato, Pelear d6+', 
-    effects: 'Siempre se te considera armado; añades +1d4 al daño de tus ataques desarmados de Pelear (o lo mejoras en un nivel de dado) y +1 a Pelear desarmado.' 
+    effects: 'Siempre se te considera armado; añades +1d4 al daño de tus ataques desarmados de Pelear (o lo mejoras en un nivel de dado) y +1 a Pelear desarmado.',
+    situationalModifiers: [
+      { value: 1, note: 'desarmado', target: 'Pelear' }
+    ]
   },
   { 
     id: 'edge-artista-marcial-mejorado', 
     name: 'Artista Marcial Mejorado', 
     requirements: 'Experimentado, Artista Marcial', 
-    effects: 'Mejoras tu nivel de daño desarmado en un nivel de dado extra y +2 a Pelear desarmado' 
+    effects: 'Mejoras tu nivel de daño desarmado en un nivel de dado extra y +2 a Pelear desarmado',
+    situationalModifiers: [
+      { value: 2, note: 'desarmado', target: 'Pelear' }
+    ]
   },
   { 
     id: 'edge-as', 
     name: 'As', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Puedes gastar benis en absorber las heridas que sufra tu vehículo e ignoras hasta dos puntos de penalizaciones.' 
+    effects: 'Ignora hasta dos puntos de penalizaciones a las tiradas de Conducir, Navegar y Pilotar, además de poder gastar tus benis para realizar tiradas de absorción con cualquier vehículo a su mando, usando la habilidad correspondiente en vez de Vigor.' 
   },
   { 
     id: 'edge-asesino', 
@@ -883,13 +898,19 @@ export const EDGES: Edge[] = [
     id: 'edge-bloqueo', 
     name: 'Bloqueo', 
     requirements: 'Experimentado, Pelear d8+', 
-    effects: '+1 a Parada; ignora un punto de núm. adversarios.' 
+    effects: '+1 a Parada. Ignoras un punto de número de adversarios cuerpo a cuerpo.',
+    modifiers: [
+      { name: 'Bloqueo', value: 1 }
+    ]
   },
   { 
     id: 'edge-bloqueo-mejorado', 
     name: 'Bloqueo Mejorado', 
     requirements: 'Veterano, Bloqueo', 
-    effects: '+2 a Parada; ignora dos puntos de núm. adversarios.' 
+    effects: '+2 a Parada. Ignoras dos puntos de número de adversarios cuerpo a cuerpo.',
+    modifiers: [
+      { name: 'Bloqueo Mejorado', value: 2 }
+    ]
   },
   { 
     id: 'edge-calculador', 
@@ -904,10 +925,10 @@ export const EDGES: Edge[] = [
     effects: '+2 a Conocimientos Generales y red de contactos con elementos criminales.' 
   },
   { 
-    id: 'edge-campeon-consagrado', 
-    name: 'Campeón Consagrado (o Impío)', 
+    id: 'edge-campeon', 
+    name: 'Campeón', 
     requirements: 'Novato, Espíritu d8+, Pelear d6+', 
-    effects: '+2 al daño contra criaturas malignas (o benignas) sobrenaturales.' 
+    effects: '+2 al daño contra criaturas malignas sobrenaturales.' 
   },
   { 
     id: 'edge-canalizacion', 
@@ -1027,7 +1048,7 @@ export const EDGES: Edge[] = [
     id: 'edge-erudito', 
     name: 'Erudito', 
     requirements: 'Novato, Investigar d8+', 
-    effects: '+2 a una habilidad de “conocimiento”.' 
+    effects: '+2 a una habilidad de “conocimiento” (d8+).' 
   },
   { 
     id: 'edge-esfuerzo-extra', 
@@ -1051,19 +1072,25 @@ export const EDGES: Edge[] = [
     id: 'edge-experto', 
     name: 'Experto', 
     requirements: 'Legendario, Profesional en rasgo', 
-    effects: 'Aumenta el rasgo en un segundo punto.' 
+    effects: 'Aumenta el atributo a d12+2.' 
   },
   { 
     id: 'edge-famoso', 
     name: 'Famoso', 
     requirements: 'Novato', 
-    effects: '+1 a Persuadir si te reconocen (Conocimientos Generales), paga doble al usar Interpretar.' 
+    effects: '+1 a Persuadir si te reconocen. Paga x2 al usar Interpretar.',
+    situationalModifiers: [
+      { value: 1, note: 'si te reconocen', target: 'Persuadir' }
+    ]
   },
   { 
     id: 'edge-muy-famoso', 
     name: 'Muy Famoso', 
     requirements: 'Experimentado, Famoso', 
-    effects: '+2 a Persuadir si te reconocen (Conocimientos Generales), paga x5 al usar Interpretar.' 
+    effects: '+2 a Persuadir si te reconocen. Paga x5 al usar Interpretar.',
+    situationalModifiers: [
+      { value: 2, note: 'si te reconocen', target: 'Persuadir' }
+    ]
   },
   { 
     id: 'edge-fervor', 
@@ -1081,7 +1108,8 @@ export const EDGES: Edge[] = [
     id: 'edge-fornido', 
     name: 'Fornido', 
     requirements: 'Novato, Fuerza d6+, Vigor d6+', 
-    effects: '+1 a Tamaño (y Dureza). Tratas la FUEMín como un nivel de dado menos. Tratas la FUE como un nivel más para carga.' 
+    effects: '+1 a Tamaño (y Dureza). Tratas la FUEMín como un nivel de dado menos. Tratas la FUE como un nivel más para carga.',
+    modifiers: [{ name: 'Dureza', value: 1 }]
   },
   { 
     id: 'edge-frenesi', 
@@ -1345,7 +1373,7 @@ export const EDGES: Edge[] = [
     id: 'edge-profesional', 
     name: 'Profesional', 
     requirements: 'Legendario, máximo en rasgo', 
-    effects: 'Aumenta el rasgo a d12+1.' 
+    effects: 'Aumenta el atributo a d12+1.' 
   },
   { 
     id: 'edge-punteria', 
@@ -1521,7 +1549,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-muy-afortunado', 
-    name: 'Muy afortunado', 
+    name: 'Muy Afortunado', 
     requirements: 'Novato, Afortunado', 
     effects: '+2 benis al comienzo de cada sesión.' 
   },
