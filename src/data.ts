@@ -155,7 +155,7 @@ export const SKILLS: Omit<Skill, 'value'>[] = [
   { id: 'skill-reparar', name: 'Reparar', attribute: 'Astucia', isBasic: false, description: 'Habilidad para arreglar objetos mecánicos o tecnológicos.' },
   { id: 'skill-sigilo', name: 'Sigilo', attribute: 'Agilidad', isBasic: true, description: 'Habilidad para moverse sin ser visto ni oído.' },
   { id: 'skill-supervivencia', name: 'Supervivencia', attribute: 'Astucia', isBasic: false, description: 'Habilidad para encontrar comida, agua y refugio en la naturaleza.' },
-  { id: 'skill-tacticas', name: 'Batalla', attribute: 'Astucia', isBasic: false, description: 'Habilidad para planificar y ejecutar estrategias militares o de combate.' },
+  { id: 'skill-tacticas', name: 'Tácticas', attribute: 'Astucia', isBasic: false, description: 'Habilidad para planificar y ejecutar estrategias militares o de combate.' },
   { id: 'skill-concentracion', name: 'Concentración', attribute: 'Espíritu', isBasic: false, description: 'Habilidad para usar poderes mediante la fuerza de voluntad pura.' },
 ];
 
@@ -780,7 +780,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-amenazador', 
     name: 'Amenazador', 
-    requirements: 'Novato, Canalla, Despiadado, Feo o Sanguinario', 
+    requirements: 'Novato, Canalla o Despiadado o Feo o Sanguinario', 
     effects: '+2 a Intimidar.',
     modifiers: [
       { name: 'Intimidar', value: 2 }
@@ -1072,7 +1072,7 @@ export const EDGES: Edge[] = [
     id: 'edge-experto', 
     name: 'Experto', 
     requirements: 'Legendario, Profesional en rasgo', 
-    effects: 'Aumenta el atributo a d12+2.' 
+    effects: 'Aumenta el rasgo a d12+2.' 
   },
   { 
     id: 'edge-famoso', 
@@ -1127,7 +1127,10 @@ export const EDGES: Edge[] = [
     id: 'edge-fuerza-de-voluntad', 
     name: 'Fuerza de Voluntad', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: '+2 a Astucia y Espíritu contra trucos.' 
+    effects: '+2 a Astucia y Espíritu contra trucos.',
+    situationalModifiers: [
+      { value: 2, note: 'contra trucos', target: ['Astucia', 'Espíritu'] }
+    ]
   },
   { 
     id: 'edge-fuga', 
@@ -1151,19 +1154,23 @@ export const EDGES: Edge[] = [
     id: 'edge-gorila', 
     name: 'Gorila', 
     requirements: 'Experimentado, Matón', 
-    effects: '+1 Dureza, aumenta el daño desarmado en un nivel de dado extra.' 
+    effects: '+1 Dureza, aumenta el daño desarmado en un nivel de dado extra.',
+    modifiers: [{ name: 'Dureza', value: 2 }]
   },
   { 
     id: 'edge-guerrero-impio-sagrado', 
     name: 'Guerrero Impío/Sagrado', 
     requirements: 'Experimentado, Trasfondo Arcano (Milagros), Fe d6+', 
-    effects: 'Gasta 1-4 PP para ganar esa misma cantidad como bonificación a una tirada de absorción.' 
+    effects: 'Gasta 1-4 PP para ganar esa misma cantidad como bonificación a una tirada de absorción.',
+    situationalModifiers: [
+      { value: 0, note: '+1-4 por PP gastados (Absorción)', target: 'Vigor' }
+    ]
   },
   { 
     id: 'edge-hombre-de-recursos', 
     name: 'Hombre de Recursos', 
     requirements: 'Novato, Astucia d10+', 
-    effects: 'Una tirada de Astucia te otorga una habilidad a d4 (d6 con aumento).' 
+    effects: 'El personaje realiza una tirada de Astucia como acción tras observar el uso de esta habilidad o estudiarla en profundidad. Con un éxito, gana d4 (d6 con uno o más aumentos) en dicha habilidad hasta que la use con otra habilidad.' 
   },
   { 
     id: 'edge-hueso-duro-de-roer', 
@@ -1211,7 +1218,11 @@ export const EDGES: Edge[] = [
     id: 'edge-investigador', 
     name: 'Investigador', 
     requirements: 'Novato, Astucia d8+, Investigar d8+', 
-    effects: '+2 a Investigar y ciertos tipos de tiradas de Notar.' 
+    effects: '+2 a Investigar y ciertos tipos de tiradas de Notar.',
+    modifiers: [{ name: 'Investigar', value: 2 }],
+    situationalModifiers: [
+      { value: 2, note: 'Buscar pistas', target: 'Notar' }
+    ]
   },
   { 
     id: 'edge-kid-dos-pistolas', 
@@ -1223,13 +1234,21 @@ export const EDGES: Edge[] = [
     id: 'edge-ladron', 
     name: 'Ladrón', 
     requirements: 'Novato, Agilidad d8+, Sigilo d6+, Latrocinio d6+', 
-    effects: '+1 a Latrocinio, +1 a Atletismo (trepar) y Sigilo en entornos urbanos.' 
+    effects: '+1 a Latrocinio, +1 a Atletismo (trepar) y Sigilo en entornos urbanos.',
+    modifiers: [{ name: 'Latrocinio', value: 1 }],
+    situationalModifiers: [
+      { value: 1, note: '(trepar) Entornos urbanos', target: 'Atletismo' },
+      { value: 1, note: 'Entornos urbanos', target: 'Sigilo' }
+    ]
   },
   { 
     id: 'edge-lenador', 
     name: 'Leñador', 
     requirements: 'Novato, Espíritu d6+, Supervivencia d8+', 
-    effects: '+2 a Supervivencia y +2 a Sigilo en entornos naturales.' 
+    effects: '+2 a Supervivencia y +2 a Sigilo en entornos naturales.',
+    situationalModifiers: [
+      { value: 2, note: 'Entornos naturales', target: ['Supervivencia', 'Sigilo'] }
+    ]
   },
   { 
     id: 'edge-lider-nato', 
@@ -1246,20 +1265,22 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-maestro', 
     name: 'Maestro', 
-    requirements: 'Legendario, Experto (rasgo)', 
-    effects: 'Aumenta el dado salvaje a d10 con ese rasgo' 
+    requirements: 'Legendario, Experto en rasgo', 
+    effects: 'Aumenta el dado salvaje a d10 con ese rasgo.' 
   },
   { 
     id: 'edge-maestro-de-armas', 
     name: 'Maestro de Armas', 
     requirements: 'Legendario, Pelear d12+', 
-    effects: 'Aumenta la Parada en un punto y bonificación de daño c/c a d8.' 
+    effects: 'Aumenta la Parada en un punto y bonificación de daño c/c con aumento en Pelear a d8.',
+    modifiers: [{ name: 'Parada', value: 1 }]
   },
   { 
     id: 'edge-maestro-de-armas-mejorado', 
     name: 'Maestro de Armas Mejorado', 
     requirements: 'Legendario, Maestro de Armas', 
-    effects: 'Aumenta la Parada en dos puntos y bonificación de daño c/c a d10 (sustituye a Maestro de Armas).' 
+    effects: 'Aumenta la Parada en dos puntos y bonificación de daño c/c con aumento en Pelear a d10 (sustituye a Maestro de Armas).',
+    modifiers: [{ name: 'Parada', value: 2 }]
   },
   { 
     id: 'edge-mago', 
@@ -1271,7 +1292,10 @@ export const EDGES: Edge[] = [
     id: 'edge-mandibula-de-hierro', 
     name: 'Mandíbula de Hierro', 
     requirements: 'Novato, Vigor d8+', 
-    effects: '+2 a las tiradas de absorción y contra golpes incapacitadores.' 
+    effects: '+2 a las tiradas de absorción y contra golpes incapacitadores.',
+    situationalModifiers: [
+      { value: 2, note: 'absorber incapacitación', target: 'Vigor' }
+    ]
   },
   { 
     id: 'edge-mando', 
@@ -1307,7 +1331,8 @@ export const EDGES: Edge[] = [
     id: 'edge-maton', 
     name: 'Matón', 
     requirements: 'Novato, Fuerza d8+, Vigor d8+', 
-    effects: '+1 a Dureza; daño desarmado +d4 (o un nivel de dado más si se combina con garras o Artista Marcial).' 
+    effects: '+1 a Dureza; daño desarmado +d4 (o un nivel de dado más si se combina con garras o Artista Marcial).',
+    modifiers: [{ name: 'Dureza', value: 1 }]
   },
   { 
     id: 'edge-mcgyver', 
@@ -1319,13 +1344,17 @@ export const EDGES: Edge[] = [
     id: 'edge-mentalista', 
     name: 'Mentalista', 
     requirements: 'Experimentado, Trasfondo Arcano (Psiónica), Psiónica d6+', 
-    effects: '+2 a las tiradas opuestas de Psiónica.' 
+    effects: '+2 a las tiradas opuestas de Psiónica.',
+    situationalModifiers: [
+      { value: 2, note: 'Tiradas opuestas', target: 'Psiónica' }
+    ]
   },
   { 
     id: 'edge-mr-arreglalotodo', 
     name: 'Mr. Arreglalotodo', 
     requirements: 'Novato, Reparar d8+', 
-    effects: '+2 a Reparar, tardas la mitad del tiempo normal con aumento.' 
+    effects: '+2 a Reparar, tardas la mitad del tiempo normal con aumento.',
+    modifiers: [{ name: 'Reparar', value: 2 }]
   },
   { 
     id: 'edge-nervios-de-acero', 
@@ -1349,19 +1378,21 @@ export const EDGES: Edge[] = [
     id: 'edge-ofuscar', 
     name: 'Ofuscar', 
     requirements: 'Novato, Provocar d6+', 
-    effects: 'Centras en ti la atención de un adversario.' 
+    effects: 'Centras en ti la atención de un adversario con un truco de Provocar. El enemigo ofuscado tiene -2 a cualquier tirada para afectar a otro objetivo que no seas tú.' 
   },
   { 
     id: 'edge-osado', 
     name: 'Osado', 
     requirements: 'Novato, Espíritu d6+', 
-    effects: '+2 a tiradas de miedo y restas 2 en la tabla de Terror.' 
+    effects: '+2 a tiradas de miedo y restas 2 en la tabla de Terror.',
+    situationalModifiers: [{ value: 2, note: 'Resistir miedo', target: 'Espíritu' }]
   },
   { 
     id: 'edge-parkour', 
     name: 'Parkour', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Ignoras terreno difícil y +2 a Atletismo en persecuciones a pie.' 
+    effects: 'Ignoras terreno difícil y +2 a Atletismo en persecuciones a pie.',
+    situationalModifiers: [{ value: 2, note: 'Persiguiendo a pie', target: 'Atletismo' }]
   },
   { 
     id: 'edge-pies-ligeros', 
@@ -1373,43 +1404,47 @@ export const EDGES: Edge[] = [
     id: 'edge-profesional', 
     name: 'Profesional', 
     requirements: 'Legendario, máximo en rasgo', 
-    effects: 'Aumenta el atributo a d12+1.' 
+    effects: 'Aumenta el rasgo a d12+1.' 
   },
   { 
     id: 'edge-punteria', 
     name: 'Puntería', 
     requirements: 'Experimentado, Atletismo d8+ o Disparar d8+', 
-    effects: 'Si no se mueve durante su turno y no emplea una Cadencia de Fuego superior a 1 como primera acción, puede añadir +1 a su tirada de Atletismo (lanzar) o Disparar, o ignorar hasta dos puntos de penalización.' 
+    effects: 'Si no te mueves y no usas CdF superior a 1, ganas +1 a atacar o ignoras hasta dos puntos de penalización en el primer ataque a distancia del turno.' 
   },
   { 
     id: 'edge-puntos-de-poder', 
     name: 'Puntos de Poder', 
     requirements: 'Novato, Trasfondo Arcano', 
-    effects: '+5 PP, máximo una vez por rango.' 
+    effects: 'Ganas +5 PP, máximo 1/rango.' 
   },
   { 
     id: 'edge-rapido', 
     name: 'Rápido', 
     requirements: 'Novato, Agilidad d8+', 
-    effects: 'Tu carta de acción debe ser superior a 5.' 
+    effects: 'Si tu carta de acción es menos de 5, saca otra.' 
   },
   { 
     id: 'edge-recuperacion-rapida', 
-    name: 'Recuperación Rápida', 
+    name: 'Rec. Rápida', 
     requirements: 'Experimentado, Espíritu d6+, Trasfondo Arcano', 
     effects: 'Recuperas 10 PP/hora.' 
   },
   { 
     id: 'edge-recuperacion-rapida-mejorada', 
-    name: 'Recuperación Rápida Mejorada', 
-    requirements: 'Veterano, Recuperación Rápida', 
+    name: 'Rec. Rápida Mejorada', 
+    requirements: 'Veterano, Rec. Rápida', 
     effects: 'Recuperas 20 PP/hora.' 
   },
   { 
     id: 'edge-reflejos-de-combate', 
     name: 'Reflejos de Combate', 
     requirements: 'Experimentado', 
-    effects: '+2 a las tiradas para recuperarte del aturdimiento y la conmoción.' 
+    effects: '+2 a las tiradas para recuperarte del aturdimiento y la conmoción.',
+    situationalModifiers: [
+      { value: 2, note: 'Quitar aturdimiento', target: 'Espíritu' },
+      { value: 2, note: 'Quitar conmoción', target: 'Vigor' }
+    ]
   },
   { 
     id: 'edge-replicar', 
@@ -1419,14 +1454,14 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-resistencia-arcana', 
-    name: 'Resistencia Arcana', 
+    name: 'Resist.Arcana', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: '+2 a resistir efectos mágicos y se reduce el daño mágico en dos.' 
+    effects: '+2 a resistir efectos mágicos y se reduce el daño mágico en dos puntos.' 
   },
   { 
     id: 'edge-resistencia-arcana-mejorada', 
     name: 'Resistencia Arcana Mejorada', 
-    requirements: 'Novato, Resistencia Arcana', 
+    requirements: 'Novato, Resist.Arcana', 
     effects: '+4 a resistir efectos mágicos y se reduce el daño mágico en cuatro puntos.' 
   },
   { 
@@ -1443,7 +1478,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-asquerosamente-rico', 
-    name: 'Asquerosamente Rico', 
+    name: 'Rico, Asquerosamente', 
     requirements: 'Novato, Rico', 
     effects: 'Cinco veces los fondos iniciales y sueldo anual.' 
   },
@@ -1463,7 +1498,8 @@ export const EDGES: Edge[] = [
     id: 'edge-sentir-el-peligro', 
     name: 'Sentir el Peligro', 
     requirements: 'Novato', 
-    effects: '+2 para detectar trampas, emboscadas, etc.' 
+    effects: 'Notar (+2) para detectar emboscadas, etc.',
+    situationalModifiers: [{ value: 2, note: 'Detectar emboscadas/peligros', target: 'Notar' }]
   },
   { 
     id: 'edge-senor-de-las-bestias', 
@@ -1497,7 +1533,7 @@ export const EDGES: Edge[] = [
   },
   { 
     id: 'edge-genio-tactico', 
-    name: 'Genio Táctico', 
+    name: 'Táctico, Genio', 
     requirements: 'Veterano, Táctico', 
     effects: 'Saca y distribuye dos cartas de acción extras en vez de una.' 
   },
@@ -1516,7 +1552,7 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-vinculo', 
     name: 'Vínculo', 
-    requirements: 'Novato, especial', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: 'Puedes regalar tus benis a otros.' 
   },
   { 
@@ -1528,18 +1564,18 @@ export const EDGES: Edge[] = [
   { 
     id: 'edge-voluntad-de-hierro', 
     name: 'Voluntad de Hierro', 
-    requirements: 'Novato, Fuerza de Voluntad', 
+    requirements: 'Novato, Espíritu d8+', 
     effects: '+2 a Astucia y Espíritu a la hora de resistir poderes y recuperarte de ellos.',
     situationalModifiers: [
-      { value: 2, note: 'resistir/recuperar poderes', target: 'Astucia' },
-      { value: 2, note: 'resistir/recuperar poderes', target: 'Espíritu' }
+      { value: 2, note: 'Resistir/Recuperarse de poderes', target: 'Astucia' },
+      { value: 2, note: 'Resistir/Recuperarse de poderes', target: 'Espíritu' }
     ]
   },
   { 
     id: 'edge-voz-potente', 
     name: 'Voz Potente', 
     requirements: 'Novato, Espíritu d8+', 
-    effects: 'Una vez por turno, añades un segundo dado de rasgo a una tirada de apoyo de Persuadir o Interpretar.' 
+    effects: '1/turno, añades un segundo dado de rasgo a una tirada de apoyo de Persuadir o Interpretar.' 
   },
   { 
     id: 'edge-voz-muy-potente', 
