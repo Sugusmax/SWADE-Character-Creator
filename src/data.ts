@@ -759,7 +759,7 @@ export const EDGES: Edge[] = [
     requirements: 'Novato', 
     effects: '+2 a Conocimientos Generales y red de contactos con la clase alta.',
     situationalModifiers: [
-      { value: 2, note: 'clase alta/realeza', target: 'Conocimientos Generales' }
+      { value: 2, note: 'Alta sociedad', target: 'Conocimientos Generales' }
     ]
   },
   { 
@@ -862,13 +862,15 @@ export const EDGES: Edge[] = [
     id: 'edge-atractivo', 
     name: 'Atractivo', 
     requirements: 'Novato, Vigor d6+', 
-    effects: '+1 a Persuadir e Interpretar.' 
+    effects: '+1 a Persuadir e Interpretar.',
+    situationalModifiers: [{ value: 1, note: 'si atrae al objetivo', target: ['Persuadir', 'Interpretar'] }]
   },
   { 
     id: 'edge-muy-atractivo', 
     name: 'Muy Atractivo', 
     requirements: 'Novato, Atractivo', 
-    effects: '+2 a Persuadir e Interpretar.' 
+    effects: '+2 a Persuadir e Interpretar.',
+    situationalModifiers: [{ value: 2, note: 'si atrae al objetivo', target: ['Persuadir', 'Interpretar'] }]
   },
   { 
     id: 'edge-ayudante', 
@@ -922,7 +924,8 @@ export const EDGES: Edge[] = [
     id: 'edge-callejear', 
     name: 'Callejear', 
     requirements: 'Novato, Astucia d6+', 
-    effects: '+2 a Conocimientos Generales y red de contactos con elementos criminales.' 
+    effects: '+2 a Conocimientos Generales y red de contactos con elementos criminales.',
+    situationalModifiers: [{ value: 2, note: 'elementos criminales', target: 'Conocimientos Generales' }]
   },
   { 
     id: 'edge-campeon', 
@@ -1018,7 +1021,7 @@ export const EDGES: Edge[] = [
     id: 'edge-disparo-doble', 
     name: 'Disparo Doble', 
     requirements: 'Experimentado, Disparar d6+', 
-    effects: '+1 a dar y daño cuando disparas con CdF 1.' 
+    effects: 'Añade +1 a la tirada de ataque y daño, al coste de una bala adicional. No se puede combinar esta ventaja con Disparo Rápido.' 
   },
   { 
     id: 'edge-disparo-mortal', 
@@ -1072,7 +1075,7 @@ export const EDGES: Edge[] = [
     id: 'edge-experto', 
     name: 'Experto', 
     requirements: 'Legendario, Profesional en rasgo', 
-    effects: 'Aumenta el rasgo a d12+2.' 
+    effects: 'Aumenta el rasgo en un segundo punto.' 
   },
   { 
     id: 'edge-famoso', 
@@ -1294,7 +1297,7 @@ export const EDGES: Edge[] = [
     requirements: 'Novato, Vigor d8+', 
     effects: '+2 a las tiradas de absorción y contra golpes incapacitadores.',
     situationalModifiers: [
-      { value: 2, note: 'absorber incapacitación', target: 'Vigor' }
+      { value: 2, note: 'absorber incapacitación/Aturdido', target: 'Vigor' }
     ]
   },
   { 
@@ -1404,7 +1407,7 @@ export const EDGES: Edge[] = [
     id: 'edge-profesional', 
     name: 'Profesional', 
     requirements: 'Legendario, máximo en rasgo', 
-    effects: 'Aumenta el rasgo a d12+1.' 
+    effects: 'Aumenta el rasgo en un primer punto.' 
   },
   { 
     id: 'edge-punteria', 
@@ -1499,7 +1502,7 @@ export const EDGES: Edge[] = [
     name: 'Sentir el Peligro', 
     requirements: 'Novato', 
     effects: 'Notar (+2) para detectar emboscadas, etc.',
-    situationalModifiers: [{ value: 2, note: 'Detectar emboscadas/peligros', target: 'Notar' }]
+    situationalModifiers: [{ value: 2, note: 'detectar trampas/peligros', target: 'Notar' }]
   },
   { 
     id: 'edge-senor-de-las-bestias', 
@@ -1567,8 +1570,8 @@ export const EDGES: Edge[] = [
     requirements: 'Novato, Espíritu d8+', 
     effects: '+2 a Astucia y Espíritu a la hora de resistir poderes y recuperarte de ellos.',
     situationalModifiers: [
-      { value: 2, note: 'Resistir/Recuperarse de poderes', target: 'Astucia' },
-      { value: 2, note: 'Resistir/Recuperarse de poderes', target: 'Espíritu' }
+      { value: 2, note: 'Resistir/Recuperarse de poderes o efectos mentales', target: 'Astucia' },
+      { value: 2, note: 'Resistir/Recuperarse de poderes o efectos mentales', target: 'Espíritu' }
     ]
   },
   { 

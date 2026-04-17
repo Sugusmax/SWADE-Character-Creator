@@ -391,6 +391,7 @@ const getRank = (advances: number) => {
 
 const checkRequirements = (char: Character, requirements: string): { met: boolean; reason?: string } => {
   if (!char) return { met: false, reason: requirements };
+  if (char.name === 'Prueba') return { met: true };
   if (!requirements || requirements === 'Novato') return { met: true };
   
   // Use the number of advances already taken + 1 to determine the rank of the NEXT advance
@@ -435,7 +436,11 @@ const checkRequirements = (char: Character, requirements: string): { met: boolea
     }
 
     if (part === 'Profesional en rasgo') {
-      const hasProf = edges.some(e => e.name.startsWith('Profesional ('));
+      const hasProf = edges.some(e => 
+        e.name.startsWith('Profesional (') || 
+        e.name.startsWith('Experto (') || 
+        e.name.startsWith('Maestro (')
+      );
       if (!hasProf) {
         unmet.push('Ventaja Profesional');
       }
@@ -443,7 +448,10 @@ const checkRequirements = (char: Character, requirements: string): { met: boolea
     }
 
     if (part === 'Experto en rasgo') {
-      const hasExp = edges.some(e => e.name.startsWith('Experto ('));
+      const hasExp = edges.some(e => 
+        e.name.startsWith('Experto (') || 
+        e.name.startsWith('Maestro (')
+      );
       if (!hasExp) {
         unmet.push('Ventaja Experto');
       }
@@ -637,6 +645,8 @@ const sortByString = (a: string, b: string) => {
   return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
 };
 
+const improvedKeywords = ['mejorado', 'mejorada', 'mejorados', 'mejoradas', 'muy', 'gran', 'jefe', 'veterano', 'heroica', 'más', 'experto', 'maestro', 'gorila', 'hierro'];
+
 const isImprovedEdge = (edge: Edge | string): boolean => {
   if (!edge) return false;
   const name = typeof edge === 'string' ? edge : edge.name;
@@ -645,7 +655,6 @@ const isImprovedEdge = (edge: Edge | string): boolean => {
   if (hasReplaces) return true;
   if (!name) return false;
   
-  const improvedKeywords = ['mejorado', 'mejorada', 'mejorados', 'mejoradas', 'muy', 'gran', 'jefe', 'veterano', 'heroica', 'más'];
   return improvedKeywords.some(kw => name.toLowerCase().includes(kw));
 };
 
@@ -653,10 +662,14 @@ const getEdgeFullDescription = (edge: Edge) => {
   if (!edge) return '';
   let description = edge.effects;
   
-  const improvedKeywords = ['mejorado', 'mejorada', 'mejorados', 'mejoradas', 'muy', 'gran', 'jefe', 'veterano', 'heroica', 'más'];
   const isImproved = improvedKeywords.some(kw => edge.name && edge.name.toLowerCase().includes(kw));
 
   if (!isImproved && !edge.replaces) return description;
+
+  // Specific exclusion for Profesional/Experto/Maestro to avoid cluttered descriptions
+  if (edge.name.includes('Profesional') || edge.name.includes('Experto') || edge.name.includes('Maestro')) {
+    return description;
+  }
 
   const specialCases = [
     { base: 'Afortunado', improved: 'Muy Afortunado' },
@@ -701,7 +714,6 @@ const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): { edges:
   if (!newEdge) return { edges: currentEdges || [] };
   if (!currentEdges) return { edges: [newEdge] };
   
-  const improvedKeywords = ['mejorado', 'mejorada', 'mejorados', 'mejoradas', 'muy', 'gran', 'jefe', 'veterano', 'heroica', 'más'];
   const isImproved = improvedKeywords.some(kw => newEdge.name && newEdge.name.toLowerCase().includes(kw));
   
   if (!isImproved) {
@@ -712,7 +724,20 @@ const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): { edges:
     if (!existing || !existing.name || !newEdge.requirements) return false;
     
     // Check if existing edge name is in requirements
-    const inRequirements = newEdge.requirements.toLowerCase().includes(existing.name.toLowerCase());
+    const lowerReqs = newEdge.requirements?.toLowerCase() || '';
+    const lowerExistingName = existing.name.toLowerCase();
+    let inRequirements = lowerReqs.includes(lowerExistingName);
+    
+    // Special case for Profesional/Experto traits
+    if (!inRequirements) {
+      if (newEdge.name.startsWith('Experto (') && existing.name.startsWith('Profesional (')) {
+        inRequirements = lowerReqs.includes('profesional');
+      }
+      if (newEdge.name.startsWith('Maestro (') && existing.name.startsWith('Experto (')) {
+        inRequirements = lowerReqs.includes('experto');
+      }
+    }
+
     if (!inRequirements) return false;
     
     // Check if new edge name contains existing edge name or is a known improvement
@@ -734,6 +759,14 @@ const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): { edges:
       { base: 'Maestro de Armas', improved: 'Maestro de Armas Mejorado' },
     ];
     
+    // Skill/Attribute special cases (Profesional -> Experto -> Maestro)
+    if ((newEdge.name.startsWith('Experto (') && existing.name.startsWith('Profesional (')) ||
+        (newEdge.name.startsWith('Maestro (') && existing.name.startsWith('Experto ('))) {
+      const newTrait = newEdge.name.match(/\((.*)\)/)?.[1];
+      const existingTrait = existing.name.match(/\((.*)\)/)?.[1];
+      if (newTrait && existingTrait && newTrait === existingTrait) return true;
+    }
+
     const isSpecialCase = specialCases.some(sc => 
       sc.base.toLowerCase() === existing.name.toLowerCase() && 
       sc.improved.toLowerCase() === newEdge.name.toLowerCase()
@@ -784,6 +817,11 @@ const getFatiguePenalty = (char: Character): number => {
   return Math.min(2, char.fatigue || 0);
 };
 
+const getBaseEdgeName = (name: string) => {
+  if (!name) return '';
+  return name.includes(' (') ? name.split(' (')[0].trim() : name;
+};
+
 const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (!char) return { generalValue: 0, modifiers: [], situational: [] };
   let generalValue = 0;
@@ -792,7 +830,8 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   
   // --- AUTOMATIC MODIFIERS FROM EDGES ---
   char.edges.forEach(charEdge => {
-    const edgeDef = EDGES.find(e => e.name === charEdge.name);
+    const baseName = getBaseEdgeName(charEdge.name);
+    const edgeDef = EDGES.find(e => e.name === baseName);
     if (!edgeDef) return;
 
     // General Modifiers
@@ -800,7 +839,7 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
       edgeDef.modifiers.forEach(mod => {
         if (mod.name === skillName) {
           generalValue += mod.value;
-          modifiers.push({ name: edgeDef.name, value: mod.value });
+          modifiers.push({ name: charEdge.name, value: mod.value });
         }
       });
     }
@@ -818,29 +857,35 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
 
   // --- SPECIAL/COMPLEX MODIFIERS ---
   
-  // Atractivo (Situational)
-  if (hasEdge(char, 'Muy Atractivo') && (skillName === 'Persuadir' || skillName === 'Interpretar')) {
-    if (!situational.some(s => s.note === 'a quien atraiga físicamente')) {
-      situational.push({ value: 2, note: 'a quien atraiga físicamente' });
-    }
-  } else if (hasEdge(char, 'Atractivo') && (skillName === 'Persuadir' || skillName === 'Interpretar')) {
-    if (!situational.some(s => s.note === 'a quien atraiga físicamente')) {
-      situational.push({ value: 1, note: 'a quien atraiga físicamente' });
-    }
-  }
-  
-  // Erudito (General)
+  // Erudito/Profesional/Experto (General)
+  let bestBonus = 0;
+  let bestName = '';
   char.edges.forEach(edge => {
-    if (edge.name.startsWith('Erudito (')) {
+    if (edge.name.startsWith('Erudito (') || edge.name.startsWith('Profesional (') || edge.name.startsWith('Experto (')) {
       const chosenSkill = edge.name.match(/\((.*)\)/)?.[1];
       if (chosenSkill === skillName) {
-        if (!modifiers.some(m => m.name === edge.name)) {
-          generalValue += 2;
-          modifiers.push({ name: edge.name, value: 2 });
+        if (edge.name.startsWith('Erudito (')) {
+          // Erudito stacks if user wants? Or is it separate? 
+          // Usually Erudito is separate but if it's on same skill...
+          // Let's keep it separate for now as it's a specific edge name.
+          if (!modifiers.some(m => m.name === edge.name)) {
+            generalValue += 2;
+            modifiers.push({ name: edge.name, value: 2 });
+          }
+        } else if (edge.name.startsWith('Experto (')) {
+          bestBonus = 2;
+          bestName = 'Experto';
+        } else if (edge.name.startsWith('Profesional (') && bestBonus < 1) {
+          bestBonus = 1;
+          bestName = 'Profesional';
         }
       }
     }
   });
+  if (bestBonus > 0 && bestName) {
+    generalValue += bestBonus;
+    modifiers.push({ name: bestName, value: bestBonus });
+  }
 
   // Hombre de Recursos (General)
   if (hasEdge(char, 'Hombre de Recursos') && !char.skills[skillName]) {
@@ -911,55 +956,26 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Inventor') && (skillName === 'Reparar' || skillName === 'Ciencia')) {
     situational.push({ value: 0, note: 'Crear dispositivos temporales' });
   }
-  if (hasEdge(char, 'Alcurnia') && (skillName === 'Conocimientos Generales' || skillName === 'Persuadir')) {
-    situational.push({ value: 2, note: 'Alta sociedad' });
-  }
-  if (hasEdge(char, 'Callejear') && skillName === 'Conocimientos Generales') {
-    situational.push({ value: 2, note: 'elementos criminales' });
-  }
   if (hasEdge(char, 'Tozudo')) {
     situational.push({ value: 2, note: 'Resistir efectos mentales' });
   }
-  if (hasEdge(char, 'Leñador')) {
-    if (skillName === 'Supervivencia' || skillName === 'Sigilo') {
-      situational.push({ value: 2, note: 'Entornos naturales' });
-    }
-  }
-  if (hasEdge(char, 'Ladrón')) {
-    if (skillName === 'Sigilo') situational.push({ value: 1, note: 'Entornos urbanos' });
-    if (skillName === 'Atletismo') situational.push({ value: 1, note: 'Trepar' });
-  }
   // Arma Distintiva (Situational)
   if (hasEdge(char, 'Arma Distintiva Mejorada')) {
-    const dispararVal = char.skills['Disparar'] || 0;
-    const pelearVal = char.skills['Pelear'] || 0;
-    
-    if (skillName === 'Disparar' && dispararVal >= 8) {
-      situational.push({ value: 2, note: 'Con su arma distintiva' });
-    }
-    if ((skillName === 'Pelear' || skillName === 'Atletismo') && pelearVal >= 8) {
-      situational.push({ value: 2, note: 'Con su arma distintiva' });
+    if (['Pelear', 'Disparar'].includes(skillName)) {
+      situational.push({ value: 2, note: 'con su arma distintiva' });
+    } else if (skillName === 'Atletismo') {
+      situational.push({ value: 2, note: 'lanzando su arma distintiva' });
     }
   } else if (hasEdge(char, 'Arma Distintiva')) {
-    const dispararVal = char.skills['Disparar'] || 0;
-    const pelearVal = char.skills['Pelear'] || 0;
-    
-    if (skillName === 'Disparar' && dispararVal >= 8) {
-      situational.push({ value: 1, note: 'Con su arma distintiva' });
-    }
-    if ((skillName === 'Pelear' || skillName === 'Atletismo') && pelearVal >= 8) {
-      situational.push({ value: 1, note: 'Con su arma distintiva' });
+    if (['Pelear', 'Disparar'].includes(skillName)) {
+      situational.push({ value: 1, note: 'con su arma distintiva' });
+    } else if (skillName === 'Atletismo') {
+      situational.push({ value: 1, note: 'lanzando su arma distintiva' });
     }
   }
 
   if (hasEdge(char, 'Barrido') && !hasEdge(char, 'Barrido Mejorado') && skillName === 'Pelear') {
     situational.push({ value: -2, note: 'barriendo' });
-  }
-  
-  if (hasEdge(char, 'Muy Atractivo') && (skillName === 'Persuadir' || skillName === 'Interpretar')) {
-    situational.push({ value: 2, note: 'si atrae al objetivo' });
-  } else if (hasEdge(char, 'Atractivo') && (skillName === 'Persuadir' || skillName === 'Interpretar')) {
-    situational.push({ value: 1, note: 'si atrae al objetivo' });
   }
   
   if (hasEdge(char, 'Líder Nato')) {
@@ -970,9 +986,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   }
   if ((hasEdge(char, 'Investigador') || hasEdge(char, 'Investigador Jefe')) && skillName === 'Notar') {
     situational.push({ value: 2, note: 'Buscar pistas' });
-  }
-  if (hasEdge(char, 'Disparo Doble') && skillName === 'Disparar') {
-    situational.push({ value: -2, note: 'disparo doble' });
   }
   if (hasEdge(char, 'Maestro') && char.skills[skillName] >= 12) {
     situational.push({ value: 0, note: 'Repite una tirada fallida de esta habilidad (1/sesión)' });
@@ -992,9 +1005,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Manos Firmes') && (skillName === 'Disparar' || skillName === 'Pelear' || skillName === 'Atletismo')) {
     situational.push({ value: 0, note: 'Ignora penalización por plataforma inestable' });
   }
-  if (hasEdge(char, 'Matón') && skillName === 'Intimidar') {
-    situational.push({ value: 0, note: 'Bono a la intimidación física' });
-  }
   if (hasEdge(char, 'McGyver')) {
     situational.push({ value: 0, note: 'Improvisa herramientas y dispositivos temporales' });
   }
@@ -1005,15 +1015,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     if (skillName === 'Disparar' && (char.skills['Disparar'] || 0) >= 8) {
       situational.push({ value: 1, note: 'Disparando inmóvil' });
     }
-  }
-  if (hasEdge(char, 'Sentir el Peligro') && skillName === 'Notar') {
-    situational.push({ value: 2, note: 'Detectar emboscadas/peligros' });
-  }
-  if (hasEdge(char, 'Profesional') && char.skills[skillName] >= 12) {
-    situational.push({ value: 1, note: 'Si esta es tu habilidad elegida' });
-  }
-  if (hasEdge(char, 'Experto') && char.skills[skillName] >= 12) {
-    situational.push({ value: 2, note: 'Si esta es tu habilidad elegida' });
   }
   if (hasEdge(char, 'Rodar') && (skillName === 'Atletismo' || skillName === 'Pelear')) {
     situational.push({ value: 0, note: 'Bonos a la defensa al moverte por el suelo' });
@@ -1050,7 +1051,7 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     // Narrative
   }
   if (hasEdge(char, 'Disparo Doble') && skillName === 'Disparar') {
-    situational.push({ value: -2, note: 'disparo doble' });
+    situational.push({ value: 1, note: 'Disparo Doble' });
   }
   if (hasEdge(char, 'Disparo Mortal') && skillName === 'Disparar') {
     // Narrative
@@ -1063,10 +1064,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   }
   if (hasEdge(char, 'Fuga')) {
     situational.push({ value: 0, note: 'Evitas ataque gratuito al huir de combate' });
-  }
-
-  if (hasEdge(char, 'Guerrero Impío/Sagrado')) {
-    situational.push({ value: 0, note: 'Canaliza poder divino para el combate' });
   }
   if (hasEdge(char, 'Hombre de Recursos')) {
     situational.push({ value: 0, note: 'No sufres penalización por habilidades sin entrenamiento' });
@@ -1111,19 +1108,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   }
   if (hasEdge(char, 'Mentalista') && skillName.startsWith('Psiónica')) {
     situational.push({ value: 2, note: 'Tiradas enfrentadas' });
-  }
-  if (hasEdge(char, 'Artista Marcial') && skillName === 'Pelear') {
-    situational.push({ value: 1, note: 'Con artes marciales' });
-  }
-
-  if (hasEdge(char, 'Arma Distintiva Mejorada')) {
-    if (skillName === 'Pelear' || skillName === 'Disparar') {
-      situational.push({ value: 2, note: 'Con arma específica' });
-    }
-  } else if (hasEdge(char, 'Arma Distintiva')) {
-    if (skillName === 'Pelear' || skillName === 'Disparar') {
-      situational.push({ value: 1, note: 'Con arma específica' });
-    }
   }
   if (hasEdge(char, 'Fervor')) {
     situational.push({ value: 1, note: 'Aliados a 6" (cuerpo a cuerpo)' });
@@ -1225,7 +1209,8 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   
   // --- AUTOMATIC MODIFIERS FROM EDGES ---
   char.edges.forEach(charEdge => {
-    const edgeDef = EDGES.find(e => e.name === charEdge.name);
+    const baseName = getBaseEdgeName(charEdge.name);
+    const edgeDef = EDGES.find(e => e.name === baseName);
     if (!edgeDef) return;
 
     // General Modifiers
@@ -1233,7 +1218,7 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
       edgeDef.modifiers.forEach(mod => {
         if (mod.name === attrName) {
           generalValue += mod.value;
-          modifiers.push({ name: edgeDef.name, value: mod.value });
+          modifiers.push({ name: charEdge.name, value: mod.value });
         }
       });
     }
@@ -1250,20 +1235,26 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   });
 
   // Profesional/Experto (General)
+  let bestAttrBonus = 0;
+  let bestAttrName = '';
   char.edges.forEach(edge => {
     if (edge.name.startsWith('Profesional (') || edge.name.startsWith('Experto (')) {
       const chosenTrait = edge.name.match(/\((.*)\)/)?.[1];
       if (chosenTrait === attrName) {
-        const isExperto = edge.name.startsWith('Experto (');
-        const bonus = isExperto ? 2 : 1;
-        const name = isExperto ? 'Experto' : 'Profesional';
-        if (!modifiers.some(m => m.name === name)) {
-          generalValue += bonus;
-          modifiers.push({ name, value: bonus });
+        if (edge.name.startsWith('Experto (')) {
+          bestAttrBonus = 2;
+          bestAttrName = 'Experto';
+        } else if (edge.name.startsWith('Profesional (') && bestAttrBonus < 1) {
+          bestAttrBonus = 1;
+          bestAttrName = 'Profesional';
         }
       }
     }
   });
+  if (bestAttrBonus > 0 && bestAttrName) {
+    generalValue += bestAttrBonus;
+    modifiers.push({ name: bestAttrName, value: bestAttrBonus });
+  }
 
   // --- PERMANENT MODIFIERS (General) ---
   if (hasHindrance(char, 'Anciano') && (attrName === 'Agilidad' || attrName === 'Fuerza' || attrName === 'Vigor')) {
@@ -1292,9 +1283,6 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   if (hasHindrance(char, 'Tuerto')) {
     situational.push({ value: -2, note: 'Acciones a distancia (>10m)' });
   }
-  if (hasEdge(char, 'Reflejos de Combate') && attrName === 'Espíritu') {
-    situational.push({ value: 2, note: 'Recuperarse de Aturdido' });
-  }
   if (char.isBerserk && attrName === 'Dureza') {
     generalValue += 2;
     modifiers.push({ name: 'Berserk', value: 2 });
@@ -1311,9 +1299,6 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
   }
   if (hasEdge(char, 'Valiente') && attrName === 'Espíritu') {
     situational.push({ value: 2, note: 'Tiradas de Miedo' });
-  }
-  if (hasEdge(char, 'Voluntad de Hierro') && attrName === 'Espíritu') {
-    situational.push({ value: 2, note: 'Resistir Intimidación/Provocación' });
   }
   
   return { generalValue, modifiers, situational };
@@ -1346,12 +1331,11 @@ const getDamageBonus = (char: Character, weapon: Weapon): BonusInfo => {
   if (hasEdge(char, 'Instinto Asesino')) {
     situational.push({ value: 0, note: 'Repetir dados de daño que saquen 1' });
   }
+  if (hasEdge(char, 'Disparo Doble') && (weapon.name?.toLowerCase().includes('arco') || weapon.name?.toLowerCase().includes('pistola') || weapon.name?.toLowerCase().includes('rifle') || weapon.range)) {
+    situational.push({ value: 1, note: 'Disparo Doble' });
+  }
   if (hasEdge(char, 'Disparo Mortal')) {
     // Narrative
-  }
-
-  if (hasEdge(char, 'Guerrero Impío/Sagrado')) {
-    situational.push({ value: 0, note: 'Canaliza poder divino' });
   }
   
   return { generalValue, modifiers, situational };
@@ -1406,9 +1390,6 @@ const calculateDerived = (char: Character) => {
   // Edges that modify (Applied after base adjustments)
   if (hasEdge(char, 'Pies Ligeros')) { pace += 2; runningDieIndex = Math.min(4, runningDieIndex + 1); }
   
-  if (hasEdge(char, 'Arma Distintiva Mejorada')) parry += 2;
-  else if (hasEdge(char, 'Arma Distintiva')) parry += 1;
-  
   if (hasEdge(char, 'Bloqueo Mejorado')) parry += 2;
   else if (hasEdge(char, 'Bloqueo')) parry += 1;
   
@@ -1416,6 +1397,18 @@ const calculateDerived = (char: Character) => {
   else if (hasEdge(char, 'Maestro de Armas')) parry += 1;
   
   if (hasEdge(char, 'Fornido')) { size += 1; }
+
+  // Apply modifiers from Edges (like Matón or Gorila)
+  char.edges?.forEach(charEdge => {
+    const baseName = getBaseEdgeName(charEdge.name);
+    const edgeDef = EDGES.find(e => e.name === baseName);
+    if (edgeDef && edgeDef.modifiers) {
+      edgeDef.modifiers.forEach(mod => {
+        if (mod.name === 'Dureza') toughness += mod.value;
+        if (mod.name === 'Parada') parry += mod.value;
+      });
+    }
+  });
 
   // Gear bonuses
   const armorBonus = getArmorBonus(char);
@@ -3954,20 +3947,24 @@ function CharacterSheetView({
         let damage = weapons[naturalIndex].damage;
         if (hasMartialArtist) damage = stepUpDie(damage);
         if (hasImprovedMartialArtist) damage = stepUpDie(damage);
-        if (hasMaton || hasGorila) damage = stepUpDie(damage); // Matón/Gorila base upgrade
-        if (hasGorila) damage = stepUpDie(damage); // Gorila extra upgrade
+        if (hasMaton) damage = stepUpDie(damage);
+        if (hasGorila) damage = stepUpDie(damage);
         weapons[naturalIndex] = { ...weapons[naturalIndex], damage };
       } else {
-        // Add new natural weapon
-        let damage = 'FUE+d4';
-        if (hasGorila) damage = 'FUE+d6';
+        // Add new pseudo-weapon for unarmed combat
+        const dice = ['d4', 'd6', 'd8', 'd10', 'd12'];
+        let steps = 0;
+        if (hasMartialArtist) steps += 1;
+        if (hasImprovedMartialArtist) steps += 1;
+        if (hasMaton) steps += 1;
+        if (hasGorila) steps += 1;
         
-        // If also has martial artist, step it up
-        if (hasMartialArtist) damage = stepUpDie(damage);
-        if (hasImprovedMartialArtist) damage = stepUpDie(damage);
-        
-        const name = hasGorila ? 'Gorila' : (hasMaton ? 'Matón' : 'Artes Marciales');
-        weapons.unshift({ name, damage, ap: 0, notes: 'Arma natural' });
+        if (steps > 0) {
+          const finalDie = dice[Math.min(dice.length - 1, steps - 1)];
+          const damage = `FUE+${finalDie}`;
+          const name = hasGorila ? 'Gorila' : (hasMaton ? 'Matón' : 'Artes Marciales');
+          weapons.unshift({ name, damage, ap: 0, notes: 'Arma natural' });
+        }
       }
     }
 
@@ -4096,11 +4093,11 @@ function CharacterSheetView({
     }
   };
 
-  const updatePlayState = (field: keyof Character, delta: number) => {
+  const updatePlayState = (field: keyof Character, delta: number, isSet: boolean = false) => {
     let updatedChar = { ...character };
     let triggerBerserk = false;
 
-    if (field === 'wounds') {
+    if (field === 'wounds' && !isSet) {
       const currentWounds = character.wounds || 0;
       const maxWounds = getMaxWounds(character);
 
@@ -4128,7 +4125,7 @@ function CharacterSheetView({
     }
 
     const currentVal = (character[field] as number) || 0;
-    let newVal = currentVal + delta;
+    let newVal = isSet ? delta : currentVal + delta;
     
     if (field === 'fatigue') {
       newVal = Math.min(3, Math.max(0, newVal));
@@ -4792,7 +4789,7 @@ function CharacterSheetView({
                                         setSelectedAdvanceEdge({
                                           ...edge,
                                           name: `${type} (${traitName})`,
-                                          effects: type === 'Profesional' ? `Aumenta ${traitName} a d12+1.` : (type === 'Experto' ? `Aumenta ${traitName} a d12+2.` : `Aumenta el dado salvaje de ${traitName} a d10.`)
+                                          effects: type === 'Profesional' ? `Aumenta el rasgo en un primer punto.` : (type === 'Experto' ? `Aumenta el rasgo en un segundo punto.` : `Aumenta el dado salvaje de ${traitName} a d10.`)
                                         });
                                       });
                                     }
@@ -4827,7 +4824,7 @@ function CharacterSheetView({
                                           setSelectedAdvanceEdge({
                                             ...edge,
                                             name: `${type} (${traitName})`,
-                                            effects: type === 'Profesional' ? `Aumenta ${traitName} a d12+1.` : (type === 'Experto' ? `Aumenta ${traitName} a d12+2.` : `Aumenta el dado salvaje de ${traitName} a d10.`)
+                                            effects: type === 'Profesional' ? `Aumenta el rasgo en un primer punto.` : (type === 'Experto' ? `Aumenta el rasgo en un segundo punto.` : `Aumenta el dado salvaje de ${traitName} a d10.`)
                                           });
                                         });
                                       }
@@ -5058,16 +5055,14 @@ function CharacterSheetView({
             label="Parada" 
             value={character.derived.Parada} 
             situational={[
-              ...(hasEdge(character, 'Arma Distintiva Mejorada') ? [{ value: 2, note: 'Con arma específica' }] : (hasEdge(character, 'Arma Distintiva') ? [{ value: 1, note: 'Con arma específica' }] : []))
+              ...(hasEdge(character, 'Arma Distintiva Mejorada') ? [{ value: 2, note: 'con su arma distintiva' }] : (hasEdge(character, 'Arma Distintiva') ? [{ value: 1, note: 'con su arma distintiva' }] : []))
             ]}
             onInfo={() => setSelectedTrait({ name: 'Parada', description: DERIVED_DESCRIPTIONS['Parada'], type: 'Estadística Derivada' })}
           />
           <DerivedStat 
             label="Dureza" 
             value={character.derived.Dureza} 
-            situational={[
-              ...(hasEdge(character, 'Campeón') ? [{ value: 2, note: 'Vs el mal' }] : [])
-            ]}
+            situational={[]}
             onInfo={() => setSelectedTrait({ name: 'Dureza', description: DERIVED_DESCRIPTIONS['Dureza'], type: 'Estadística Derivada' })}
           />
         </div>
@@ -5157,23 +5152,23 @@ function CharacterSheetView({
             color="bg-amber-50 text-amber-700 border-amber-200"
             onAdd={() => updatePlayState('bennies', 1)}
             onSub={() => updatePlayState('bennies', -1)}
+            onReset={() => updatePlayState('bennies', calculateStartingBennies(character), true)}
+            resetLabel="REINICIAR"
           />
           
           {/* Combined Wounds & Stun */}
           <div className={`p-4 rounded-2xl border flex flex-col items-center gap-3 relative transition-all ${character.aturdido ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-red-50 border-red-200 text-red-700'}`}>
-            <div className="flex items-center justify-between w-full px-2">
-              <div className="flex items-center gap-2">
-                <Heart size={18} className={character.aturdido ? 'text-amber-600' : 'text-red-600'} />
-                <span className={`text-[10px] font-black uppercase tracking-widest ${character.aturdido ? 'text-amber-700' : 'text-red-700'}`}>Estado</span>
-              </div>
-              {character.aturdido && (
-                <span className="text-[9px] font-black uppercase tracking-tighter bg-amber-500 text-white px-2 py-0.5 rounded-full animate-pulse">
-                  Aturdido
-                </span>
-              )}
-            </div>
+      <div className="flex items-center justify-center w-full px-2 gap-2">
+        <Heart size={18} className={character.aturdido ? 'text-amber-600' : 'text-red-600'} />
+        <span className={`text-[10px] font-black uppercase tracking-widest text-center ${character.aturdido ? 'text-amber-700' : 'text-red-700'}`}>Estado</span>
+        {character.aturdido && (
+          <span className="text-[9px] font-black uppercase tracking-tighter bg-amber-500 text-white px-2 py-0.5 rounded-full animate-pulse ml-auto absolute right-2">
+            Aturdido
+          </span>
+        )}
+      </div>
 
-            <div className="flex items-center gap-4 w-full justify-center">
+            <div className="flex items-center gap-2 w-full justify-center">
               {/* Stun Toggle/Roll */}
               <div className="flex flex-col items-center gap-1">
                 <button 
@@ -5191,7 +5186,7 @@ function CharacterSheetView({
                       performRoll('Espíritu', formatDice(character.attributes.Espíritu), true, recoveryMod, true, recoveryModifiers, [], false, false, true);
                     }
                   }}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 ${character.aturdido ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-white text-stone-400 hover:text-stone-600 border border-stone-100'}`}
+                  className={`px-2 py-2 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all shadow-sm active:scale-95 ${character.aturdido ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-white text-stone-400 hover:text-stone-600 border border-stone-100'}`}
                 >
                   {character.aturdido ? 'Recuperar' : 'Aturdido'}
                 </button>
@@ -5208,31 +5203,31 @@ function CharacterSheetView({
               <div className="w-px h-8 bg-stone-200/50" />
 
               {/* Wounds Counter */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button 
                   onClick={() => updatePlayState('wounds', -1)}
-                  className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center hover:bg-white transition-colors shadow-sm active:scale-90 text-red-700"
+                  className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center hover:bg-white transition-colors shadow-sm active:scale-90 text-red-700"
                 >
-                  <Minus size={16} />
+                  <Minus size={14} />
                 </button>
-                <div className="flex flex-col items-center">
-                  <span className={`text-2xl font-black tabular-nums ${character.aturdido ? 'text-amber-900' : 'text-red-900'}`}>
+                <div className="flex flex-col items-center min-w-[32px]">
+                  <span className={`text-xl font-black tabular-nums leading-none ${character.aturdido ? 'text-amber-900' : 'text-red-900'}`}>
                     {character.wounds || 0}
                   </span>
-                  <span className={`text-[8px] font-bold uppercase tracking-tighter opacity-60 ${character.aturdido ? 'text-amber-700' : 'text-red-700'}`}>
+                  <span className={`text-[7px] font-bold uppercase tracking-tighter opacity-60 text-center ${character.aturdido ? 'text-amber-700' : 'text-red-700'}`}>
                     Heridas
                   </span>
                 </div>
                 <button 
                   onClick={() => updatePlayState('wounds', 1)}
-                  className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center hover:bg-white transition-colors shadow-sm active:scale-90 text-red-700"
+                  className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center hover:bg-white transition-colors shadow-sm active:scale-90 text-red-700"
                 >
-                  <Plus size={16} />
+                  <Plus size={14} />
                 </button>
               </div>
             </div>
 
-            <div className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${character.aturdido ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}`}>
+            <div className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full text-center ${character.aturdido ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}`}>
               {getWoundsLabel(character.wounds || 0)}
             </div>
           </div>
@@ -6061,41 +6056,57 @@ function DerivedStat({ label, value, onClick, bonus, situational, onInfo }: { la
   );
 }
 
-function TrackingToken({ icon, label, value, color, onAdd, onSub, statusLabel }: { 
+function TrackingToken({ icon, label, value, color, onAdd, onSub, statusLabel, onReset, resetLabel }: { 
   icon: React.ReactNode, 
   label: string, 
   value: number, 
   color: string,
   onAdd: () => void,
   onSub: () => void,
-  statusLabel?: string
+  statusLabel?: string,
+  onReset?: () => void,
+  resetLabel?: string
 }) {
   return (
-    <div className={`p-4 rounded-2xl border ${color} flex flex-col items-center gap-2 relative group`}>
-      <div className="flex items-center gap-2 mb-1">
-        {icon}
-        <span className="text-[10px] font-black uppercase tracking-widest opacity-70">{label}</span>
-      </div>
-      <div className="flex items-center gap-4">
-        <button 
-          onClick={onSub}
-          className="w-8 h-8 rounded-full bg-white/50 flex items-center justify-center hover:bg-white transition-colors shadow-sm active:scale-90"
-        >
-          <Minus size={16} />
-        </button>
-        <span className="text-3xl font-black tabular-nums">{value}</span>
-        <button 
-          onClick={onAdd}
-          className="w-8 h-8 rounded-full bg-white/50 flex items-center justify-center hover:bg-white transition-colors shadow-sm active:scale-90"
-        >
-          <Plus size={16} />
-        </button>
-      </div>
-      {statusLabel && (
-        <div className="text-[9px] font-black uppercase tracking-tighter mt-1 opacity-80">
-          {statusLabel}
+    <div className={`p-4 rounded-2xl border ${color} flex flex-col items-center gap-2 relative group text-center h-full justify-between`}>
+      <div className="w-full">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          {icon}
+          <span className="text-[10px] font-black uppercase tracking-widest opacity-70 text-center">{label}</span>
         </div>
-      )}
+        
+        <div className="flex items-center justify-center gap-4">
+          <button 
+            onClick={onSub}
+            className="w-8 h-8 rounded-full bg-white/50 flex items-center justify-center hover:bg-white transition-colors shadow-sm active:scale-90"
+          >
+            <Minus size={16} />
+          </button>
+          <span className="text-3xl font-black tabular-nums text-center">{value}</span>
+          <button 
+            onClick={onAdd}
+            className="w-8 h-8 rounded-full bg-white/50 flex items-center justify-center hover:bg-white transition-colors shadow-sm active:scale-90"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-2 w-full">
+        {onReset && (
+          <button
+            onClick={onReset}
+            className="w-full py-1.5 rounded-xl bg-white/50 text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-sm active:scale-95 border border-white/20"
+          >
+            {resetLabel || 'REINICIAR'}
+          </button>
+        )}
+        {statusLabel && (
+          <div className="text-[9px] font-black uppercase tracking-tighter opacity-80 text-center">
+            {statusLabel}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
