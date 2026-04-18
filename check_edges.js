@@ -23,7 +23,7 @@ const userEdges = [
   "Nervios de Acero", "Nervios de Acero Mejorados", "Nuevos Poderes", "Ofuscar",
   "Osado", "Parkour", "Pies Ligeros", "Profesional", "Puntería", "Rápido", "Rico",
   "Rico, Muy", "Rodar", "Sabio", "Sangre Fría", "Sentido del Peligro",
-  "Siempre Preparado", "Suerte", "Suerte Mejorada", "Temerario", "Templado",
+  "Siempre Preparado", "Temerario", "Templado",
   "Tirador", "Tiro Preciso", "Tozudo", "Trabajo en Equipo", "Trampero",
   "Vínculo Común", "Voz de Mando", "Voz Potente", "Voz Muy Potente"
 ];

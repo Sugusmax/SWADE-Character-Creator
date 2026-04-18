@@ -1228,6 +1228,16 @@ export const EDGES: Edge[] = [
     ]
   },
   { 
+    id: 'edge-investigador-jefe', 
+    name: 'Investigador Jefe', 
+    requirements: 'Veterano, Investigador', 
+    effects: '+2 a Investigar y ciertos tipos de tiradas de Notar (Mejora: +2 adicional a Investigar).',
+    modifiers: [{ name: 'Investigar', value: 4 }],
+    situationalModifiers: [
+      { value: 2, note: 'Buscar pistas', target: 'Notar' }
+    ]
+  },
+  { 
     id: 'edge-kid-dos-pistolas', 
     name: 'Kid Dos Pistolas', 
     requirements: 'Novato, Agilidad d8+', 
@@ -1297,7 +1307,7 @@ export const EDGES: Edge[] = [
     requirements: 'Novato, Vigor d8+', 
     effects: '+2 a las tiradas de absorción y contra golpes incapacitadores.',
     situationalModifiers: [
-      { value: 2, note: 'absorber incapacitación/Aturdido', target: 'Vigor' }
+      { value: 2, note: 'absorción/ resistir incapacitación', target: 'Vigor' }
     ]
   },
   { 
@@ -1349,7 +1359,7 @@ export const EDGES: Edge[] = [
     requirements: 'Experimentado, Trasfondo Arcano (Psiónica), Psiónica d6+', 
     effects: '+2 a las tiradas opuestas de Psiónica.',
     situationalModifiers: [
-      { value: 2, note: 'Tiradas opuestas', target: 'Psiónica' }
+      { value: 2, note: 'Tiradas enfrentadas', target: 'Psiónica' }
     ]
   },
   { 

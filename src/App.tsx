@@ -211,20 +211,83 @@ const calculateStartingBennies = (char: Character) => {
   if (hasHindrance(char, 'Joven', 'Mayor')) bennies += 2;
   
   // Edges
-  if (hasEdge(char, 'Afortunado')) bennies += 1;
-  if (hasEdge(char, 'Afortunado, Muy')) bennies += 1;
-  if (hasEdge(char, 'Suerte')) bennies += 1;
-  if (hasEdge(char, 'Suerte Mejorada')) bennies += 1;
+  if (hasEdge(char, 'Muy Afortunado')) bennies += 2;
+  else if (hasEdge(char, 'Afortunado')) bennies += 1;
   
   return Math.max(0, bennies);
+};
+
+const getTraitExtraModifiers = (char: Character, traitName: string) => {
+  if (!char) return [];
+  const mods: AppliedModifier[] = [];
+  
+  // Professional/Expert
+  if (char.edges) {
+    let bestProfBonus = 0;
+    let bestProfName = '';
+    char.edges.forEach(e => {
+      if (e.name.startsWith('Experto (') && e.name.includes(`(${traitName})`)) {
+        bestProfBonus = 2;
+        bestProfName = 'Experto';
+      } else if (e.name.startsWith('Profesional (') && e.name.includes(`(${traitName})`) && bestProfBonus < 1) {
+        bestProfBonus = 1;
+        bestProfName = 'Profesional';
+      }
+    });
+    if (bestProfBonus > 0) {
+      mods.push({ name: bestProfName, value: bestProfBonus });
+    }
+  }
+
+  // Racial Bonus (if die value > 12)
+  // For Attributes
+  if (ATTRIBUTES.includes(traitName)) {
+    const { max } = getAttributeLimits(traitName, char.species, char.heritageChoice, char.hindrances);
+    const purchased = char.attributes[traitName as keyof typeof char.attributes] || 4;
+    if (max > 12 && purchased > 12) {
+      mods.push({ name: 'Bono Racial', value: purchased - 12 });
+    }
+  } 
+  // For Skills
+  else {
+    const { max } = getSkillLimits(traitName, char.species, char.heritageChoice);
+    const purchased = char.skills[traitName] || 0;
+    if (max > 12 && purchased > 12) {
+      mods.push({ name: 'Bono Racial', value: purchased - 12 });
+    }
+  }
+
+  return mods;
+};
+
+const getTraitProfessionalBonus = (char: Character, traitName: string) => {
+  const mods = getTraitExtraModifiers(char, traitName);
+  const prof = mods.find(m => m.name === 'Profesional' || m.name === 'Experto');
+  return prof ? prof.value : 0;
 };
 
 const getEffectiveAttribute = (char: Character, attrName: string) => {
   if (!char || !char.attributes) return 4;
   let val = char.attributes[attrName as keyof typeof char.attributes] || 4;
   
+  // Professional/Expert bonuses integrated into the trait value
+  val += getTraitProfessionalBonus(char, attrName);
+
   if (char.isBerserk && attrName === 'Fuerza') {
     return upgradeDie(val);
+  }
+  
+  return val;
+};
+
+const getEffectiveSkillValue = (char: Character, skillName: string) => {
+  if (!char || !char.skills) return 0;
+  const { min } = getSkillLimits(skillName, char.species, char.heritageChoice);
+  let val = char.skills[skillName] || min;
+  
+  // Professional/Expert bonuses integrated into the trait value
+  if (val > 0) {
+    val += getTraitProfessionalBonus(char, skillName);
   }
   
   return val;
@@ -650,6 +713,11 @@ const improvedKeywords = ['mejorado', 'mejorada', 'mejorados', 'mejoradas', 'muy
 const isImprovedEdge = (edge: Edge | string): boolean => {
   if (!edge) return false;
   const name = typeof edge === 'string' ? edge : edge.name;
+  
+  // Maestro de armas, Mandíbula de Hierro and Voluntad de Hierro (base versions) are not improved
+  const lowerName = name.toLowerCase();
+  if (lowerName === 'maestro de armas' || lowerName === 'mandíbula de hierro' || lowerName === 'voluntad de hierro') return false;
+
   const hasReplaces = typeof edge === 'object' && !!edge.replaces;
   
   if (hasReplaces) return true;
@@ -673,7 +741,6 @@ const getEdgeFullDescription = (edge: Edge) => {
 
   const specialCases = [
     { base: 'Afortunado', improved: 'Muy Afortunado' },
-    { base: 'Suerte', improved: 'Suerte Mejorada' },
     { base: 'Atractivo', improved: 'Muy Atractivo' },
     { base: 'Rico', improved: 'Rico, Asquerosamente' },
     { base: 'Famoso', improved: 'Muy Famoso' },
@@ -733,9 +800,6 @@ const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): { edges:
       if (newEdge.name.startsWith('Experto (') && existing.name.startsWith('Profesional (')) {
         inRequirements = lowerReqs.includes('profesional');
       }
-      if (newEdge.name.startsWith('Maestro (') && existing.name.startsWith('Experto (')) {
-        inRequirements = lowerReqs.includes('experto');
-      }
     }
 
     if (!inRequirements) return false;
@@ -746,7 +810,6 @@ const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): { edges:
     // Handle specific cases where name doesn't match perfectly
     const specialCases = [
       { base: 'Afortunado', improved: 'Muy Afortunado' },
-      { base: 'Suerte', improved: 'Suerte Mejorada' },
       { base: 'Atractivo', improved: 'Muy Atractivo' },
       { base: 'Rico', improved: 'Rico, Asquerosamente' },
       { base: 'Famoso', improved: 'Muy Famoso' },
@@ -755,13 +818,11 @@ const getEdgesAfterReplacement = (currentEdges: Edge[], newEdge: Edge): { edges:
       { base: 'Fuerza de Voluntad', improved: 'Voluntad de Hierro' },
       { base: 'Matón', improved: 'Gorila' },
       { base: 'Hueso Duro de Roer', improved: 'Hueso Muy Duro de Roer' },
-      { base: 'Experto', improved: 'Maestro' },
       { base: 'Maestro de Armas', improved: 'Maestro de Armas Mejorado' },
     ];
     
-    // Skill/Attribute special cases (Profesional -> Experto -> Maestro)
-    if ((newEdge.name.startsWith('Experto (') && existing.name.startsWith('Profesional (')) ||
-        (newEdge.name.startsWith('Maestro (') && existing.name.startsWith('Experto ('))) {
+    // Skill/Attribute special cases (Profesional -> Experto)
+    if (newEdge.name.startsWith('Experto (') && existing.name.startsWith('Profesional (')) {
       const newTrait = newEdge.name.match(/\((.*)\)/)?.[1];
       const existingTrait = existing.name.match(/\((.*)\)/)?.[1];
       if (newTrait && existingTrait && newTrait === existingTrait) return true;
@@ -857,44 +918,19 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
 
   // --- SPECIAL/COMPLEX MODIFIERS ---
   
-  // Erudito/Profesional/Experto (General)
-  let bestBonus = 0;
-  let bestName = '';
+  // Erudito (General)
   char.edges.forEach(edge => {
-    if (edge.name.startsWith('Erudito (') || edge.name.startsWith('Profesional (') || edge.name.startsWith('Experto (')) {
+    if (edge.name.startsWith('Erudito (')) {
       const chosenSkill = edge.name.match(/\((.*)\)/)?.[1];
       if (chosenSkill === skillName) {
-        if (edge.name.startsWith('Erudito (')) {
-          // Erudito stacks if user wants? Or is it separate? 
-          // Usually Erudito is separate but if it's on same skill...
-          // Let's keep it separate for now as it's a specific edge name.
-          if (!modifiers.some(m => m.name === edge.name)) {
-            generalValue += 2;
-            modifiers.push({ name: edge.name, value: 2 });
-          }
-        } else if (edge.name.startsWith('Experto (')) {
-          bestBonus = 2;
-          bestName = 'Experto';
-        } else if (edge.name.startsWith('Profesional (') && bestBonus < 1) {
-          bestBonus = 1;
-          bestName = 'Profesional';
+        if (!modifiers.some(m => m.name === edge.name)) {
+          generalValue += 2;
+          modifiers.push({ name: edge.name, value: 2 });
         }
       }
     }
   });
-  if (bestBonus > 0 && bestName) {
-    generalValue += bestBonus;
-    modifiers.push({ name: bestName, value: bestBonus });
-  }
 
-  // Hombre de Recursos (General)
-  if (hasEdge(char, 'Hombre de Recursos') && !char.skills[skillName]) {
-    const skillDef = SKILLS.find(s => s.name === skillName);
-    if (skillDef && skillDef.attribute === 'Astucia') {
-      generalValue += 2;
-      modifiers.push({ name: 'Hombre de Recursos', value: 2 });
-    }
-  }
   if (hasEdge(char, 'Curandero') && skillName === 'Medicina') {
     generalValue += 2;
     modifiers.push({ name: 'Curandero', value: 2 });
@@ -984,12 +1020,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Lingüista')) {
     situational.push({ value: 0, note: 'Conoces idiomas adicionales (Astucia/2)' });
   }
-  if ((hasEdge(char, 'Investigador') || hasEdge(char, 'Investigador Jefe')) && skillName === 'Notar') {
-    situational.push({ value: 2, note: 'Buscar pistas' });
-  }
-  if (hasEdge(char, 'Maestro') && char.skills[skillName] >= 12) {
-    situational.push({ value: 0, note: 'Repite una tirada fallida de esta habilidad (1/sesión)' });
-  }
   if (hasEdge(char, 'Mago') && (skillName.includes('Magia') || skillName.includes('Arcano'))) {
     situational.push({ value: 0, note: 'Bonos a la magia y gestión de PP' });
   }
@@ -1065,9 +1095,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Fuga')) {
     situational.push({ value: 0, note: 'Evitas ataque gratuito al huir de combate' });
   }
-  if (hasEdge(char, 'Hombre de Recursos')) {
-    situational.push({ value: 0, note: 'No sufres penalización por habilidades sin entrenamiento' });
-  }
   if (hasEdge(char, 'Humillar') && skillName === 'Provocar') {
     situational.push({ value: 0, note: 'El enemigo queda Vulnerable además de Distraído' });
   }
@@ -1105,9 +1132,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   if (hasEdge(char, 'Acróbata Marcial')) {
     situational.push({ value: 0, note: 'Ignora terreno difícil' });
     situational.push({ value: -2, note: 'A ser impactado (distancia) si se mueve' });
-  }
-  if (hasEdge(char, 'Mentalista') && skillName.startsWith('Psiónica')) {
-    situational.push({ value: 2, note: 'Tiradas enfrentadas' });
   }
   if (hasEdge(char, 'Fervor')) {
     situational.push({ value: 1, note: 'Aliados a 6" (cuerpo a cuerpo)' });
@@ -1159,23 +1183,19 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     situational.push({ value: -2, note: 'Fuera de su grupo' });
   }
   if (hasHindrance(char, 'Manazas')) {
-    situational.push({ value: -2, note: 'Usar instrumentos mecánicos/electrónicos' });
+    situational.push({ value: 0, note: 'Manazas: Usar instrumentos mecánicos/electrónicos (-2)' });
   }
   if (hasHindrance(char, 'Manco')) {
-    situational.push({ value: -4, note: 'Tareas que requieran dos manos' });
+    situational.push({ value: 0, note: 'Manco: Tareas que requieran dos manos (-4)' });
   }
   if (hasHindrance(char, 'Suspicaz', 'Mayor')) {
-    situational.push({ value: -2, note: 'Tiradas de Apoyo' });
+    situational.push({ value: 0, note: 'Suspicaz (Mayor): Tiradas de Apoyo (-2)' });
   }
   if (hasHindrance(char, 'Cojo')) {
     const isMayor = hasHindrance(char, 'Cojo', 'Mayor');
     if (skillName === 'Atletismo') {
       situational.push({ value: isMayor ? -4 : -2, note: 'Movilidad' });
     }
-  }
-  if (char.hindrances.some(h => h.name === 'Fobia')) {
-    const fobia = char.hindrances.find(h => h.name === 'Fobia');
-    situational.push({ value: fobia?.type === 'Mayor' ? -2 : -1, note: 'En presencia de la fobia' });
   }
 
   // Species
@@ -1234,28 +1254,6 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
     }
   });
 
-  // Profesional/Experto (General)
-  let bestAttrBonus = 0;
-  let bestAttrName = '';
-  char.edges.forEach(edge => {
-    if (edge.name.startsWith('Profesional (') || edge.name.startsWith('Experto (')) {
-      const chosenTrait = edge.name.match(/\((.*)\)/)?.[1];
-      if (chosenTrait === attrName) {
-        if (edge.name.startsWith('Experto (')) {
-          bestAttrBonus = 2;
-          bestAttrName = 'Experto';
-        } else if (edge.name.startsWith('Profesional (') && bestAttrBonus < 1) {
-          bestAttrBonus = 1;
-          bestAttrName = 'Profesional';
-        }
-      }
-    }
-  });
-  if (bestAttrBonus > 0 && bestAttrName) {
-    generalValue += bestAttrBonus;
-    modifiers.push({ name: bestAttrName, value: bestAttrBonus });
-  }
-
   // --- PERMANENT MODIFIERS (General) ---
   if (hasHindrance(char, 'Anciano') && (attrName === 'Agilidad' || attrName === 'Fuerza' || attrName === 'Vigor')) {
     generalValue -= 1;
@@ -1276,10 +1274,6 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
     const isMayor = hasHindrance(char, 'Sensible', 'Mayor');
     situational.push({ value: isMayor ? -4 : -2, note: 'Resistir Provocar' });
   }
-  if (char.hindrances.some(h => h.name === 'Fobia')) {
-    const fobia = char.hindrances.find(h => h.name === 'Fobia');
-    situational.push({ value: fobia?.type === 'Mayor' ? -2 : -1, note: 'En presencia de la fobia' });
-  }
   if (hasHindrance(char, 'Tuerto')) {
     situational.push({ value: -2, note: 'Acciones a distancia (>10m)' });
   }
@@ -1288,9 +1282,6 @@ const getAttributeBonus = (char: Character, attrName: string): BonusInfo => {
     modifiers.push({ name: 'Berserk', value: 2 });
   }
   
-  if (hasEdge(char, 'Mandíbula de Hierro') && attrName === 'Vigor') {
-    situational.push({ value: 2, note: 'Resistir Aturdido' });
-  }
   if (hasEdge(char, 'Templado') && attrName === 'Espíritu') {
     situational.push({ value: 2, note: 'Resistencia mental y emocional' });
   }
@@ -1401,6 +1392,7 @@ const calculateDerived = (char: Character) => {
   // Apply modifiers from Edges (like Matón or Gorila)
   char.edges?.forEach(charEdge => {
     const baseName = getBaseEdgeName(charEdge.name);
+    if (baseName === 'Maestro de Armas' || baseName === 'Maestro de Armas Mejorado') return; // Handled specifically above
     const edgeDef = EDGES.find(e => e.name === baseName);
     if (edgeDef && edgeDef.modifiers) {
       edgeDef.modifiers.forEach(mod => {
@@ -1467,7 +1459,7 @@ export default function App() {
 
   // Lock body scroll when any modal is open
   useEffect(() => {
-    const isModalOpen = !!characterToDelete || !!arcaneModalOnSelect || !!scholarModalOnSelect || !!traitModalOnSelect || !!pendingHindranceSpend;
+    const isModalOpen = !!characterToDelete || !!arcaneModalOnSelect || !!scholarModalOnSelect || !!traitModalOnSelect || !!pendingHindranceSpend || isAddingWeapon || isAddingArmor || isAddingShield;
     if (isModalOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
@@ -2374,10 +2366,13 @@ function renderStep(
               <button
                 key={s.id}
                 onClick={() => {
-                  const nextChar = { ...char, species: s.name, heritageChoice: undefined };
+                  const sAbilities = s.abilities.map(a => a.name);
+                  const nextHindrances = char.hindrances.filter(h => !sAbilities.includes(h.name));
+                  const nextChar = { ...char, species: s.name, heritageChoice: undefined, hindrances: nextHindrances };
                   update({ 
                     species: s.name, 
                     heritageChoice: undefined,
+                    hindrances: nextHindrances,
                     bennies: calculateStartingBennies(nextChar)
                   });
                 }}
@@ -2458,7 +2453,10 @@ function renderStep(
         </div>
       );
     case 2: // Desventajas
-      const uniqueHindranceNames = Array.from(new Set(HINDRANCES.map(h => h.name))).sort(sortByString);
+      const speciesAbilities = SPECIES.find(s => s.name === char.species)?.abilities.map(a => a.name) || [];
+      const uniqueHindranceNames = Array.from(new Set(HINDRANCES.map(h => h.name)))
+        .filter(name => !speciesAbilities.includes(name))
+        .sort(sortByString);
       const selectedHindranceData = HINDRANCES.filter(h => h.name === previewHindranceName);
       const availableTypes = selectedHindranceData.map(h => h.type);
       const currentPreview = selectedHindranceData.find(h => h.type === previewHindranceType) || selectedHindranceData[0];
@@ -2672,32 +2670,38 @@ function renderStep(
                       >
                         <Minus size={12} />
                       </button>
-                      <button 
-                        onClick={() => {
-                          if (current >= max) return;
-                          const nextVal = upgradeDie(current);
-                          const cost = 1;
-                          const currentSpent = calculateAttributePointsSpent(char);
-                          
-                          if (currentSpent < 5) {
-                            update({ attributes: { ...char.attributes, [attr]: nextVal } });
-                          } else if (availableHP_Attr >= 2) {
-                            setPendingHindranceSpend({
-                              type: 'attribute',
-                              cost: 2,
-                              onConfirm: () => {
-                                update({ 
-                                  attributes: { ...char.attributes, [attr]: nextVal },
-                                  spentHindrancePoints: { ...char.spentHindrancePoints, attributes: (char.spentHindrancePoints.attributes || 0) + 1 }
-                                });
-                              }
-                            });
-                          }
-                        }}
-                        className="w-6 h-6 bg-stone-900 text-white rounded-full flex items-center justify-center hover:bg-stone-800 transition-colors"
-                      >
-                        <Plus size={12} />
-                      </button>
+                        <button 
+                          onClick={() => {
+                            const { max } = getAttributeLimits(attr, char.species, char.heritageChoice, char.hindrances);
+                            if (current >= max) return;
+                            const nextVal = upgradeDie(current);
+                            const cost = 1;
+                            const currentSpent = calculateAttributePointsSpent(char);
+                            
+                            if (currentSpent < 5) {
+                              update({ attributes: { ...char.attributes, [attr]: nextVal } });
+                            } else if (availableHP_Attr >= 2) {
+                              setPendingHindranceSpend({
+                                type: 'attribute',
+                                cost: 2,
+                                onConfirm: () => {
+                                  update({ 
+                                    attributes: { ...char.attributes, [attr]: nextVal },
+                                    spentHindrancePoints: { ...char.spentHindrancePoints, attributes: (char.spentHindrancePoints.attributes || 0) + 1 }
+                                  });
+                                }
+                              });
+                            }
+                          }}
+                          disabled={current >= getAttributeLimits(attr, char.species, char.heritageChoice, char.hindrances).max}
+                          className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                            current >= getAttributeLimits(attr, char.species, char.heritageChoice, char.hindrances).max
+                              ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                              : 'bg-stone-900 text-white hover:bg-stone-800'
+                          }`}
+                        >
+                          {current >= getAttributeLimits(attr, char.species, char.heritageChoice, char.hindrances).max ? <span className="text-[7px] font-black">MAX</span> : <Plus size={12} />}
+                        </button>
                     </div>
                   </div>
                   <label className="font-bold uppercase tracking-tighter text-stone-400 text-xs">{attr}</label>
@@ -2777,92 +2781,81 @@ function renderStep(
                     </div>
                     <div className="text-[10px] uppercase text-stone-400 font-bold">{skillAttr} ({formatDice(attrVal)})</div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="font-mono font-bold text-stone-700 w-12 text-center">
-                      {formatDice(val)}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <button 
-                        onClick={() => {
-                          const nextSkills = { ...char.skills };
-                          if (val < max) {
-                            const cost = val === 0 ? 1 : (val < attrVal ? 1 : 2);
-                            
-                            const nextVal = upgradeDie(val);
-                            const nextChar = { ...char, skills: { ...char.skills, [skill.name]: nextVal } };
-                            const { smartsSpent: nextSmarts, otherSpent: nextOther } = calculateSkillPointsSpent(nextChar);
-                            
-                            const baseAllowed = isYoung ? 10 : 12;
-                            const extraFromHindrances = char.spentHindrancePoints?.skills || 0;
-                            
-                            let canAffordWithBasic = false;
-                            if (isElderly) {
-                              const ancianoBonusUsed = Math.min(5, nextSmarts);
-                              const remainingSmarts = nextSmarts - ancianoBonusUsed;
-                              const totalBasicNeeded = nextOther + remainingSmarts;
-                              canAffordWithBasic = totalBasicNeeded <= (baseAllowed + extraFromHindrances);
-                            } else {
-                              canAffordWithBasic = (nextSmarts + nextOther) <= (baseAllowed + extraFromHindrances);
-                            }
+                    <div className="flex items-center gap-3">
+                      <div className="font-mono font-bold text-stone-700 w-12 text-center">
+                        {formatDice(val)}
+                      </div>
+                      <div className="flex flex-col gap-1 items-center">
+                        <button 
+                          onClick={() => {
+                            const nextSkills = { ...char.skills };
+                            if (val < max) {
+                              const cost = val === 0 ? 1 : (val < attrVal ? 1 : 2);
+                              
+                              const nextVal = upgradeDie(val);
+                              const nextChar = { ...char, skills: { ...char.skills, [skill.name]: nextVal } };
+                              const { smartsSpent: nextSmarts, otherSpent: nextOther } = calculateSkillPointsSpent(nextChar);
+                              
+                              const baseAllowed = isYoung ? 10 : 12;
+                              const extraFromHindrances = char.spentHindrancePoints?.skills || 0;
+                              
+                              let canAffordWithBasic = false;
+                              if (isElderly) {
+                                const ancianoBonusUsed = Math.min(5, nextSmarts);
+                                const remainingSmarts = nextSmarts - ancianoBonusUsed;
+                                const totalBasicNeeded = nextOther + remainingSmarts;
+                                canAffordWithBasic = totalBasicNeeded <= (baseAllowed + extraFromHindrances);
+                              } else {
+                                canAffordWithBasic = (nextSmarts + nextOther) <= (baseAllowed + extraFromHindrances);
+                              }
 
-                            if (canAffordWithBasic) {
-                              nextSkills[skill.name] = nextVal;
+                              if (canAffordWithBasic) {
+                                nextSkills[skill.name] = nextVal;
+                                update({ skills: nextSkills });
+                              } else if (availableHP_Skills >= cost) {
+                                setPendingHindranceSpend({
+                                  type: 'skill',
+                                  cost: cost,
+                                  onConfirm: () => {
+                                    const confirmedSkills = { ...char.skills };
+                                    confirmedSkills[skill.name] = nextVal;
+                                    update({ 
+                                      skills: confirmedSkills,
+                                      spentHindrancePoints: { ...char.spentHindrancePoints, skills: (char.spentHindrancePoints.skills || 0) + cost }
+                                    });
+                                  }
+                                });
+                              }
+                            }
+                          }}
+                          disabled={val >= max}
+                          className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                            val >= max
+                              ? 'bg-stone-100 text-stone-300 cursor-not-allowed'
+                              : 'bg-stone-900 text-white hover:bg-stone-800'
+                          }`}
+                        >
+                          {val >= max ? <span className="text-[7px] font-black uppercase">MAX</span> : <Plus size={12} />}
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const nextSkills = { ...char.skills };
+                            if (val > min) {
+                              nextSkills[skill.name] = downgradeDie(val);
                               update({ skills: nextSkills });
-                            } else if (availableHP_Skills >= cost) {
-                              setPendingHindranceSpend({
-                                type: 'skill',
-                                cost: cost,
-                                onConfirm: () => {
-                                  const confirmedSkills = { ...char.skills };
-                                  confirmedSkills[skill.name] = nextVal;
-                                  update({ 
-                                    skills: confirmedSkills,
-                                    spentHindrancePoints: { ...char.spentHindrancePoints, skills: (char.spentHindrancePoints.skills || 0) + cost }
-                                  });
-                                }
-                              });
                             }
-                          }
-                        }}
-                        className="w-5 h-5 bg-stone-900 text-white rounded flex items-center justify-center text-xs hover:bg-stone-800 disabled:opacity-30"
-                        disabled={val >= max}
-                      >
-                        +
-                      </button>
-                      <button 
-                        onClick={() => {
-                          const nextSkills = { ...char.skills };
-                          if (val === 0) return;
-
-                          let nextVal: Dice | 0 = 0;
-                          if (val === 4) {
-                            if (min === 0) {
-                              delete nextSkills[skill.name];
-                              nextVal = 0;
-                            } else {
-                              return; // Cannot go below min
-                            }
-                          } else {
-                            nextVal = downgradeDie(val);
-                            nextSkills[skill.name] = nextVal;
-                          }
-                          
-                          const { basicNeeded } = calculateSkillPointsSpent({ ...char, skills: nextSkills });
-                          const baseAllowed = isYoung ? 10 : 12;
-                          const paidWithHP = Math.max(0, basicNeeded - baseAllowed);
-                          
-                          update({ 
-                            skills: nextSkills,
-                            spentHindrancePoints: { ...char.spentHindrancePoints, skills: paidWithHP }
-                          });
-                        }}
-                        disabled={val === 0 || (val === min && (min > 0 || skill.isBasic))}
-                        className="w-5 h-5 bg-stone-100 rounded flex items-center justify-center text-xs hover:bg-stone-200 disabled:opacity-30"
-                      >
-                        -
-                      </button>
+                          }}
+                          disabled={val <= min}
+                          className={`w-6 h-6 rounded-full border border-stone-200 flex items-center justify-center transition-colors ${
+                            val <= min
+                              ? 'bg-stone-50 text-stone-200 border-stone-100 cursor-not-allowed'
+                              : 'bg-stone-50 text-stone-600 hover:bg-stone-200'
+                          }`}
+                        >
+                          <Minus size={12} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
                 </div>
               );
             })}
@@ -3497,7 +3490,7 @@ function renderStep(
                   {ATTRIBUTES.map(attr => (
                     <div key={attr} className="flex justify-between items-center p-3 bg-stone-50 rounded-xl border border-stone-100">
                       <span className="text-sm font-bold text-stone-700">{attr}</span>
-                      <span className="text-sm font-black text-stone-900">{formatDice(char.attributes[attr as keyof typeof char.attributes])}</span>
+                      <span className="text-sm font-black text-stone-900">{formatDice(getEffectiveAttribute(char, attr))}</span>
                     </div>
                   ))}
                 </div>
@@ -3509,10 +3502,10 @@ function renderStep(
                   {Object.entries(char.skills)
                     .filter(([_, val]) => (val as number) > 0)
                     .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([name, val]) => (
+                    .map(([name, _]) => (
                       <div key={name} className="flex justify-between items-center p-2 bg-stone-50 rounded-lg border border-stone-100">
                         <span className="text-[11px] font-bold text-stone-600">{name}</span>
-                        <span className="text-[11px] font-black text-stone-900">{formatDice(val as number)}</span>
+                        <span className="text-[11px] font-black text-stone-900">{formatDice(getEffectiveSkillValue(char, name))}</span>
                       </div>
                     ))}
                 </div>
@@ -3543,11 +3536,11 @@ function renderStep(
                   {char.edges.length > 0 ? char.edges.map((e, i) => {
                     const improved = isImprovedEdge(e);
                     return (
-                      <div key={e.instanceId || `e-prev-${i}`} className={`p-3 rounded-xl border ${improved ? 'bg-amber-50 border-amber-200' : 'bg-stone-50 border-stone-100'}`}>
+                      <div key={e.instanceId || `e-prev-${i}`} className={`p-3 rounded-xl border ${improved ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-100'}`}>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-sm font-bold ${improved ? 'text-amber-700' : 'text-stone-700'}`}>{e.name}</span>
+                          <span className={`text-sm font-bold ${improved ? 'text-amber-700' : 'text-emerald-700'}`}>{e.name}</span>
                         </div>
-                        <p className={`text-[10px] italic line-clamp-2 ${improved ? 'text-amber-600' : 'text-stone-500'}`}>{getEdgeFullDescription(e)}</p>
+                        <p className={`text-[10px] italic line-clamp-2 ${improved ? 'text-amber-600' : 'text-emerald-600'}`}>{getEdgeFullDescription(e)}</p>
                       </div>
                     );
                   }) : (
@@ -3739,6 +3732,52 @@ function ScholarModal({ isOpen, onClose, onSelect, char }: { isOpen: boolean, on
   );
 }
 
+function StudyModal({ isOpen, onClose, char, onStudy }: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  char: Character, 
+  onStudy: (skillName: string) => void 
+}) {
+  if (!isOpen) return null;
+  const untrainedSkills = SKILLS.filter(s => !char.skills[s.name] && !s.isBasic);
+  
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+      >
+        <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+          <div>
+            <h3 className="text-xl font-black text-stone-900 uppercase tracking-tighter">Estudiar Habilidad</h3>
+            <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest mt-1">Hombre de Recursos</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-full transition-colors"><X size={20} /></button>
+        </div>
+        
+        <div className="p-6 overflow-y-auto custom-scrollbar">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {untrainedSkills.map(skill => (
+              <button
+                key={skill.id}
+                onClick={() => {
+                  onStudy(skill.name);
+                  onClose();
+                }}
+                className="p-4 rounded-2xl border border-stone-100 bg-stone-50 hover:bg-white hover:border-amber-400 hover:shadow-md transition-all text-left flex flex-col gap-1 group"
+              >
+                <span className="font-bold text-stone-900 group-hover:text-amber-600 transition-colors uppercase tracking-tight">{skill.name}</span>
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{skill.attribute}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function TraitModal({ isOpen, onClose, onSelect, char, type }: { isOpen: boolean, onClose: () => void, onSelect: (traitName: string) => void, char: Character, type: 'Profesional' | 'Experto' | 'Maestro' }) {
   if (!isOpen) return null;
 
@@ -3853,6 +3892,7 @@ function CharacterSheetView({
   const [isAddingArmor, setIsAddingArmor] = useState(false);
   const [isAddingShield, setIsAddingShield] = useState(false);
   const [isAddingPower, setIsAddingPower] = useState(false);
+  const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
   const [newWeapon, setNewWeapon] = useState({ name: '', damage: '', range: '', ap: 0, notes: '' });
   const [newArmor, setNewArmor] = useState({ name: '', bonus: 0, notes: '' });
   const [newShield, setNewShield] = useState({ name: '', parryBonus: 0, coverBonus: 0, notes: '' });
@@ -3885,7 +3925,7 @@ function CharacterSheetView({
 
   // Lock body scroll when any modal is open
   useEffect(() => {
-    const isModalOpen = !!selectedTrait || isAddingAdvance || isAddingWeapon || isAddingArmor || isAddingShield || isAddingPower || !!rollResult;
+    const isModalOpen = !!selectedTrait || isAddingAdvance || isAddingWeapon || isAddingArmor || isAddingShield || isAddingPower || !!rollResult || isStudyModalOpen;
     if (isModalOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
@@ -3897,7 +3937,7 @@ function CharacterSheetView({
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [selectedTrait, isAddingAdvance, isAddingWeapon, isAddingArmor, isAddingShield, isAddingPower, rollResult]);
+  }, [selectedTrait, isAddingAdvance, isAddingWeapon, isAddingArmor, isAddingShield, isAddingPower, rollResult, isStudyModalOpen]);
   
   const speciesData = useMemo(() => SPECIES.find(s => s.name === character.species), [character.species]);
 
@@ -3975,7 +4015,20 @@ function CharacterSheetView({
   const isIncapacitated = (character.wounds || 0) > maxWounds || (character.fatigue || 0) >= 3;
   const totalPenalty = getWoundPenalty(character) + getFatiguePenalty(character);
 
-  const performRoll = (traitName: string, dieStr: string, isTraitRoll: boolean = true, traitModifier: number = 0, explodes: boolean = true, modifiers: AppliedModifier[] = [], situational: SituationalBonus[] = [], isBerserkRoll: boolean = false, isCalmRoll: boolean = false, isRecoveryRoll: boolean = false) => {
+  const performRoll = (
+    traitName: string, 
+    dieStr: string, 
+    isTraitRoll: boolean = true, 
+    traitModifier: number = 0, 
+    explodes: boolean = true, 
+    modifiers: AppliedModifier[] = [], 
+    situational: SituationalBonus[] = [], 
+    isBerserkRoll: boolean = false, 
+    isCalmRoll: boolean = false, 
+    isRecoveryRoll: boolean = false,
+    isStudyRoll: boolean = false,
+    studySkillName?: string
+  ) => {
     const rollSingleDie = (sides: number, canExplode: boolean) => {
       let actualSides = sides;
       let bonus = 0;
@@ -4046,6 +4099,8 @@ function CharacterSheetView({
       let wildDieSize = 6;
       if (hasEdge(character, `Maestro (${traitName})`)) {
         wildDieSize = 10;
+        // Ensure Maestro doesn't appear twice if it's already in modifiers, 
+        // but performRoll adds modifiers later.
       }
       
       wildRoll = rollSingleDie(wildDieSize, true);
@@ -4058,7 +4113,19 @@ function CharacterSheetView({
 
     const allModifiers = [...modifiers];
     if (baseModifier !== 0) {
-      allModifiers.push({ name: isTraitRoll ? 'Bono de Rasgo' : 'Bono de Arma', value: baseModifier });
+      // If we are a trait roll, try to identify the source of the trait bonus
+      if (isTraitRoll) {
+        const extraMods = getTraitExtraModifiers(character, traitName);
+        const totalExtra = extraMods.reduce((acc, m) => acc + m.value, 0);
+        
+        if (totalExtra === baseModifier && extraMods.length > 0) {
+          extraMods.forEach(m => allModifiers.push(m));
+        } else {
+          allModifiers.push({ name: 'Bono de Rasgo', value: baseModifier });
+        }
+      } else {
+        allModifiers.push({ name: 'Bono de Arma', value: baseModifier });
+      }
     }
     if (penalty > 0) {
       allModifiers.push({ name: 'Heridas/Fatiga', value: -penalty });
@@ -4090,6 +4157,14 @@ function CharacterSheetView({
 
     if (isRecoveryRoll && totalWithMod >= 4) {
       onUpdate({ ...charRef.current, aturdido: false });
+    }
+
+    if (isStudyRoll && totalWithMod >= 4 && studySkillName) {
+      const newVal: Dice = totalWithMod >= 8 ? 6 : 4;
+      onUpdate({
+        ...charRef.current,
+        studiedSkill: { name: studySkillName, value: newVal }
+      });
     }
   };
 
@@ -4218,7 +4293,7 @@ function CharacterSheetView({
     newChar.advancesList = [...newChar.advancesList, newAdvance];
     newChar.xp = (newChar.xp || 0) + 5;
     
-    // Recalculate resources that might change with advances (like Bennies from 'Suerte')
+    // Recalculate resources that might change with advances (like Bennies from 'Afortunado')
     const oldBenniesMax = calculateStartingBennies(character);
     const newBenniesMax = calculateStartingBennies(newChar);
     const benniesDelta = newBenniesMax - oldBenniesMax;
@@ -4647,32 +4722,47 @@ function CharacterSheetView({
 
                     {advanceType === 'Attribute' && (
                       <div className="grid grid-cols-1 gap-2">
-                        {ATTRIBUTES.map(attr => (
-                          <div
-                            key={attr}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => setSelectedAdvanceAttribute(attr)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                setSelectedAdvanceAttribute(attr);
-                              }
-                            }}
-                            className={`p-4 rounded-xl border transition-all text-left flex items-center justify-between cursor-pointer ${
-                              selectedAdvanceAttribute === attr 
-                                ? 'bg-stone-900 border-stone-900 text-white shadow-lg' 
-                                : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'
-                            }`}
-                          >
-                            <span className="font-bold">{attr}</span>
-                            <div className="flex items-center gap-3">
-                              <span className="font-mono opacity-60">{formatDice(character.attributes[attr as keyof typeof character.attributes])}</span>
-                              <ChevronRight size={14} />
-                              <span className="font-mono font-black">{formatDice(upgradeDie(character.attributes[attr as keyof typeof character.attributes]))}</span>
+                        {ATTRIBUTES.map(attr => {
+                          const { max } = getAttributeLimits(attr, character.species, character.heritageChoice, character.hindrances);
+                          const current = character.attributes[attr as keyof typeof character.attributes];
+                          const canUpgrade = current < max;
+                          
+                          return (
+                            <div
+                              key={attr}
+                              role="button"
+                              tabIndex={canUpgrade ? 0 : -1}
+                              onClick={() => {
+                                if (canUpgrade) setSelectedAdvanceAttribute(attr);
+                              }}
+                              onKeyDown={(e) => {
+                                if (canUpgrade && (e.key === 'Enter' || e.key === ' ')) {
+                                  e.preventDefault();
+                                  setSelectedAdvanceAttribute(attr);
+                                }
+                              }}
+                              className={`p-4 rounded-xl border transition-all text-left flex items-center justify-between ${
+                                !canUpgrade
+                                  ? 'bg-stone-50/50 border-stone-100 opacity-50 cursor-not-allowed text-stone-400'
+                                  : selectedAdvanceAttribute === attr 
+                                    ? 'bg-stone-900 border-stone-900 text-white shadow-lg' 
+                                    : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100 cursor-pointer'
+                              }`}
+                            >
+                              <span className="font-bold">{attr}</span>
+                              <div className="flex items-center gap-3">
+                                <span className={!canUpgrade ? 'font-mono' : 'font-mono opacity-60'}>{formatDice(current)}</span>
+                                {canUpgrade && (
+                                  <>
+                                    <ChevronRight size={14} />
+                                    <span className="font-mono font-black">{formatDice(upgradeDie(current))}</span>
+                                  </>
+                                )}
+                                {!canUpgrade && <span className="text-[9px] font-black uppercase bg-stone-200 text-stone-500 px-1.5 py-0.5 rounded">MÁX</span>}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
 
@@ -4686,9 +4776,9 @@ function CharacterSheetView({
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {[...SKILLS].sort(sortByName).filter(s => {
-                            const { min } = getSkillLimits(s.name, character.species, character.heritageChoice);
+                            const { min, max } = getSkillLimits(s.name, character.species, character.heritageChoice);
                             const val = character.skills[s.name] || min;
-                            return val > 0;
+                            return val > 0 && val < max;
                           }).map(skillDef => {
                             const name = skillDef.name;
                             const { min } = getSkillLimits(name, character.species, character.heritageChoice);
@@ -5322,9 +5412,6 @@ function CharacterSheetView({
                   </div>
                   <div className={`w-20 shrink-0 font-mono font-black text-2xl flex items-center ${character.isBerserk && name === 'Fuerza' ? 'text-emerald-600' : ''}`}>
                     {formatDice(val)}
-                    {val !== purchasedVal && !(character.isBerserk && name === 'Fuerza') && (
-                      <span className="text-[10px] text-stone-400 ml-1">({formatDice(purchasedVal)})</span>
-                    )}
                     {displayBonus !== 0 && (
                       <span className={`text-xl font-black ml-1 ${displayBonus > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                         {displayBonus > 0 ? '+' : ''}{displayBonus}
@@ -5348,14 +5435,27 @@ function CharacterSheetView({
           <SectionTitle 
             icon={<Sword size={20} className="text-stone-500" />} 
             title="Habilidades" 
-            extra={totalPenalty > 0 && (
-              <span className="text-[10px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-widest">
-                Penalizador: -{totalPenalty}
-              </span>
+            extra={(
+              <div className="flex items-center gap-2">
+                {hasEdge(character, 'Hombre de Recursos') && (
+                  <button 
+                    onClick={() => setIsStudyModalOpen(true)}
+                    className="p-1 px-3 bg-amber-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full hover:bg-amber-600 transition-all flex items-center gap-1 shadow-sm shadow-amber-200 active:scale-95"
+                  >
+                    <BookOpen size={10} /> Estudiar
+                  </button>
+                )}
+                {totalPenalty > 0 && (
+                  <span className="text-[10px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase tracking-widest">
+                    Penalizador: -{totalPenalty}
+                  </span>
+                )}
+              </div>
             )}
           />
           <div className="grid grid-cols-1 gap-2">
-            {Object.entries(character.skills).map(([name, val]) => {
+            {Object.entries(character.skills).map(([name, purchasedVal]) => {
+              const effectiveVal = getEffectiveSkillValue(character, name);
               const bonus = getSkillBonus(character, name);
               const displayBonus = bonus.generalValue - totalPenalty;
               const allowedInBerserk = ['Atletismo', 'Disparar', 'Intimidar', 'Notar', 'Pelear'];
@@ -5374,10 +5474,10 @@ function CharacterSheetView({
                   </div>
                   <button 
                     disabled={isDisabled}
-                    onClick={() => performRoll(name, formatDice(val as number), true, bonus.generalValue, true, bonus.modifiers, bonus.situational)}
+                    onClick={() => performRoll(name, formatDice(effectiveVal), true, bonus.generalValue, true, bonus.modifiers, bonus.situational)}
                     className={`flex items-center gap-1 shrink-0 w-20 rounded px-1 -mx-1 transition-colors ${isDisabled ? 'cursor-not-allowed' : 'hover:bg-stone-100'}`}
                   >
-                    <span className="font-mono font-bold text-stone-600">{formatDice(val as number)}</span>
+                    <span className="font-mono font-bold text-stone-600">{formatDice(effectiveVal)}</span>
                     {displayBonus !== 0 && (
                       <span className={`text-base font-black ${displayBonus > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                         {displayBonus > 0 ? '+' : ''}{displayBonus}
@@ -5398,18 +5498,23 @@ function CharacterSheetView({
                 </div>
               );
             })}
-            {SKILLS.filter(s => s.isBasic && !character.skills[s.name]).map(s => {
+            {SKILLS.filter(s => (s.isBasic || character.studiedSkill?.name === s.name) && !character.skills[s.name]).map(s => {
               const bonus = getSkillBonus(character, s.name);
-              const displayBonus = bonus.generalValue - totalPenalty;
+              const isStudied = character.studiedSkill?.name === s.name;
+              const isTrained = isStudied || s.isBasic;
+              const traitDie = isStudied ? `d${character.studiedSkill?.value}` : 'd4';
+              const displayBonus = isTrained ? (bonus.generalValue - totalPenalty) : (bonus.generalValue - 2 - totalPenalty);
               const allowedInBerserk = ['Atletismo', 'Disparar', 'Intimidar', 'Notar', 'Pelear'];
               const isDisabled = character.isBerserk && !allowedInBerserk.includes(s.name);
 
               return (
                 <div key={s.id} className={`flex items-start py-2 border-b border-stone-100 gap-4 group ${isDisabled ? 'opacity-40 grayscale' : ''}`}>
                   <div className="w-32 shrink-0">
-                    <div className="font-bold text-stone-700">{s.name}</div>
+                    <div className="font-bold text-stone-700 flex items-center gap-2">
+                       {s.name}
+                     </div>
                     <button 
-                      onClick={() => setSelectedTrait({ name: s.name, description: s.description, type: 'Habilidad Básica' })}
+                      onClick={() => setSelectedTrait({ name: s.name, description: s.description, type: isStudied ? 'Habilidad Estudiada' : (s.isBasic ? 'Habilidad Básica' : 'Sin Entrenamiento') })}
                       className="text-[9px] text-stone-400 hover:text-stone-900 flex items-center gap-1 mt-0.5 transition-opacity"
                     >
                       <Info size={10} /> Info
@@ -5417,10 +5522,10 @@ function CharacterSheetView({
                   </div>
                   <button 
                     disabled={isDisabled}
-                    onClick={() => performRoll(s.name, 'd4', true, bonus.generalValue, true, bonus.modifiers, bonus.situational)}
+                    onClick={() => performRoll(s.name, traitDie, true, isTrained ? bonus.generalValue : bonus.generalValue - 2, true, isTrained ? bonus.modifiers : [...bonus.modifiers, { name: 'Sin entrenamiento', value: -2 }], bonus.situational)}
                     className={`flex items-center gap-1 shrink-0 w-20 rounded px-1 -mx-1 transition-colors ${isDisabled ? 'cursor-not-allowed' : 'hover:bg-stone-100'}`}
                   >
-                    <span className="font-mono font-bold text-stone-500">d4</span>
+                    <span className={`font-mono font-bold ${isStudied ? 'text-emerald-600' : (s.isBasic ? 'text-stone-700' : 'text-stone-500')}`}>{traitDie}</span>
                     {displayBonus !== 0 && (
                       <span className={`text-base font-black ${displayBonus > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                         {displayBonus > 0 ? '+' : ''}{displayBonus}
@@ -5428,6 +5533,9 @@ function CharacterSheetView({
                     )}
                   </button>
                   <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
+                    {isStudied && (
+                      <span className="text-[9px] font-black bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded uppercase tracking-widest leading-none">Estudiada</span>
+                    )}
                     {isDisabled ? (
                       <span className="text-[10px] font-black text-red-600 uppercase tracking-widest">Inhabilitado (Furia)</span>
                     ) : (
@@ -5787,7 +5895,7 @@ function CharacterSheetView({
                   newChar.advancesList = newChar.advancesList?.slice(0, -1);
                   newChar.advances = (newChar.advances || 0) - 1;
                   
-                  // Recalculate resources that might change when undoing advances (like Bennies from 'Suerte')
+                  // Recalculate resources that might change when undoing advances (like Bennies from 'Afortunado')
                   const oldBenniesMax = calculateStartingBennies(character);
                   const newBenniesMax = calculateStartingBennies(newChar);
                   const benniesDelta = newBenniesMax - oldBenniesMax;
@@ -6000,6 +6108,16 @@ function CharacterSheetView({
           </div>
         )}
       </AnimatePresence>
+
+      <StudyModal 
+        isOpen={isStudyModalOpen} 
+        onClose={() => setIsStudyModalOpen(false)} 
+        char={character} 
+        onStudy={(skillName) => {
+          const astuciaVal = character.attributes.Astucia;
+          performRoll('Estudiar', formatDice(astuciaVal), true, 0, true, [], [], false, false, false, true, skillName);
+        }} 
+      />
     </div>
   );
 }

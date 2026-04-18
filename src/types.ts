@@ -155,4 +155,8 @@ export interface Character {
   advances?: number;
   advancesList?: Advance[];
   xp?: number;
+  studiedSkill?: {
+    name: string;
+    value: Dice;
+  };
 }
