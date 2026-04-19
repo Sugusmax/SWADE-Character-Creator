@@ -32,7 +32,8 @@ import {
   Heart,
   TrendingUp,
   Minus,
-  Flame
+  Flame,
+  Coffee
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Character, Dice, Species, Skill, Hindrance, Edge, Advance, AppliedModifier, SituationalBonus, Weapon } from './types';
@@ -1957,6 +1958,29 @@ export default function App() {
               </div>
             ) : (
               <>
+                <motion.div
+                  className="col-span-full"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="w-full flex items-center justify-between gap-4 p-4 bg-white border border-stone-200 rounded-2xl shadow-sm">
+                    <span className="text-sm font-black text-stone-500 italic leading-tight">
+                      ¡Si te sirvió, apoya la<br />
+                      app con un cafecito!
+                    </span>
+                    <a 
+                      href="https://mpago.la/1d692XK" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-6 py-3 bg-orange-500 text-white rounded-2xl font-black hover:bg-orange-600 hover:shadow-orange-200 shadow-lg shadow-orange-100 transition-all group active:scale-95 shrink-0"
+                      title="Invítame un Cafecito"
+                    >
+                      <Coffee size={24} className="group-hover:rotate-12 transition-transform" />
+                      <span className="text-xl tracking-tighter">DONAR</span>
+                    </a>
+                  </div>
+                </motion.div>
+
                 {characters.map(char => (
                 <motion.div 
                   key={char.id}
@@ -4496,7 +4520,7 @@ function CharacterSheetView({
 
                   {rollResult.situationalModifiers && rollResult.situationalModifiers.length > 0 && (
                     <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100 space-y-2">
-                      <div className="text-[10px] font-black uppercase text-amber-600 tracking-widest text-left mb-1 italic">Modificadores Situacionales</div>
+                      <div className="text-[10px] font-black uppercase text-amber-600 tracking-widest text-left mb-1 italic">Modificadores</div>
                       {rollResult.situationalModifiers.map((sit, idx) => (
                         <div key={`${sit.note}-${idx}`} className="flex justify-between items-center text-xs font-bold">
                           <span className="text-amber-700">{sit.note}</span>
