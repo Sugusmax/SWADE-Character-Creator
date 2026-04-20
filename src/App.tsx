@@ -1972,7 +1972,7 @@ export default function App() {
                       href="https://mpago.la/1d692XK" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 px-6 py-3 bg-orange-500 text-white rounded-2xl font-black hover:bg-orange-600 hover:shadow-orange-200 shadow-lg shadow-orange-100 transition-all group active:scale-95 shrink-0"
+                      className="flex items-center gap-3 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black hover:bg-emerald-700 hover:shadow-emerald-200 shadow-lg shadow-emerald-100 transition-all group active:scale-95 shrink-0"
                       title="Invítame un Cafecito"
                     >
                       <Coffee size={24} className="group-hover:rotate-12 transition-transform" />
@@ -3243,10 +3243,9 @@ function renderStep(
       const maxPowers = getMaxPowers(char);
       const rank = getCharacterRank(char);
       
-      const availablePowers = POWERS.filter(p => {
-        const rankOrder = ['Novato', 'Experimentado', 'Veterano', 'Heroico', 'Legendario'];
-        return rankOrder.indexOf(p.rank) <= rankOrder.indexOf(rank);
-      });
+      const availablePowers = POWERS; // Show all powers
+      const rankOrder = ['Novato', 'Experimentado', 'Veterano', 'Heroico', 'Legendario'];
+      const charRankIdx = rankOrder.indexOf(rank);
 
       return (
         <div className="space-y-8">
@@ -3268,34 +3267,42 @@ function renderStep(
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-black uppercase tracking-widest text-stone-400 text-xs">Poderes Disponibles ({rank})</h4>
+                <h4 className="font-black uppercase tracking-widest text-stone-400 text-xs">Catálogo de Poderes (Total: {POWERS.length})</h4>
                 <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{char.powers?.length || 0} / {maxPowers} Seleccionados</span>
               </div>
-              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-2 max-h-[500px] overflow-y-auto overflow-x-hidden pr-2 custom-scrollbar">
                 {availablePowers.map(p => {
                   const hasPower = char.powers?.some(cp => cp.name === p.name);
+                  const isRankAllowed = rankOrder.indexOf(p.rank) <= charRankIdx;
+                  
                   return (
                     <div 
                       key={p.id}
                       className={`p-4 border rounded-xl transition-all ${
                         hasPower 
                           ? 'bg-stone-100 border-stone-200 opacity-50' 
-                          : 'bg-white border-stone-200 hover:border-amber-300 hover:shadow-md cursor-pointer'
+                          : !isRankAllowed
+                            ? 'bg-stone-50 border-stone-200 grayscale opacity-60 cursor-not-allowed'
+                            : 'bg-white border-stone-200 hover:border-amber-300 hover:shadow-md cursor-pointer'
                       }`}
                       onClick={() => {
-                        if (hasPower || (char.powers?.length || 0) >= maxPowers) return;
+                        if (hasPower || !isRankAllowed || (char.powers?.length || 0) >= maxPowers) return;
                         const powerWithId = { ...p, instanceId: `power-${Math.random().toString(36).substr(2, 9)}` };
                         update({ powers: [...(char.powers || []), powerWithId] });
                       }}
                     >
-                      <div className="flex justify-between items-start mb-1">
-                        <div className="font-bold text-stone-900">{p.name}</div>
-                        <div className="text-[10px] font-black text-amber-600 uppercase tracking-widest">{p.points} PP</div>
+                      <div className="flex justify-between items-start gap-4 mb-2">
+                        <div className="font-bold text-stone-900 w-1/2 leading-tight whitespace-pre-line">
+                          {p.name}
+                        </div>
+                        <div className="text-[10px] font-black text-amber-600 uppercase tracking-widest text-right shrink-0 pt-0.5">
+                          {p.points} PP | {p.rank}
+                        </div>
                       </div>
-                      <p className="text-xs text-stone-500 line-clamp-2">{p.description}</p>
-                      <div className="mt-2 flex gap-3 text-[10px] font-bold text-stone-400 uppercase tracking-tighter">
-                        <span>Alcance: {p.range}</span>
-                        <span>Duración: {p.duration}</span>
+                      <p className="text-xs text-stone-500 leading-relaxed text-zinc-600">{p.description}</p>
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-bold text-stone-400 uppercase tracking-tighter border-t border-stone-100 pt-2">
+                        <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-stone-300" /> Alcance: {p.range}</span>
+                        <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-stone-300" /> Duración: {p.duration}</span>
                       </div>
                     </div>
                   );
@@ -5058,38 +5065,56 @@ function CharacterSheetView({
               <button onClick={() => setIsAddingPower(false)} className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900"><X size={20} /></button>
               <h3 className="text-2xl font-black text-stone-900 uppercase tracking-tighter mb-6">Elegir Nuevo Poder</h3>
               
-              <div className="overflow-y-auto space-y-2 pr-2 custom-scrollbar overscroll-contain">
-                {POWERS.filter(p => {
+              <div className="overflow-y-auto overflow-x-hidden space-y-2 pr-2 custom-scrollbar overscroll-contain">
+                {POWERS.map((p, i) => {
                   const rankOrder = ['Novato', 'Experimentado', 'Veterano', 'Heroico', 'Legendario'];
                   const charRank = getRank(character.advances || 0);
                   const charRankIdx = rankOrder.indexOf(charRank);
                   const powerRankIdx = rankOrder.indexOf(p.rank);
-                  return powerRankIdx <= charRankIdx && !character.powers?.some(cp => cp.name === p.name);
-                }).map((p, i) => (
-                  <button
-                    key={`${p.name}-${i}`}
-                    onClick={() => {
-                      const latestChar = charRef.current;
-                      const updatedPowers = [...(latestChar.powers || []), p];
-                      onUpdate({
-                        ...latestChar,
-                        powers: updatedPowers
-                      });
-                      
-                      const maxPowers = getMaxPowers(latestChar);
-                      if (updatedPowers.length >= maxPowers) {
-                        setIsAddingPower(false);
-                      }
-                    }}
-                    className="w-full text-left p-4 bg-stone-50 border border-stone-200 rounded-xl hover:border-amber-400 hover:bg-amber-50 transition-all group"
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-bold text-stone-900 group-hover:text-amber-900">{p.name}</span>
-                      <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">{p.points} PP | {p.rank}</span>
-                    </div>
-                    <p className="text-xs text-stone-500 line-clamp-1">{p.description}</p>
-                  </button>
-                ))}
+                  const isRankAllowed = powerRankIdx <= charRankIdx;
+                  const alreadyHas = character.powers?.some(cp => cp.name === p.name);
+
+                  return (
+                    <button
+                      key={`${p.name}-${i}`}
+                      disabled={alreadyHas || !isRankAllowed}
+                      onClick={() => {
+                        const latestChar = charRef.current;
+                        const updatedPowers = [...(latestChar.powers || []), p];
+                        onUpdate({
+                          ...latestChar,
+                          powers: updatedPowers
+                        });
+                        
+                        const maxPowers = getMaxPowers(latestChar);
+                        if (updatedPowers.length >= maxPowers) {
+                          setIsAddingPower(false);
+                        }
+                      }}
+                      className={`w-full text-left p-4 border rounded-xl transition-all group ${
+                        alreadyHas
+                          ? 'bg-stone-100 border-stone-200 opacity-50 cursor-not-allowed'
+                          : !isRankAllowed
+                            ? 'bg-stone-50 border-stone-200 grayscale opacity-60 cursor-not-allowed'
+                            : 'bg-stone-50 border-stone-200 hover:border-amber-400 hover:bg-amber-50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start gap-4 mb-2">
+                        <span className="font-bold text-stone-900 group-hover:text-amber-900 w-1/2 leading-tight whitespace-pre-line">
+                          {p.name}
+                        </span>
+                        <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest text-right shrink-0 pt-0.5">
+                          {p.points} PP | {p.rank}
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-400 group-hover:text-stone-500 leading-relaxed text-zinc-600">{p.description}</p>
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-bold text-stone-300 group-hover:text-stone-400 uppercase tracking-tighter border-t border-stone-100 pt-2">
+                        <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-stone-200 group-hover:bg-stone-300" /> Alcance: {p.range}</span>
+                        <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-stone-200 group-hover:bg-stone-300" /> Duración: {p.duration}</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
           </div>
