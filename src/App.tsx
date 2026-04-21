@@ -36,6 +36,9 @@ import {
   Coffee
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { Character, Dice, Species, Skill, Hindrance, Edge, Advance, AppliedModifier, SituationalBonus, Weapon } from './types';
 import { SPECIES, ATTRIBUTES, SKILLS, HINDRANCES, EDGES, ARCANE_BACKGROUNDS, POWERS, WEAPONS, ARMOR, SHIELDS } from './data';
 
@@ -1507,14 +1510,37 @@ export default function App() {
     setCharacters(prev => prev.filter(c => c.id !== id));
   };
 
-  const exportCharacter = (char: Character) => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(char));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `${char.name || 'personaje'}.json`);
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
+  const exportCharacter = async (char: Character) => {
+    const fileName = `${char.name || 'personaje'}.json`;
+    const jsonString = JSON.stringify(char, null, 2);
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: jsonString,
+          directory: Directory.Cache,
+          encoding: Encoding.UTF8,
+        });
+
+        await Share.share({
+          title: 'Exportar Personaje',
+          text: `Ficha de ${char.name}`,
+          url: result.uri,
+          dialogTitle: 'Guardar personaje',
+        });
+      } catch (e) {
+        console.error('Error al exportar personaje:', e);
+      }
+    } else {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonString);
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", fileName);
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    }
   };
 
   const importCharacter = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2029,7 +2055,7 @@ export default function App() {
                       <button 
                         onClick={() => exportCharacter(char)}
                         className="p-2 text-stone-400 hover:text-stone-600 transition-colors"
-                        title="Exportar"
+                        title="Guardar personaje"
                       >
                         <Download size={18} />
                       </button>
