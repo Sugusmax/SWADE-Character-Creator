@@ -458,7 +458,6 @@ const getRank = (advances: number) => {
 
 const checkRequirements = (char: Character, requirements: string): { met: boolean; reason?: string } => {
   if (!char) return { met: false, reason: requirements };
-  if (char.name === 'Prueba') return { met: true };
   if (!requirements || requirements === 'Novato') return { met: true };
   
   // Use the number of advances already taken + 1 to determine the rank of the NEXT advance
@@ -1446,7 +1445,7 @@ export default function App() {
 
   // Load characters from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('sw_characters');
+    const saved = localStorage.getItem('sw_characters_v2');
     if (saved) {
       try {
         setCharacters(JSON.parse(saved));
@@ -1458,7 +1457,7 @@ export default function App() {
 
   // Save characters to localStorage
   useEffect(() => {
-    localStorage.setItem('sw_characters', JSON.stringify(characters));
+    localStorage.setItem('sw_characters_v2', JSON.stringify(characters));
   }, [characters]);
 
   // Lock body scroll when any modal is open
@@ -1511,35 +1510,49 @@ export default function App() {
   };
 
   const exportCharacter = async (char: Character) => {
-    const fileName = `${char.name || 'personaje'}.json`;
-    const jsonString = JSON.stringify(char, null, 2);
+    try {
+      const sanitizedName = (char.name || 'personaje').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+      const fileName = `${sanitizedName}.json`;
+      const jsonString = JSON.stringify(char, null, 2);
 
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const result = await Filesystem.writeFile({
+      if (Capacitor.isNativePlatform()) {
+        // Write the file to cache
+        await Filesystem.writeFile({
           path: fileName,
           data: jsonString,
           directory: Directory.Cache,
           encoding: Encoding.UTF8,
         });
 
-        await Share.share({
-          title: 'Exportar Personaje',
-          text: `Ficha de ${char.name}`,
-          url: result.uri,
-          dialogTitle: 'Guardar personaje',
+        // Get the URI for sharing
+        const uriResult = await Filesystem.getUri({
+          path: fileName,
+          directory: Directory.Cache
         });
-      } catch (e) {
-        console.error('Error al exportar personaje:', e);
+
+        // Use a more robust share options set
+        await Share.share({
+          title: `Exportar ${char.name}`,
+          text: `Ficha de personaje: ${char.name}`,
+          files: [uriResult.uri],
+        });
+      } else {
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", url);
+        downloadAnchorNode.setAttribute("download", fileName);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        URL.revokeObjectURL(url);
       }
-    } else {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonString);
-      const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", fileName);
-      document.body.appendChild(downloadAnchorNode);
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
+    } catch (e: any) {
+      console.error('Error al exportar personaje:', e);
+      // Fallback alert for native errors
+      if (Capacitor.isNativePlatform()) {
+        alert('Error al exportar: ' + (e.message || 'Error desconocido'));
+      }
     }
   };
 
@@ -2055,9 +2068,9 @@ export default function App() {
                       <button 
                         onClick={() => exportCharacter(char)}
                         className="p-2 text-stone-400 hover:text-stone-600 transition-colors"
-                        title="Guardar personaje"
+                        title="Exportar personaje"
                       >
-                        <Download size={18} />
+                        <Share2 size={18} />
                       </button>
                       <button 
                         onClick={() => setCharacterToDelete(char)}
@@ -2385,7 +2398,7 @@ function renderStep(
                   if (conceptInput) conceptInput.focus();
                 }
               }}
-              placeholder="Ej: Red"
+              placeholder="Nombre del personaje..."
               className="w-full text-4xl font-bold focus:border-stone-900 outline-none py-2 transition-colors placeholder:text-stone-200"
             />
           </div>
