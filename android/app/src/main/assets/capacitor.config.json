@@ -1,0 +1,11 @@
+{
+	"appId": "com.swade.charactercreator",
+	"appName": "Savage Creator",
+	"webDir": "dist",
+	"android": {
+		"allowMixedContent": false
+	},
+	"server": {
+		"androidScheme": "https"
+	}
+}

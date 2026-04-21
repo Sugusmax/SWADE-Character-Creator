@@ -1,0 +1,20 @@
+include ':app'
+include ':capacitor-cordova-android-plugins'
+project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
+
+// Fix for "proguard-android.txt is no longer supported" error in Capacitor plugins
+def patchCapacitorPlugin(String path) {
+    def buildGradle = new File(rootDir, path)
+    if (buildGradle.exists()) {
+        def content = buildGradle.text
+        if (content.contains("'proguard-android.txt'")) {
+            buildGradle.text = content.replace("'proguard-android.txt'", "'proguard-android-optimize.txt'")
+            println "Successfully patched: ${path}"
+        }
+    }
+}
+
+patchCapacitorPlugin("../node_modules/@capacitor/filesystem/android/build.gradle")
+patchCapacitorPlugin("../node_modules/@capacitor/share/android/build.gradle")
+
+apply from: 'capacitor.settings.gradle'
