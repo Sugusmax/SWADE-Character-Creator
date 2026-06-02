@@ -2124,6 +2124,28 @@ export default function App() {
             }
           });
           next.hindrances = newHindrances;
+        } else if (next.species === "Rakhasa") {
+          const rakhasaRacial = [{ name: "Sanguinario", type: "Mayor" }];
+          const newHindrances = [...next.hindrances];
+          rakhasaRacial.forEach((rr) => {
+            if (
+              !newHindrances.some(
+                (h) => h.name === rr.name && h.type === rr.type,
+              )
+            ) {
+              const def = HINDRANCES.find(
+                (h) => h.name === rr.name && h.type === rr.type,
+              );
+              if (def) {
+                newHindrances.push({
+                  ...def,
+                  instanceId: `hindrance-racial-${rr.name.toLowerCase()}`,
+                  isRacial: true,
+                });
+              }
+            }
+          });
+          next.hindrances = newHindrances;
         }
       }
 
