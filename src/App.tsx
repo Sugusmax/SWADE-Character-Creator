@@ -1528,14 +1528,8 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   }
 
   // Species
-  if (char.species === "Rakhasa" && skillName === "Persuadir") {
+  if (hasHindrance(char, "Enemigo racial") && skillName === "Persuadir") {
     situational.push({ value: -2, note: "Enemigo racial" });
-  }
-  if (char.species === "Aviano" && skillName === "Atletismo") {
-    situational.push({ value: -2, note: "Nadando" });
-  }
-  if (char.species === "Rakhasa" && skillName === "Atletismo") {
-    situational.push({ value: -2, note: "Nadando" });
   }
 
   return { generalValue, modifiers, situational };
