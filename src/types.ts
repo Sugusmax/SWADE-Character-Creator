@@ -21,6 +21,7 @@ export interface Hindrance {
   name: string;
   type: 'Menor' | 'Mayor';
   description: string;
+  isRacial?: boolean;
 }
 
 export interface AppliedModifier {

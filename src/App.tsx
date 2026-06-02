@@ -523,7 +523,7 @@ const calculateHindrancePoints = (hindrances: Hindrance[]) => {
   if (!hindrances) return 0;
   let points = 0;
   hindrances.forEach((h) => {
-    if (h) {
+    if (h && !h.isRacial) {
       points += h.type === "Mayor" ? 2 : 1;
     }
   });
@@ -1037,6 +1037,7 @@ const getWoundPenalty = (char: Character): number => {
   if (hasEdge(char, "Nervios de Acero Mejorados")) ignore += 2;
   else if (hasEdge(char, "Nervios de Acero")) ignore += 1;
   if (char.isBerserk) ignore += 1;
+  if (char.species === "Androide") ignore += 1;
   return Math.max(0, rawPenalty - ignore);
 };
 
@@ -1502,10 +1503,10 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
     situational.push({ value: -2, note: "Fuera de su grupo" });
   }
   if (hasHindrance(char, "Manazas")) {
-    situational.push({
-      value: 0,
-      note: "Manazas: Usar instrumentos mecánicos/electrónicos (-2)",
-    });
+    if (["Reparar", "Electrónica", "Hackear"].includes(skillName)) {
+      generalValue -= 2;
+      modifiers.push({ name: "Manazas", value: -2 });
+    }
   }
   if (hasHindrance(char, "Manco")) {
     situational.push({
@@ -1527,9 +1528,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   }
 
   // Species
-  if (char.species === "Androide" && skillName === "Persuadir") {
-    situational.push({ value: -2, note: "Fuera de su grupo" });
-  }
   if (char.species === "Saurio" && skillName === "Persuadir") {
     situational.push({ value: -2, note: "Fuera de su grupo" });
   }
@@ -1670,6 +1668,14 @@ const getDamageBonus = (char: Character, weapon: Weapon): BonusInfo => {
   }
   if (hasEdge(char, "Disparo Mortal")) {
     // Narrative
+  }
+
+  if (
+    hasHindrance(char, "Anciano") &&
+    weapon.damage?.toUpperCase().includes("FUE")
+  ) {
+    generalValue -= 1;
+    modifiers.push({ name: "Anciano", value: -1 });
   }
 
   return { generalValue, modifiers, situational };
@@ -2041,6 +2047,54 @@ export default function App() {
 
     if (speciesChanged || heritageChanged || hindrancesChanged) {
       const newAttributes = { ...next.attributes };
+
+      if (speciesChanged) {
+        // Remove ALL racial hindrances when changing species
+        next.hindrances = next.hindrances.filter((h) => !h.isRacial);
+
+        if (next.species === "Elfo") {
+          if (!next.hindrances.some((h) => h.name === "Manazas")) {
+            const manazasDef = HINDRANCES.find((h) => h.name === "Manazas");
+            if (manazasDef) {
+              next.hindrances = [
+                ...next.hindrances,
+                {
+                  ...manazasDef,
+                  instanceId: `hindrance-racial-manazas`,
+                  isRacial: true,
+                },
+              ];
+            }
+          }
+        } else if (next.species === "Androide") {
+          const androidRacial = [
+            { name: "Juramento", type: "Mayor" },
+            { name: "Marginado", type: "Mayor" },
+            { name: "Pacifista", type: "Mayor" },
+          ];
+          const newHindrances = [...next.hindrances];
+          androidRacial.forEach((ar) => {
+            if (
+              !newHindrances.some(
+                (h) => h.name === ar.name && h.type === ar.type,
+              )
+            ) {
+              const def = HINDRANCES.find(
+                (h) => h.name === ar.name && h.type === ar.type,
+              );
+              if (def) {
+                newHindrances.push({
+                  ...def,
+                  instanceId: `hindrance-racial-${ar.name.toLowerCase()}`,
+                  isRacial: true,
+                });
+              }
+            }
+          });
+          next.hindrances = newHindrances;
+        }
+      }
+
       ATTRIBUTES.forEach((attr) => {
         const oldLimits = getAttributeLimits(
           attr,
@@ -3299,14 +3353,14 @@ function renderStep(
                     <div className="space-y-6">
                       {s.abilities.map((a, i) => (
                         <div key={`${a.name}-${i}`} className="space-y-1">
-                          <div className="font-black text-stone-900 uppercase text-sm tracking-tight">
-                            {a.name}
+                            <div className="font-black text-stone-900 uppercase text-sm tracking-tight">
+                              {a.name}
+                            </div>
+                            <p className="text-stone-700 text-sm leading-relaxed">
+                              {a.description}
+                            </p>
                           </div>
-                          <p className="text-stone-700 text-sm leading-relaxed">
-                            {a.description}
-                          </p>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                     {s.heritageChoices && (
                       <div className="space-y-4 pt-4">
@@ -3385,28 +3439,37 @@ function renderStep(
             {[...char.hindrances].sort(sortByName).map((h) => (
               <div
                 key={h.instanceId}
-                className="px-4 py-2 bg-red-50 border border-red-100 text-red-700 rounded-full flex items-center gap-2 text-sm font-bold shadow-sm"
+                className={`px-4 py-2 border rounded-full flex items-center gap-2 text-sm font-bold shadow-sm ${h.isRacial ? "bg-stone-100 border-stone-200 text-stone-600" : "bg-red-50 border-red-100 text-red-700"}`}
               >
-                <span>
-                  {h.name} ({h.type})
-                </span>
-                <button
-                  onClick={() => {
-                    const nextHindrances = char.hindrances.filter(
-                      (hind) => hind.instanceId !== h.instanceId,
-                    );
-                    const nextChar = { ...char, hindrances: nextHindrances };
-                    update({
-                      hindrances: nextHindrances,
-                      bennies: calculateStartingBennies(nextChar),
-                    });
-                  }}
-                >
-                  <Trash2
-                    size={14}
-                    className="text-red-400 hover:text-red-600"
-                  />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <span>
+                    {h.name} ({h.type})
+                  </span>
+                  {h.isRacial && (
+                    <span className="text-[8px] font-black bg-stone-200 text-stone-400 px-1 py-0.5 rounded uppercase tracking-tighter">
+                      Racial
+                    </span>
+                  )}
+                </div>
+                {!h.isRacial && (
+                  <button
+                    onClick={() => {
+                      const nextHindrances = char.hindrances.filter(
+                        (hind) => hind.instanceId !== h.instanceId,
+                      );
+                      const nextChar = { ...char, hindrances: nextHindrances };
+                      update({
+                        hindrances: nextHindrances,
+                        bennies: calculateStartingBennies(nextChar),
+                      });
+                    }}
+                  >
+                    <Trash2
+                      size={14}
+                      className="text-red-400 hover:text-red-600 transition-colors"
+                    />
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -4959,24 +5022,31 @@ function renderStep(
                 <div className="space-y-2">
                   {char.hindrances.length > 0 ? (
                     char.hindrances.map((h, i) => (
-                      <div
-                        key={h.instanceId || `h-prev-${i}`}
-                        className="p-3 bg-stone-50 rounded-xl border border-stone-100"
-                      >
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-sm font-bold text-stone-700">
-                            {h.name}
-                          </span>
-                          <span
-                            className={`text-[10px] font-black uppercase tracking-widest ${h.type === "Mayor" ? "text-red-500" : "text-amber-600"}`}
-                          >
-                            {h.type}
-                          </span>
+                        <div
+                          key={h.instanceId || `h-prev-${i}`}
+                          className="p-3 bg-stone-50 rounded-xl border border-stone-100"
+                        >
+                          <div className="flex justify-between items-center mb-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-stone-700">
+                                {h.name}
+                              </span>
+                              {h.isRacial && (
+                                <span className="text-[8px] font-black bg-stone-200 text-stone-500 px-1 py-0.5 rounded uppercase tracking-tighter">
+                                  Racial
+                                </span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-[10px] font-black uppercase tracking-widest ${h.type === "Mayor" ? "text-red-500" : "text-amber-600"}`}
+                            >
+                              {h.type}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-stone-500 italic line-clamp-2">
+                            {h.description}
+                          </p>
                         </div>
-                        <p className="text-[10px] text-stone-500 italic line-clamp-2">
-                          {h.description}
-                        </p>
-                      </div>
                     ))
                   ) : (
                     <p className="text-xs text-stone-400 italic">
@@ -7476,16 +7546,22 @@ function CharacterSheetView({
                         );
                       }
                     } else {
-                      const recoveryMod = hasEdge(
-                        character,
-                        "Reflejos de Combate",
-                      )
-                        ? 2
-                        : 0;
-                      const recoveryModifiers =
-                        recoveryMod > 0
-                          ? [{ name: "Reflejos de Combate", value: 2 }]
-                          : [];
+                      let recoveryMod = 0;
+                      const recoveryModifiers = [];
+
+                      if (hasEdge(character, "Reflejos de Combate")) {
+                        recoveryMod += 2;
+                        recoveryModifiers.push({
+                          name: "Reflejos de Combate",
+                          value: 2,
+                        });
+                      }
+
+                      if (character.species === "Androide") {
+                        recoveryMod += 2;
+                        recoveryModifiers.push({ name: "Constructo", value: 2 });
+                      }
+
                       performRoll(
                         "Espíritu",
                         formatDice(character.attributes.Espíritu),
@@ -7957,12 +8033,17 @@ function CharacterSheetView({
                   setSelectedTrait({
                     name: h.name,
                     description: h.description,
-                    type: `Desventaja ${h.type}`,
+                    type: `Desventaja ${h.type}${h.isRacial ? " (Racial)" : ""}`,
                   })
                 }
-                className="px-4 py-2 bg-red-50 border border-red-100 rounded-lg text-sm font-bold text-red-700 hover:bg-red-100 transition-all active:scale-95 text-left"
+                className={`px-4 py-2 border rounded-lg text-sm font-bold transition-all active:scale-95 text-left flex items-center gap-2 ${h.isRacial ? "bg-stone-100 border-stone-200 text-stone-600 hover:bg-stone-200" : "bg-red-50 border-red-100 text-red-700 hover:bg-red-100"}`}
               >
                 {h.name} ({h.type})
+                {h.isRacial && (
+                  <span className="text-[8px] font-black bg-stone-200 text-stone-400 px-1 py-0.5 rounded uppercase tracking-tighter">
+                    Racial
+                  </span>
+                )}
               </button>
             ))}
           </div>
