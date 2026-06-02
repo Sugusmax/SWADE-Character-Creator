@@ -393,11 +393,6 @@ const getAttributeLimits = (
   // Apply Hindrance bonuses to base (Anciano increases Smarts)
   const isElderly = hindrances?.some((h) => h && h.name === "Anciano");
 
-  if (isElderly && attrName === "Astucia") {
-    min = upgradeDie(min);
-    max = upgradeDie(max);
-  }
-
   return { min, max };
 };
 
@@ -2435,14 +2430,35 @@ export default function App() {
                       }
                       if (currentStep === 4) {
                         // Habilidades
-                        const { basicNeeded } =
+                        const { basicNeeded, smartsSpent, otherSpent } =
                           calculateSkillPointsSpent(currentCharacter);
-                        const isYoung = hasHindrance(currentCharacter, "Joven");
+                        const isYoung = hasHindrance(
+                          currentCharacter,
+                          "Joven",
+                        );
+                        const isElderly = hasHindrance(
+                          currentCharacter,
+                          "Anciano",
+                        );
                         const baseAllowed = isYoung ? 10 : 12;
+                        const extraFromHindrances =
+                          currentCharacter.spentHindrancePoints?.skills || 0;
+
+                        if (isElderly) {
+                          // Anciano: 5 extra points ONLY for Smarts.
+                          const ancianoBonusUsed = Math.min(5, smartsSpent);
+                          const remainingSmarts =
+                            smartsSpent - ancianoBonusUsed;
+                          const totalBasicNeeded =
+                            otherSpent + remainingSmarts;
+                          return (
+                            totalBasicNeeded >
+                            baseAllowed + extraFromHindrances
+                          );
+                        }
+
                         return (
-                          basicNeeded >
-                          baseAllowed +
-                            (currentCharacter.spentHindrancePoints?.skills || 0)
+                          basicNeeded > baseAllowed + extraFromHindrances
                         );
                       }
                     }
@@ -3927,13 +3943,22 @@ function renderStep(
                         onClick={() => {
                           const nextSkills = { ...char.skills };
                           if (val > min) {
-                            nextSkills[skill.name] = downgradeDie(val);
+                            const nextVal = downgradeDie(val);
+                            if (nextVal === 4 && min === 0) {
+                              delete nextSkills[skill.name];
+                            } else {
+                              nextSkills[skill.name] = nextVal;
+                            }
+                            update({ skills: nextSkills });
+                          } else if (val === 4 && min === 0) {
+                            // Allows going from d4 to untrained (0) if the skill is not basic/racial
+                            delete nextSkills[skill.name];
                             update({ skills: nextSkills });
                           }
                         }}
-                        disabled={val <= min}
+                        disabled={val <= min && (val !== 4 || min !== 0)}
                         className={`w-6 h-6 rounded-full border border-stone-200 flex items-center justify-center transition-colors ${
-                          val <= min
+                          val <= min && (val !== 4 || min !== 0)
                             ? "bg-stone-50 text-stone-200 border-stone-100 cursor-not-allowed"
                             : "bg-stone-50 text-stone-600 hover:bg-stone-200"
                         }`}
