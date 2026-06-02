@@ -1528,12 +1528,6 @@ const getSkillBonus = (char: Character, skillName: string): BonusInfo => {
   }
 
   // Species
-  if (char.species === "Saurio" && skillName === "Persuadir") {
-    situational.push({ value: -2, note: "Fuera de su grupo" });
-  }
-  if (char.species === "Semielfo" && skillName === "Persuadir") {
-    situational.push({ value: -2, note: "Fuera de su grupo" });
-  }
   if (char.species === "Rakhasa" && skillName === "Persuadir") {
     situational.push({ value: -2, note: "Enemigo racial" });
   }
@@ -2086,6 +2080,50 @@ export default function App() {
                 newHindrances.push({
                   ...def,
                   instanceId: `hindrance-racial-${ar.name.toLowerCase()}`,
+                  isRacial: true,
+                });
+              }
+            }
+          });
+          next.hindrances = newHindrances;
+        } else if (next.species === "Saurio") {
+          const saurioRacial = [{ name: "Marginado", type: "Menor" }];
+          const newHindrances = [...next.hindrances];
+          saurioRacial.forEach((sr) => {
+            if (
+              !newHindrances.some(
+                (h) => h.name === sr.name && h.type === sr.type,
+              )
+            ) {
+              const def = HINDRANCES.find(
+                (h) => h.name === sr.name && h.type === sr.type,
+              );
+              if (def) {
+                newHindrances.push({
+                  ...def,
+                  instanceId: `hindrance-racial-${sr.name.toLowerCase()}`,
+                  isRacial: true,
+                });
+              }
+            }
+          });
+          next.hindrances = newHindrances;
+        } else if (next.species === "Semielfo") {
+          const semielfoRacial = [{ name: "Marginado", type: "Menor" }];
+          const newHindrances = [...next.hindrances];
+          semielfoRacial.forEach((ser) => {
+            if (
+              !newHindrances.some(
+                (h) => h.name === ser.name && h.type === ser.type,
+              )
+            ) {
+              const def = HINDRANCES.find(
+                (h) => h.name === ser.name && h.type === ser.type,
+              );
+              if (def) {
+                newHindrances.push({
+                  ...def,
+                  instanceId: `hindrance-racial-semielfo-${ser.name.toLowerCase()}`,
                   isRacial: true,
                 });
               }
@@ -3420,10 +3458,18 @@ function renderStep(
         SPECIES.find((s) => s.name === char.species)?.abilities.map(
           (a) => a.name,
         ) || [];
+      const racialHindranceNames = char.hindrances
+        .filter((h) => h.isRacial)
+        .map((h) => h.name);
+
       const uniqueHindranceNames = Array.from(
         new Set(HINDRANCES.map((h) => h.name)),
       )
-        .filter((name) => !speciesAbilities.includes(name))
+        .filter(
+          (name) =>
+            !speciesAbilities.includes(name) &&
+            !racialHindranceNames.includes(name),
+        )
         .sort(sortByString);
       const selectedHindranceData = HINDRANCES.filter(
         (h) => h.name === previewHindranceName,
