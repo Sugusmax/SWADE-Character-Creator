@@ -3320,7 +3320,7 @@ function renderStep(
                   if (conceptInput) conceptInput.focus();
                 }
               }}
-              placeholder="Nombre del personaje..."
+              placeholder="Nombre"
               className="w-full text-4xl font-bold focus:border-stone-900 outline-none py-2 transition-colors placeholder:text-stone-200"
             />
           </div>
