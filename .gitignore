@@ -25,3 +25,6 @@ Thumbs.db
 # Temporales de compilación o pruebas
 test_write.txt
 android/
+reqs.txt
+sort_edges.js
+check_edges.js
