@@ -44,6 +44,7 @@ export interface Edge {
   replaces?: string;
   modifiers?: AppliedModifier[];
   situationalModifiers?: SituationalBonus[];
+  isRacial?: boolean;
 }
 
 export interface SpeciesAbility {
@@ -93,6 +94,7 @@ export interface Weapon {
   range?: string;
   ap?: number;
   notes?: string;
+  isRacial?: boolean;
 }
 
 export interface Armor {
@@ -100,6 +102,7 @@ export interface Armor {
   name: string;
   bonus: number;
   notes?: string;
+  isRacial?: boolean;
 }
 
 export interface Shield {

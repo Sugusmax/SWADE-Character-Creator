@@ -1711,7 +1711,7 @@ const calculateDerived = (char: Character) => {
     runningDieIndex = 0;
   }
   if (char.species === "Acuariano") toughness += 1;
-  if (char.species === "Saurio") toughness += 2; // Armadura +2
+  // if (char.species === "Saurio") toughness += 2; // Handled via Piel Escamosa armor now
 
   // Hindrances that SET or REDUCE (Applied before Edges for base adjustment)
   if (hasHindrance(char, "Obeso")) {
@@ -1828,6 +1828,8 @@ export default function App() {
   const [isAddingWeapon, setIsAddingWeapon] = useState(false);
   const [isAddingArmor, setIsAddingArmor] = useState(false);
   const [isAddingShield, setIsAddingShield] = useState(false);
+  const [editingWeaponId, setEditingWeaponId] = useState<string | null>(null);
+  const [editingArmorId, setEditingArmorId] = useState<string | null>(null);
   const [newWeapon, setNewWeapon] = useState({
     name: "",
     damage: "",
@@ -2039,6 +2041,11 @@ export default function App() {
       if (speciesChanged) {
         // Remove ALL racial hindrances when changing species
         next.hindrances = next.hindrances.filter((h) => !h.isRacial);
+        // Remove ALL racial edges when changing species
+        next.edges = (next.edges || []).filter((e) => !e.isRacial);
+        // Remove ALL racial equipment when changing species
+        next.armor = (next.armor || []).filter((a) => !a.isRacial);
+        next.weapons = (next.weapons || []).filter((w) => !w.isRacial);
 
         if (next.species === "Elfo") {
           if (!next.hindrances.some((h) => h.name === "Manazas")) {
@@ -2102,6 +2109,45 @@ export default function App() {
             }
           });
           next.hindrances = newHindrances;
+
+          // Add Alerta racial edge
+          const newEdges = [...(next.edges || [])];
+          if (!newEdges.some((e) => e.name === "Alerta")) {
+            const alertaDef = EDGES.find((e) => e.name === "Alerta");
+            if (alertaDef) {
+              newEdges.push({
+                ...alertaDef,
+                instanceId: "edge-racial-alerta",
+                isRacial: true,
+              });
+            }
+          }
+          next.edges = newEdges;
+
+          // Add racial equipment for Saurio
+          const newArmor = [...(next.armor || [])];
+          if (!newArmor.some((a) => a.name === "Piel escamosa")) {
+            newArmor.push({
+              instanceId: "armor-racial-piel-escamosa",
+              name: "Piel escamosa",
+              bonus: 2,
+              notes: "Natural",
+              isRacial: true,
+            });
+          }
+          next.armor = newArmor;
+
+          const newWeapons = [...(next.weapons || [])];
+          if (!newWeapons.some((w) => w.name === "Mordisco")) {
+            newWeapons.push({
+              instanceId: "weapon-racial-mordisco",
+              name: "Mordisco",
+              damage: "FUE+d4",
+              notes: "Arma natural",
+              isRacial: true,
+            });
+          }
+          next.weapons = newWeapons;
         } else if (next.species === "Semielfo") {
           const semielfoRacial = [{ name: "Marginado", type: "Menor" }];
           const newHindrances = [...next.hindrances];
@@ -2146,6 +2192,19 @@ export default function App() {
             }
           });
           next.hindrances = newHindrances;
+
+          // Add racial equipment for Rakhasa
+          const newWeapons = [...(next.weapons || [])];
+          if (!newWeapons.some((w) => w.name === "Garras/Mordisco")) {
+            newWeapons.push({
+              instanceId: "weapon-racial-garras-mordisco",
+              name: "Garras/Mordisco",
+              damage: "FUE+d4",
+              notes: "Arma natural",
+              isRacial: true,
+            });
+          }
+          next.weapons = newWeapons;
         }
       }
 
@@ -2216,31 +2275,57 @@ export default function App() {
 
   const handleAddWeapon = () => {
     if (!currentCharacter || !newWeapon.name || !newWeapon.damage) return;
-    const weaponWithId = {
-      ...newWeapon,
-      instanceId: `weapon-${Math.random().toString(36).substr(2, 9)}`,
-    };
-    const next = {
-      ...currentCharacter,
-      weapons: [...(currentCharacter.weapons || []), weaponWithId],
-    };
+
+    let next;
+    if (editingWeaponId) {
+      next = {
+        ...currentCharacter,
+        weapons: (currentCharacter.weapons || []).map((w) =>
+          w.instanceId === editingWeaponId ? { ...newWeapon, instanceId: w.instanceId } : w
+        ),
+      };
+    } else {
+      const weaponWithId = {
+        ...newWeapon,
+        instanceId: `weapon-${Math.random().toString(36).substr(2, 9)}`,
+      };
+      next = {
+        ...currentCharacter,
+        weapons: [...(currentCharacter.weapons || []), weaponWithId],
+      };
+    }
+
     updateCharacter(next);
     setNewWeapon({ name: "", damage: "", range: "", ap: 0, notes: "" });
+    setEditingWeaponId(null);
     setIsAddingWeapon(false);
   };
 
   const handleAddArmor = () => {
     if (!currentCharacter || !newArmor.name) return;
-    const armorWithId = {
-      ...newArmor,
-      instanceId: `armor-${Math.random().toString(36).substr(2, 9)}`,
-    };
-    const next = {
-      ...currentCharacter,
-      armor: [...(currentCharacter.armor || []), armorWithId],
-    };
+
+    let next;
+    if (editingArmorId) {
+      next = {
+        ...currentCharacter,
+        armor: (currentCharacter.armor || []).map((a) =>
+          a.instanceId === editingArmorId ? { ...newArmor, instanceId: a.instanceId } : a
+        ),
+      };
+    } else {
+      const armorWithId = {
+        ...newArmor,
+        instanceId: `armor-${Math.random().toString(36).substr(2, 9)}`,
+      };
+      next = {
+        ...currentCharacter,
+        armor: [...(currentCharacter.armor || []), armorWithId],
+      };
+    }
+
     updateCharacter(next);
     setNewArmor({ name: "", bonus: 0, notes: "" });
+    setEditingArmorId(null);
     setIsAddingArmor(false);
   };
 
@@ -2865,7 +2950,7 @@ export default function App() {
               className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
               <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">
-                Nueva Arma
+                {editingWeaponId ? "Editar Arma" : "Nueva Arma"}
               </h3>
 
               <div className="space-y-6">
@@ -2984,7 +3069,11 @@ export default function App() {
               </div>
               <div className="flex gap-3 mt-8">
                 <button
-                  onClick={() => setIsAddingWeapon(false)}
+                  onClick={() => {
+                    setIsAddingWeapon(false);
+                    setEditingWeaponId(null);
+                    setNewWeapon({ name: "", damage: "", range: "", ap: 0, notes: "" });
+                  }}
                   className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs"
                 >
                   Cancelar
@@ -3009,7 +3098,7 @@ export default function App() {
               className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
               <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">
-                Nueva Armadura
+                {editingArmorId ? "Editar Armadura" : "Nueva Armadura"}
               </h3>
 
               <div className="space-y-6">
@@ -3096,7 +3185,11 @@ export default function App() {
               </div>
               <div className="flex gap-3 mt-8">
                 <button
-                  onClick={() => setIsAddingArmor(false)}
+                  onClick={() => {
+                    setIsAddingArmor(false);
+                    setEditingArmorId(null);
+                    setNewArmor({ name: "", bonus: 0, notes: "" });
+                  }}
                   className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs"
                 >
                   Cancelar
@@ -3501,14 +3594,14 @@ function renderStep(
             {[...char.hindrances].sort(sortByName).map((h) => (
               <div
                 key={h.instanceId}
-                className={`px-4 py-2 border rounded-full flex items-center gap-2 text-sm font-bold shadow-sm ${h.isRacial ? "bg-stone-100 border-stone-200 text-stone-600" : "bg-red-50 border-red-100 text-red-700"}`}
+                className="px-4 py-2 border rounded-full flex items-center gap-2 text-sm font-bold shadow-sm bg-red-50 border-red-100 text-red-700"
               >
                 <div className="flex items-center gap-1.5">
                   <span>
                     {h.name} ({h.type})
                   </span>
                   {h.isRacial && (
-                    <span className="text-[8px] font-black bg-stone-200 text-stone-400 px-1 py-0.5 rounded uppercase tracking-tighter">
+                    <span className="text-[8px] font-black bg-red-600 text-white px-1 py-0.5 rounded uppercase tracking-tighter">
                       Racial
                     </span>
                   )}
@@ -4107,7 +4200,8 @@ function renderStep(
       if (isBlind) freeEdgesSources.push("Ciego (+1)");
 
       const freeEdges = (char.species === "Humano" ? 1 : 0) + (isBlind ? 1 : 0);
-      const currentEdgesCount = char.edges.length;
+      const nonRacialEdges = char.edges.filter((e) => !e.isRacial);
+      const currentEdgesCount = nonRacialEdges.length;
       const canPickFree = currentEdgesCount < freeEdges;
 
       const totalHP_Edges = calculateHindrancePoints(char.hindrances);
@@ -4242,8 +4336,13 @@ function renderStep(
                               };
 
                               const freeEdges =
-                                char.species === "Humano" ? 1 : 0;
-                              const canPickFree = char.edges.length < freeEdges;
+                                (char.species === "Humano" ? 1 : 0) +
+                                (hasHindrance(char, "Ciego") ? 1 : 0);
+                              const nonRacialEdgesCount = char.edges.filter(
+                                (e) => !e.isRacial,
+                              ).length;
+                              const canPickFree =
+                                nonRacialEdgesCount < freeEdges;
                               const totalHP = calculateHindrancePoints(
                                 char.hindrances,
                               );
@@ -4316,9 +4415,13 @@ function renderStep(
                                 };
 
                                 const freeEdges =
-                                  char.species === "Humano" ? 1 : 0;
+                                  (char.species === "Humano" ? 1 : 0) +
+                                  (hasHindrance(char, "Ciego") ? 1 : 0);
+                                const nonRacialEdgesCount = char.edges.filter(
+                                  (e) => !e.isRacial,
+                                ).length;
                                 const canPickFree =
-                                  char.edges.length < freeEdges;
+                                  nonRacialEdgesCount < freeEdges;
                                 const totalHP = calculateHindrancePoints(
                                   char.hindrances,
                                 );
@@ -4397,9 +4500,13 @@ function renderStep(
                                 };
 
                                 const freeEdges =
-                                  char.species === "Humano" ? 1 : 0;
+                                  (char.species === "Humano" ? 1 : 0) +
+                                  (hasHindrance(char, "Ciego") ? 1 : 0);
+                                const nonRacialEdgesCount = char.edges.filter(
+                                  (e) => !e.isRacial,
+                                ).length;
                                 const canPickFree =
-                                  char.edges.length < freeEdges;
+                                  nonRacialEdgesCount < freeEdges;
                                 const totalHP = calculateHindrancePoints(
                                   char.hindrances,
                                 );
@@ -4543,6 +4650,11 @@ function renderStep(
                         className={`font-bold flex items-center gap-2 ${improved ? "text-amber-900" : "text-emerald-900"}`}
                       >
                         {edge.name}
+                        {edge.isRacial && (
+                          <span className="text-[8px] font-black bg-emerald-600 text-white px-1 py-0.5 rounded uppercase tracking-tighter">
+                            Racial
+                          </span>
+                        )}
                       </div>
                       <div
                         className={`text-[10px] font-bold uppercase ${improved ? "text-amber-600" : "text-emerald-600"}`}
@@ -4550,41 +4662,47 @@ function renderStep(
                         {edge.requirements}
                       </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        const nextEdges = char.edges.filter(
-                          (e) => e.instanceId !== edge.instanceId,
-                        );
+                    {!edge.isRacial && (
+                      <button
+                        onClick={() => {
+                          const nextEdges = char.edges.filter(
+                            (e) => e.instanceId !== edge.instanceId,
+                          );
 
-                        // Recalculate paid edges based on total count and free slots
-                        const paidEdgesCount = Math.max(
-                          0,
-                          nextEdges.length - freeEdges,
-                        );
-                        const nextSpentHP = {
-                          ...char.spentHindrancePoints,
-                          edges: paidEdgesCount,
-                        };
+                          // Recalculate paid edges based on total count and free slots
+                          // Exclude racial edges from the count
+                          const nonRacialNextCount = nextEdges.filter(
+                            (e) => !e.isRacial,
+                          ).length;
+                          const paidEdgesCount = Math.max(
+                            0,
+                            nonRacialNextCount - freeEdges,
+                          );
+                          const nextSpentHP = {
+                            ...char.spentHindrancePoints,
+                            edges: paidEdgesCount,
+                          };
 
-                        const nextChar = {
-                          ...char,
-                          edges: nextEdges,
-                          spentHindrancePoints: nextSpentHP,
-                        };
-                        update({
-                          edges: nextEdges,
-                          spentHindrancePoints: nextSpentHP,
-                          bennies: calculateStartingBennies(nextChar),
-                        });
-                      }}
-                      className={`p-2 rounded-lg transition-all ${
-                        improved
-                          ? "hover:bg-amber-100 text-amber-600"
-                          : "hover:bg-emerald-100 text-emerald-600"
-                      }`}
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                          const nextChar = {
+                            ...char,
+                            edges: nextEdges,
+                            spentHindrancePoints: nextSpentHP,
+                          };
+                          update({
+                            edges: nextEdges,
+                            spentHindrancePoints: nextSpentHP,
+                            bennies: calculateStartingBennies(nextChar),
+                          });
+                        }}
+                        className={`p-2 rounded-lg transition-all ${
+                          improved
+                            ? "hover:bg-amber-100 text-amber-600"
+                            : "hover:bg-emerald-100 text-emerald-600"
+                        }`}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -4750,25 +4868,6 @@ function renderStep(
     case 7: {
       // Equipo
       const allWeapons = [...(char.weapons || [])];
-      if (char.species === "Rakhasa") {
-        if (!allWeapons.some((w) => w.name === "Garras/Mordisco")) {
-          allWeapons.unshift({
-            name: "Garras/Mordisco",
-            damage: "FUE+d4",
-            ap: 0,
-            notes: "Arma natural",
-          });
-        }
-      } else if (char.species === "Saurio") {
-        if (!allWeapons.some((w) => w.name === "Mordisco")) {
-          allWeapons.unshift({
-            name: "Mordisco",
-            damage: "FUE+d4",
-            ap: 0,
-            notes: "Arma natural",
-          });
-        }
-      }
 
       return (
         <div className="space-y-8">
@@ -4788,11 +4887,24 @@ function renderStep(
                 </div>
                 <div className="space-y-2">
                   {allWeapons.map((w, idx) => {
-                    const isNatural = w.notes === "Arma natural";
+                    const isRacialWeapon =
+                      w.isRacial || w.notes === "Arma natural";
                     return (
                       <div
                         key={w.instanceId || `w-${idx}`}
-                        className="p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center"
+                        onClick={() => {
+                          if (isRacialWeapon) return;
+                          setNewWeapon({
+                            name: w.name,
+                            damage: w.damage,
+                            range: w.range || "",
+                            ap: w.ap || 0,
+                            notes: w.notes || "",
+                          });
+                          setEditingWeaponId(w.instanceId || null);
+                          setIsAddingWeapon(true);
+                        }}
+                        className={`p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center ${!isRacialWeapon ? "cursor-pointer hover:border-stone-400 transition-colors" : ""}`}
                       >
                         <div>
                           <div className="font-bold text-stone-900 text-sm">
@@ -4801,15 +4913,16 @@ function renderStep(
                           <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">
                             {w.damage} {w.range ? `| ${w.range}` : ""}
                           </div>
-                          {isNatural && (
+                          {isRacialWeapon && (
                             <div className="text-[9px] text-stone-400 italic">
                               Arma natural
                             </div>
                           )}
                         </div>
-                        {!isNatural && (
+                        {!isRacialWeapon && (
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               const charIdx = char.weapons?.findIndex(
                                 (cw) => cw.instanceId === w.instanceId,
                               );
@@ -4846,27 +4959,50 @@ function renderStep(
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {char.armor?.map((a, idx) => (
-                    <div
-                      key={a.instanceId || `a-${idx}`}
-                      className="p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center"
-                    >
-                      <div>
-                        <div className="font-bold text-stone-900 text-sm">
-                          {a.name}
-                        </div>
-                        <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">
-                          Bono: +{a.bonus}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => removeArmor(idx)}
-                        className="text-stone-300 hover:text-red-500 transition-colors"
+                  {char.armor?.map((a, idx) => {
+                    const isRacialArmor = a.isRacial;
+                    return (
+                      <div
+                        key={a.instanceId || `a-${idx}`}
+                        onClick={() => {
+                          if (isRacialArmor) return;
+                          setNewArmor({
+                            name: a.name,
+                            bonus: a.bonus,
+                            notes: a.notes || "",
+                          });
+                          setEditingArmorId(a.instanceId || null);
+                          setIsAddingArmor(true);
+                        }}
+                        className={`p-3 bg-white border border-stone-200 rounded-xl flex justify-between items-center ${!isRacialArmor ? "cursor-pointer hover:border-stone-400 transition-colors" : ""}`}
                       >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
+                        <div>
+                          <div className="font-bold text-stone-900 text-sm">
+                            {a.name}
+                          </div>
+                          <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">
+                            Bono: +{a.bonus}
+                          </div>
+                          {isRacialArmor && (
+                            <div className="text-[9px] text-stone-400 italic">
+                              Natural
+                            </div>
+                          )}
+                        </div>
+                        {!isRacialArmor && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeArmor(idx);
+                            }}
+                            className="text-stone-300 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                   {(!char.armor || char.armor.length === 0) && (
                     <p className="text-xs text-stone-400 italic">
                       No has añadido armadura.
@@ -5137,6 +5273,11 @@ function renderStep(
                             >
                               {e.name}
                             </span>
+                            {e.isRacial && (
+                              <span className="text-[8px] font-black bg-emerald-600 text-white px-1 py-0.5 rounded uppercase tracking-tighter">
+                                Racial
+                              </span>
+                            )}
                           </div>
                           <p
                             className={`text-[10px] italic line-clamp-2 ${improved ? "text-amber-600" : "text-emerald-600"}`}
@@ -5615,6 +5756,8 @@ function CharacterSheetView({
   const [isAddingWeapon, setIsAddingWeapon] = useState(false);
   const [isAddingArmor, setIsAddingArmor] = useState(false);
   const [isAddingShield, setIsAddingShield] = useState(false);
+  const [editingWeaponId, setEditingWeaponId] = useState<string | null>(null);
+  const [editingArmorId, setEditingArmorId] = useState<string | null>(null);
   const [isAddingPower, setIsAddingPower] = useState(false);
   const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
   const [newWeapon, setNewWeapon] = useState({
@@ -5720,6 +5863,7 @@ function CharacterSheetView({
           damage: "FUE+d4",
           ap: 0,
           notes: "Arma natural",
+          isRacial: true,
         });
       }
     } else if (character.species === "Saurio") {
@@ -5729,6 +5873,7 @@ function CharacterSheetView({
           damage: "FUE+d4",
           ap: 0,
           notes: "Arma natural",
+          isRacial: true,
         });
       }
     }
@@ -6173,32 +6318,58 @@ function CharacterSheetView({
 
   const handleAddWeapon = () => {
     if (!newWeapon.name || !newWeapon.damage) return;
-    const weaponWithId = {
-      ...newWeapon,
-      instanceId: `weapon-${Math.random().toString(36).substr(2, 9)}`,
-    };
-    const newChar = {
-      ...character,
-      weapons: [...(character.weapons || []), weaponWithId],
-    };
+
+    let newChar;
+    if (editingWeaponId) {
+      newChar = {
+        ...character,
+        weapons: (character.weapons || []).map((w) =>
+          w.instanceId === editingWeaponId ? { ...newWeapon, instanceId: w.instanceId } : w
+        ),
+      };
+    } else {
+      const weaponWithId = {
+        ...newWeapon,
+        instanceId: `weapon-${Math.random().toString(36).substr(2, 9)}`,
+      };
+      newChar = {
+        ...character,
+        weapons: [...(character.weapons || []), weaponWithId],
+      };
+    }
+
     onUpdate(newChar);
     setNewWeapon({ name: "", damage: "", range: "", ap: 0, notes: "" });
+    setEditingWeaponId(null);
     setIsAddingWeapon(false);
   };
 
   const handleAddArmor = () => {
     if (!newArmor.name) return;
-    const armorWithId = {
-      ...newArmor,
-      instanceId: `armor-${Math.random().toString(36).substr(2, 9)}`,
-    };
-    const newChar = {
-      ...character,
-      armor: [...(character.armor || []), armorWithId],
-    };
+
+    let newChar;
+    if (editingArmorId) {
+      newChar = {
+        ...character,
+        armor: (character.armor || []).map((a) =>
+          a.instanceId === editingArmorId ? { ...newArmor, instanceId: a.instanceId } : a
+        ),
+      };
+    } else {
+      const armorWithId = {
+        ...newArmor,
+        instanceId: `armor-${Math.random().toString(36).substr(2, 9)}`,
+      };
+      newChar = {
+        ...character,
+        armor: [...(character.armor || []), armorWithId],
+      };
+    }
+
     newChar.derived = calculateDerived(newChar);
     onUpdate(newChar);
     setNewArmor({ name: "", bonus: 0, notes: "" });
+    setEditingArmorId(null);
     setIsAddingArmor(false);
   };
 
@@ -8098,11 +8269,11 @@ function CharacterSheetView({
                     type: `Desventaja ${h.type}${h.isRacial ? " (Racial)" : ""}`,
                   })
                 }
-                className={`px-4 py-2 border rounded-lg text-sm font-bold transition-all active:scale-95 text-left flex items-center gap-2 ${h.isRacial ? "bg-stone-100 border-stone-200 text-stone-600 hover:bg-stone-200" : "bg-red-50 border-red-100 text-red-700 hover:bg-red-100"}`}
+                className="px-4 py-2 border rounded-lg text-sm font-bold transition-all active:scale-95 text-left flex items-center gap-2 bg-red-50 border-red-100 text-red-700 hover:bg-red-100"
               >
                 {h.name} ({h.type})
                 {h.isRacial && (
-                  <span className="text-[8px] font-black bg-stone-200 text-stone-400 px-1 py-0.5 rounded uppercase tracking-tighter">
+                  <span className="text-[8px] font-black bg-red-600 text-white px-1 py-0.5 rounded uppercase tracking-tighter">
                     Racial
                   </span>
                 )}
@@ -8126,7 +8297,7 @@ function CharacterSheetView({
                     setSelectedTrait({
                       name: e.name,
                       description: getEdgeFullDescription(e),
-                      type: "Ventaja",
+                      type: `Ventaja${e.isRacial ? " (Racial)" : ""}`,
                       requirements: e.requirements,
                     })
                   }
@@ -8137,6 +8308,11 @@ function CharacterSheetView({
                   }`}
                 >
                   {e.name}
+                  {e.isRacial && (
+                    <span className="text-[8px] font-black bg-emerald-600 text-white px-1 py-0.5 rounded uppercase tracking-tighter">
+                      Racial
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -8303,11 +8479,23 @@ function CharacterSheetView({
               </div>
               <div className="grid grid-cols-1 gap-2">
                 {allWeapons.map((w, idx) => {
-                  const isNatural = w.notes === "Arma natural";
+                  const isNatural = w.isRacial || w.notes === "Arma natural";
                   return (
                     <div
                       key={w.instanceId || `w-${idx}`}
-                      className="p-4 bg-white border border-stone-200 rounded-xl shadow-sm relative flex items-center gap-4"
+                      onClick={() => {
+                        if (isNatural) return;
+                        setNewWeapon({
+                          name: w.name,
+                          damage: w.damage,
+                          range: w.range || "",
+                          ap: w.ap || 0,
+                          notes: w.notes || "",
+                        });
+                        setEditingWeaponId(w.instanceId || null);
+                        setIsAddingWeapon(true);
+                      }}
+                      className={`p-4 bg-white border border-stone-200 rounded-xl shadow-sm relative flex items-center gap-4 ${!isNatural ? "cursor-pointer hover:border-stone-400 transition-colors" : ""}`}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="font-black text-stone-900 uppercase tracking-tight mb-2 pr-6">
@@ -8374,7 +8562,8 @@ function CharacterSheetView({
                           </button>
                         )}
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             const charIdx = character.weapons?.findIndex(
                               (cw) => cw.instanceId === w.instanceId,
                             );
@@ -8413,20 +8602,35 @@ function CharacterSheetView({
                   </button>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
-                  {character.armor?.map((a, idx) => (
-                    <div
-                      key={a.instanceId || `a-${idx}`}
-                      className="p-3 bg-white border border-stone-200 rounded-xl shadow-sm relative"
-                    >
+                {character.armor?.map((a, idx) => (
+                  <div
+                    key={a.instanceId || `a-${idx}`}
+                    onClick={() => {
+                      if (a.isRacial) return;
+                      setNewArmor({
+                        name: a.name,
+                        bonus: a.bonus,
+                        notes: a.notes || "",
+                      });
+                      setEditingArmorId(a.instanceId || null);
+                      setIsAddingArmor(true);
+                    }}
+                    className={`p-3 bg-white border border-stone-200 rounded-xl shadow-sm relative ${!a.isRacial ? "cursor-pointer hover:border-stone-400 transition-colors" : ""}`}
+                  >
+                    {!a.isRacial && (
                       <button
-                        onClick={() => removeArmor(idx)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeArmor(idx);
+                        }}
                         className="absolute top-2 right-2 p-1 text-stone-300 hover:text-red-500 transition-all"
                       >
                         <Trash2 size={14} />
                       </button>
-                      <div className="font-bold text-stone-900 text-sm">
-                        {a.name}
-                      </div>
+                    )}
+                    <div className="font-bold text-stone-900 text-sm">
+                      {a.name}
+                    </div>
                       <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">
                         Bono: +{a.bonus}
                       </div>
@@ -8709,7 +8913,7 @@ function CharacterSheetView({
               className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
               <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">
-                Nueva Arma
+                {editingWeaponId ? "Editar Arma" : "Nueva Arma"}
               </h3>
 
               <div className="space-y-6">
@@ -8828,7 +9032,11 @@ function CharacterSheetView({
               </div>
               <div className="flex gap-3 mt-8">
                 <button
-                  onClick={() => setIsAddingWeapon(false)}
+                  onClick={() => {
+                    setIsAddingWeapon(false);
+                    setEditingWeaponId(null);
+                    setNewWeapon({ name: "", damage: "", range: "", ap: 0, notes: "" });
+                  }}
                   className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs"
                 >
                   Cancelar
@@ -8853,7 +9061,7 @@ function CharacterSheetView({
               className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
               <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">
-                Nueva Armadura
+                {editingArmorId ? "Editar Armadura" : "Nueva Armadura"}
               </h3>
 
               <div className="space-y-6">
@@ -8940,7 +9148,11 @@ function CharacterSheetView({
               </div>
               <div className="flex gap-3 mt-8">
                 <button
-                  onClick={() => setIsAddingArmor(false)}
+                  onClick={() => {
+                    setIsAddingArmor(false);
+                    setEditingArmorId(null);
+                    setNewArmor({ name: "", bonus: 0, notes: "" });
+                  }}
                   className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs"
                 >
                   Cancelar
