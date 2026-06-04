@@ -1828,8 +1828,10 @@ export default function App() {
   const [isAddingWeapon, setIsAddingWeapon] = useState(false);
   const [isAddingArmor, setIsAddingArmor] = useState(false);
   const [isAddingShield, setIsAddingShield] = useState(false);
+  const [isAddingGear, setIsAddingGear] = useState(false);
   const [editingWeaponId, setEditingWeaponId] = useState<string | null>(null);
   const [editingArmorId, setEditingArmorId] = useState<string | null>(null);
+  const [editingGearId, setEditingGearId] = useState<string | null>(null);
   const [newWeapon, setNewWeapon] = useState({
     name: "",
     damage: "",
@@ -1844,13 +1846,33 @@ export default function App() {
     coverBonus: 0,
     notes: "",
   });
+  const [newGear, setNewGear] = useState({ name: "", description: "" });
 
   // Load characters from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("sw_characters_v2");
     if (saved) {
       try {
-        setCharacters(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        // Migration: gear was string[], now it's GearItem[]
+        const migrated = parsed.map((char: any) => {
+          if (
+            char.gear &&
+            char.gear.length > 0 &&
+            typeof char.gear[0] === "string"
+          ) {
+            return {
+              ...char,
+              gear: char.gear.map((name: string) => ({
+                instanceId: `gear-${Math.random().toString(36).substr(2, 9)}`,
+                name,
+                description: "",
+              })),
+            };
+          }
+          return char;
+        });
+        setCharacters(migrated);
       } catch (e) {
         console.error("Failed to parse saved characters", e);
       }
@@ -2339,6 +2361,34 @@ export default function App() {
     updateCharacter(next);
     setNewShield({ name: "", parryBonus: 0, coverBonus: 0, notes: "" });
     setIsAddingShield(false);
+  };
+
+  const handleAddGear = () => {
+    if (!currentCharacter || !newGear.name) return;
+
+    let next;
+    if (editingGearId) {
+      next = {
+        ...currentCharacter,
+        gear: (currentCharacter.gear || []).map((g) =>
+          g.instanceId === editingGearId ? { ...newGear, instanceId: g.instanceId } : g
+        ),
+      };
+    } else {
+      const gearWithId = {
+        ...newGear,
+        instanceId: `gear-${Math.random().toString(36).substr(2, 9)}`,
+      };
+      next = {
+        ...currentCharacter,
+        gear: [...(currentCharacter.gear || []), gearWithId],
+      };
+    }
+
+    updateCharacter(next);
+    setNewGear({ name: "", description: "" });
+    setEditingGearId(null);
+    setIsAddingGear(false);
   };
 
   const removeWeapon = (idx: number) => {
@@ -3266,7 +3316,7 @@ export default function App() {
                         setNewShield({ ...newShield, name: e.target.value })
                       }
                       className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors"
-                      placeholder="Ej: Escudo Mediano"
+                      placeholder="Ej: Escudo Grande"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -3327,6 +3377,71 @@ export default function App() {
                 </button>
                 <button
                   onClick={handleAddShield}
+                  className="flex-1 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-colors uppercase tracking-widest text-xs"
+                >
+                  Guardar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {isAddingGear && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar"
+            >
+              <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">
+                {editingGearId ? "Editar Objeto" : "Nuevo Objeto"}
+              </h3>
+
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                      Nombre del objeto
+                    </label>
+                    <input
+                      type="text"
+                      value={newGear.name}
+                      onChange={(e) =>
+                        setNewGear({ ...newGear, name: e.target.value })
+                      }
+                      className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors"
+                      placeholder="Ej: Brújula plateada"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                      Notas / Descripción
+                    </label>
+                    <textarea
+                      value={newGear.description}
+                      onChange={(e) =>
+                        setNewGear({ ...newGear, description: e.target.value })
+                      }
+                      className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-32 resize-none"
+                      placeholder="Detalles sobre el objeto..."
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-8">
+                <button
+                  onClick={() => {
+                    setIsAddingGear(false);
+                    setEditingGearId(null);
+                    setNewGear({ name: "", description: "" });
+                  }}
+                  className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAddGear}
                   className="flex-1 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-colors uppercase tracking-widest text-xs"
                 >
                   Guardar
@@ -5052,59 +5167,63 @@ function renderStep(
 
             <div className="space-y-6">
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">
-                  Equipo General
-                </h4>
-                <div className="flex gap-2">
-                  <input
-                    id="gear-input"
-                    type="text"
-                    placeholder="Añadir objeto..."
-                    className="flex-1 px-4 py-3 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        const input = e.currentTarget;
-                        if (input.value) {
-                          update({ gear: [...char.gear, input.value] });
-                          input.value = "";
-                        }
-                      }
-                    }}
-                  />
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">
+                    Equipo General
+                  </h4>
                   <button
                     onClick={() => {
-                      const input = document.getElementById(
-                        "gear-input",
-                      ) as HTMLInputElement;
-                      if (input.value) {
-                        update({ gear: [...char.gear, input.value] });
-                        input.value = "";
-                      }
+                      setEditingGearId(null);
+                      setNewGear({ name: "", description: "" });
+                      setIsAddingGear(true);
                     }}
-                    className="px-6 py-3 bg-stone-900 text-white rounded-xl font-bold"
+                    className="p-2 bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition-colors"
                   >
-                    Añadir
+                    <Plus size={16} />
                   </button>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
                   {char.gear.map((item, i) => (
                     <div
-                      key={`${item}-${i}`}
-                      className="flex justify-between items-center p-3 bg-stone-50 rounded-xl border border-stone-100 group"
+                      key={item.instanceId || `g-${i}`}
+                      onClick={() => {
+                        setNewGear({
+                          name: item.name,
+                          description: item.description || "",
+                        });
+                        setEditingGearId(item.instanceId);
+                        setIsAddingGear(true);
+                      }}
+                      className="flex justify-between items-center p-3 bg-white border border-stone-200 rounded-xl group cursor-pointer hover:border-stone-400 transition-colors"
                     >
-                      <span className="text-sm font-medium">{item}</span>
+                      <div>
+                        <div className="text-sm font-bold text-stone-900">
+                          {item.name}
+                        </div>
+                        {item.description && (
+                          <div className="text-[10px] text-stone-500 line-clamp-1">
+                            {item.description}
+                          </div>
+                        )}
+                      </div>
                       <button
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           update({
                             gear: char.gear.filter((_, idx) => idx !== i),
-                          })
-                        }
+                          });
+                        }}
                         className="text-stone-300 hover:text-red-500 transition-colors"
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
                   ))}
+                  {char.gear.length === 0 && (
+                    <p className="text-xs text-stone-400 italic">
+                      No has añadido equipo general.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -5303,10 +5422,15 @@ function renderStep(
                   <div className="flex flex-wrap gap-2">
                     {char.gear.map((item, i) => (
                       <span
-                        key={`${item}-${i}`}
+                        key={item.instanceId || `g-res-${i}`}
                         className="px-3 py-1 bg-stone-100 text-stone-600 text-[10px] font-bold rounded-lg border border-stone-200"
                       >
-                        {item}
+                        {item.name}
+                        {item.description && (
+                          <span className="text-[8px] text-stone-400 ml-1 italic font-normal">
+                            *
+                          </span>
+                        )}
                       </span>
                     ))}
                   </div>
@@ -5756,8 +5880,10 @@ function CharacterSheetView({
   const [isAddingWeapon, setIsAddingWeapon] = useState(false);
   const [isAddingArmor, setIsAddingArmor] = useState(false);
   const [isAddingShield, setIsAddingShield] = useState(false);
+  const [isAddingGear, setIsAddingGear] = useState(false);
   const [editingWeaponId, setEditingWeaponId] = useState<string | null>(null);
   const [editingArmorId, setEditingArmorId] = useState<string | null>(null);
+  const [editingGearId, setEditingGearId] = useState<string | null>(null);
   const [isAddingPower, setIsAddingPower] = useState(false);
   const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
   const [newWeapon, setNewWeapon] = useState({
@@ -5774,6 +5900,7 @@ function CharacterSheetView({
     coverBonus: 0,
     notes: "",
   });
+  const [newGear, setNewGear] = useState({ name: "", description: "" });
   const [advanceType, setAdvanceType] = useState<
     "Attribute" | "Skills" | "Edge" | "NewSkill" | null
   >(null);
@@ -6386,6 +6513,34 @@ function CharacterSheetView({
     setIsAddingShield(false);
   };
 
+  const handleAddGear = () => {
+    if (!newGear.name) return;
+
+    let newChar;
+    if (editingGearId) {
+      newChar = {
+        ...character,
+        gear: (character.gear || []).map((g) =>
+          g.instanceId === editingGearId ? { ...newGear, instanceId: g.instanceId } : g
+        ),
+      };
+    } else {
+      const gearWithId = {
+        ...newGear,
+        instanceId: `gear-${Math.random().toString(36).substr(2, 9)}`,
+      };
+      newChar = {
+        ...character,
+        gear: [...(character.gear || []), gearWithId],
+      };
+    }
+
+    onUpdate(newChar);
+    setNewGear({ name: "", description: "" });
+    setEditingGearId(null);
+    setIsAddingGear(false);
+  };
+
   const removeWeapon = (idx: number) => {
     const newWeapons = [...(character.weapons || [])];
     newWeapons.splice(idx, 1);
@@ -6410,16 +6565,6 @@ function CharacterSheetView({
     const newGear = [...character.gear];
     newGear.splice(idx, 1);
     onUpdate({ ...character, gear: newGear });
-  };
-
-  const [newGearItemLocal, setNewGearItemLocal] = useState("");
-  const handleAddGearLocal = () => {
-    if (!newGearItemLocal.trim()) return;
-    onUpdate({
-      ...character,
-      gear: [...character.gear, newGearItemLocal.trim()],
-    });
-    setNewGearItemLocal("");
   };
 
   const getFatigueLabel = (val: number) => {
@@ -8691,31 +8836,50 @@ function CharacterSheetView({
             title="Equipo"
           />
           <div className="space-y-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newGearItemLocal}
-                onChange={(e) => setNewGearItemLocal(e.target.value)}
-                placeholder="Añadir objeto..."
-                className="flex-1 p-2 bg-stone-50 border border-stone-200 rounded-lg text-sm"
-                onKeyDown={(e) => e.key === "Enter" && handleAddGearLocal()}
-              />
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black uppercase tracking-widest text-stone-400">
+                Equipo General
+              </h4>
               <button
-                onClick={handleAddGearLocal}
-                className="p-2 bg-stone-900 text-white rounded-lg"
+                onClick={() => {
+                  setEditingGearId(null);
+                  setNewGear({ name: "", description: "" });
+                  setIsAddingGear(true);
+                }}
+                className="p-1 text-stone-400 hover:text-stone-900 transition-colors"
               >
                 <Plus size={16} />
               </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2">
               {character.gear.map((item, idx) => (
                 <div
-                  key={`gear-${idx}-${item}`}
-                  className="p-3 bg-white border border-stone-200 rounded-xl text-stone-700 font-medium flex justify-between items-center"
+                  key={item.instanceId || `gear-${idx}`}
+                  onClick={() => {
+                    setNewGear({
+                      name: item.name,
+                      description: item.description || "",
+                    });
+                    setEditingGearId(item.instanceId);
+                    setIsAddingGear(true);
+                  }}
+                  className="p-3 bg-white border border-stone-200 rounded-xl text-stone-700 font-medium flex justify-between items-center group cursor-pointer hover:border-stone-400 transition-colors"
                 >
-                  <span className="text-sm">{item}</span>
+                  <div>
+                    <div className="text-sm font-bold text-stone-900">
+                      {item.name}
+                    </div>
+                    {item.description && (
+                      <div className="text-xs text-stone-500 italic mt-0.5 line-clamp-1">
+                        {item.description}
+                      </div>
+                    )}
+                  </div>
                   <button
-                    onClick={() => removeGear(idx)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeGear(idx);
+                    }}
                     className="text-stone-300 hover:text-red-500 transition-all"
                   >
                     <Trash2 size={14} />
@@ -9229,7 +9393,7 @@ function CharacterSheetView({
                         setNewShield({ ...newShield, name: e.target.value })
                       }
                       className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors"
-                      placeholder="Ej: Escudo Mediano"
+                      placeholder="Ej: Escudo Grande"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -9290,6 +9454,71 @@ function CharacterSheetView({
                 </button>
                 <button
                   onClick={handleAddShield}
+                  className="flex-1 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-colors uppercase tracking-widest text-xs"
+                >
+                  Guardar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {isAddingGear && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto custom-scrollbar"
+            >
+              <h3 className="text-2xl font-black mb-6 uppercase tracking-tighter">
+                {editingGearId ? "Editar Objeto" : "Nuevo Objeto"}
+              </h3>
+
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                      Nombre del objeto
+                    </label>
+                    <input
+                      type="text"
+                      value={newGear.name}
+                      onChange={(e) =>
+                        setNewGear({ ...newGear, name: e.target.value })
+                      }
+                      className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors"
+                      placeholder="Ej: Brújula plateada"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                      Notas / Descripción
+                    </label>
+                    <textarea
+                      value={newGear.description}
+                      onChange={(e) =>
+                        setNewGear({ ...newGear, description: e.target.value })
+                      }
+                      className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl outline-none focus:border-stone-900 transition-colors h-32 resize-none"
+                      placeholder="Detalles sobre el objeto..."
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-8">
+                <button
+                  onClick={() => {
+                    setIsAddingGear(false);
+                    setEditingGearId(null);
+                    setNewGear({ name: "", description: "" });
+                  }}
+                  className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-colors uppercase tracking-widest text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAddGear}
                   className="flex-1 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-colors uppercase tracking-widest text-xs"
                 >
                   Guardar

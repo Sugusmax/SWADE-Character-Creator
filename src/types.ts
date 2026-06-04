@@ -113,6 +113,12 @@ export interface Shield {
   notes?: string;
 }
 
+export interface GearItem {
+  instanceId: string;
+  name: string;
+  description?: string;
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -129,7 +135,7 @@ export interface Character {
   skills: { [key: string]: Dice };
   hindrances: Hindrance[];
   edges: Edge[];
-  gear: string[];
+  gear: GearItem[];
   weapons?: Weapon[];
   armor?: Armor[];
   shield?: Shield;
