@@ -1,5 +1,5 @@
 {
-  "appId": "com.swade.charactercreator",
+  "appId": "com.savage.creator",
   "appName": "Savage Creator",
   "webDir": "dist",
   "bundledWebRuntime": false,
