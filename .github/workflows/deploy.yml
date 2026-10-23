@@ -1,4 +1,4 @@
-name: Build and Deploy SWADE Creator
+name: Build Android Release (Capacitor)
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: 1. Checkout del código
         uses: actions/checkout@v4
@@ -18,13 +19,28 @@ jobs:
         with:
           node-version: 22
 
-      - name: 3. Instalar EAS CLI
-        run: npm install -g eas-cli
+      - name: 3. Configurar Java (JDK 21)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
 
-      - name: 4. Instalar dependencias del proyecto
-        run: npm install
+      - name: 4. Instalar dependencias web
+        run: npm install --legacy-peer-deps
 
-      - name: 5. Generar AAB en la nube con EAS
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --platform android --profile production --non-interactive
+      - name: 5. Compilar proyecto web (Vite) y sincronizar Capacitor
+        run: npm run build
+
+      - name: 6. Dar permisos de ejecución a Gradle
+        run: chmod +x android/gradlew
+
+      - name: 7. Compilar Android App Bundle (.aab)
+        run: |
+          cd android
+          ./gradlew bundleRelease
+
+      - name: 8. Subir .aab como artefacto descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: android/app/build/outputs/bundle/release/app-release.aab
