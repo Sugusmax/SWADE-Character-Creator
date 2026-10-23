@@ -28,18 +28,23 @@ jobs:
       - name: 4. Instalar dependencias web
         run: npm install --legacy-peer-deps
 
-      - name: 5. Compilar proyecto web (Vite) y sincronizar Capacitor
-        run: npm run build
+      - name: 5. Compilar proyecto web con Vite
+        run: npx vite build
 
-      - name: 6. Dar permisos de ejecución a Gradle
+      - name: 6. Agregar plataforma Android y sincronizar Capacitor
+        run: |
+          npx cap add android || true
+          npx cap sync android
+
+      - name: 7. Dar permisos de ejecución a Gradle
         run: chmod +x android/gradlew
 
-      - name: 7. Compilar Android App Bundle (.aab)
+      - name: 8. Compilar Android App Bundle (.aab)
         run: |
           cd android
           ./gradlew bundleRelease
 
-      - name: 8. Subir .aab como artefacto descargable
+      - name: 9. Subir .aab como artefacto descargable
         uses: actions/upload-artifact@v4
         with:
           name: app-release
