@@ -34,7 +34,6 @@ jobs:
       - name: 6. Agregar plataforma Android y ajustar SDK a 24
         run: |
           npx cap add android || true
-          # Actualiza minSdkVersion de 23 a 24 automáticamente
           if [ -f "android/variables.gradle" ]; then
             sed -i 's/minSdkVersion = 23/minSdkVersion = 24/g' android/variables.gradle
           fi
@@ -48,8 +47,16 @@ jobs:
           cd android
           ./gradlew bundleRelease
 
-      - name: 9. Subir .aab como artefacto descargable
+      - name: 9. Generar firma y firmar el archivo .aab
+        run: |
+          # Crear una clave keystore en la nube
+          keytool -genkey -v -keystore release.keystore -alias swade-key -keyalg RSA -keysize 2048 -validity 10000 -storepass 123456 -keypass 123456 -dname "CN=SWADE, OU=Dev, O=SWADE, L=City, S=State, C=AR"
+          
+          # Firmar el bundle
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore release.keystore -storepass 123456 -keypass 123456 android/app/build/outputs/bundle/release/app-release.aab swade-key
+
+      - name: 10. Subir .aab firmado como artefacto descargable
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
+          name: app-release-signed
           path: android/app/build/outputs/bundle/release/app-release.aab
