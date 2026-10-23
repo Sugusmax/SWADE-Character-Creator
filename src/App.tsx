@@ -2606,10 +2606,17 @@ export default function App() {
                     setTraitModalOnSelect,
                     setIsAddingWeapon,
                     removeWeapon,
+                    setNewWeapon,
+                    setEditingWeaponId,
                     setIsAddingArmor,
                     removeArmor,
+                    setNewArmor,
+                    setEditingArmorId,
                     setIsAddingShield,
                     removeShield,
+                    setIsAddingGear,
+                    setNewGear,
+                    setEditingGearId,
                   })}
                 </motion.div>
               </AnimatePresence>
@@ -3484,10 +3491,29 @@ function renderStep(
     ) => void;
     setIsAddingWeapon: (val: boolean) => void;
     removeWeapon: (idx: number) => void;
+    setNewWeapon: React.Dispatch<
+      React.SetStateAction<{
+        name: string;
+        damage: string;
+        range: string;
+        ap: number;
+        notes: string;
+      }>
+    >;
+    setEditingWeaponId: React.Dispatch<React.SetStateAction<string | null>>;
     setIsAddingArmor: (val: boolean) => void;
     removeArmor: (idx: number) => void;
+    setNewArmor: React.Dispatch<
+      React.SetStateAction<{ name: string; bonus: number; notes: string }>
+    >;
+    setEditingArmorId: React.Dispatch<React.SetStateAction<string | null>>;
     setIsAddingShield: (val: boolean) => void;
     removeShield: () => void;
+    setIsAddingGear: (val: boolean) => void;
+    setNewGear: React.Dispatch<
+      React.SetStateAction<{ name: string; description: string }>
+    >;
+    setEditingGearId: React.Dispatch<React.SetStateAction<string | null>>;
   },
 ) {
   const {
@@ -3503,10 +3529,17 @@ function renderStep(
     setScholarModalOnSelect,
     setIsAddingWeapon,
     removeWeapon,
+    setNewWeapon,
+    setEditingWeaponId,
     setIsAddingArmor,
     removeArmor,
+    setNewArmor,
+    setEditingArmorId,
     setIsAddingShield,
     removeShield,
+    setIsAddingGear,
+    setNewGear,
+    setEditingGearId,
   } = extras;
 
   switch (step) {
