@@ -23,7 +23,7 @@ jobs:
         run: npm install -g eas-cli
 
       - name: 4. Instalar dependencias del proyecto
-        run: npm ci
+        run: npm ci || npm install
 
       - name: 5. Generar AAB en la nube con EAS
         env:
