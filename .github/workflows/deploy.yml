@@ -31,9 +31,13 @@ jobs:
       - name: 5. Compilar proyecto web con Vite
         run: npx vite build
 
-      - name: 6. Agregar plataforma Android y sincronizar Capacitor
+      - name: 6. Agregar plataforma Android y ajustar SDK a 24
         run: |
           npx cap add android || true
+          # Actualiza minSdkVersion de 23 a 24 automáticamente
+          if [ -f "android/variables.gradle" ]; then
+            sed -i 's/minSdkVersion = 23/minSdkVersion = 24/g' android/variables.gradle
+          fi
           npx cap sync android
 
       - name: 7. Dar permisos de ejecución a Gradle
