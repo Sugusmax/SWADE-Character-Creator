@@ -39,11 +39,21 @@ jobs:
           fi
           npx cap sync android
 
-      - name: 7. Decodificar Keystore de producción con Node.js
+      - name: 7. Decodificar Keystore de producción con diagnóstico
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          node -e 'require("fs").writeFileSync("release.keystore", Buffer.from(process.env.KEYSTORE_BASE64, "base64"))'
+          node -e '
+            const fs = require("fs");
+            if (!process.env.KEYSTORE_BASE64 || process.env.KEYSTORE_BASE64.trim() === "") {
+              console.error("❌ ERROR: El secret ANDROID_KEYSTORE_BASE64 está vacío o no fue configurado.");
+              process.exit(1);
+            }
+            const buffer = Buffer.from(process.env.KEYSTORE_BASE64.trim(), "base64");
+            fs.writeFileSync("release.keystore", buffer);
+            console.log("✅ Keystore decodificado correctamente. Tamaño:", buffer.length, "bytes");
+          '
+          ls -la release.keystore
 
       - name: 8. Dar permisos de ejecución a Gradle
         run: chmod +x android/gradlew
