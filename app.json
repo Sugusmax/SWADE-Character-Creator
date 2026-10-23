@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "SWADE Character Creator",
+    "slug": "swade-character-creator",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.sugusmax.swadecreator",
+      "adaptiveIcon": {
+        "backgroundColor": "#121212"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "adf9951f-75d3-4886-8bc7-03d63e3fc7ab"
+      }
+    }
+  }
+}
