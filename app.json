@@ -3,6 +3,7 @@
     "name": "SWADE Character Creator",
     "slug": "savage-creator",
     "version": "1.0.0",
+    "sdkVersion": "51.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "assetBundlePatterns": [
@@ -13,6 +14,7 @@
     },
     "android": {
       "package": "com.sugusmax.swadecreator",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#121212"
       }
