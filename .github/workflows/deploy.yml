@@ -39,23 +39,28 @@ jobs:
           fi
           npx cap sync android
 
-      - name: 7. Dar permisos de ejecución a Gradle
+      - name: 7. Decodificar Keystore de producción
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+
+      - name: 8. Dar permisos de ejecución a Gradle
         run: chmod +x android/gradlew
 
-      - name: 8. Compilar Android App Bundle (.aab)
+      - name: 9. Compilar Android App Bundle (.aab)
         run: |
           cd android
           ./gradlew bundleRelease
 
-      - name: 9. Generar firma y firmar el archivo .aab
+      - name: 10. Firmar el archivo .aab con la clave correcta
         run: |
-          # Crear una clave keystore en la nube
-          keytool -genkey -v -keystore release.keystore -alias swade-key -keyalg RSA -keysize 2048 -validity 10000 -storepass 123456 -keypass 123456 -dname "CN=SWADE, OU=Dev, O=SWADE, L=City, S=State, C=AR"
-          
-          # Firmar el bundle
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore release.keystore -storepass 123456 -keypass 123456 android/app/build/outputs/bundle/release/app-release.aab swade-key
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore release.keystore \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            -keypass "${{ secrets.KEY_PASSWORD }}" \
+            android/app/build/outputs/bundle/release/app-release.aab \
+            "${{ secrets.KEY_ALIAS }}"
 
-      - name: 10. Subir .aab firmado como artefacto descargable
+      - name: 11. Subir .aab firmado como artefacto descargable
         uses: actions/upload-artifact@v4
         with:
           name: app-release-signed
